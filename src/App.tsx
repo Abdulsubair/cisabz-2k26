@@ -11,7 +11,6 @@ import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSectio
 import { RegistrationPassesSection } from './components/RegistrationPassesSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { CampusSection } from './components/CampusSection';
-import { GallerySection } from './components/GallerySection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -19,11 +18,9 @@ import { EventGuidelineModal } from './components/EventGuidelineModal';
 import { CinematicEventVideoModal } from './components/CinematicEventVideoModal';
 import { RegistrationModal } from './components/RegistrationModal';
 import { AdminPortal } from './components/AdminPortal';
-import { CseTerminalWidget } from './components/CseTerminalWidget';
 import { CseAiAssistantModal } from './components/CseAiAssistantModal';
 import { BackgroundBuildingFlythrough } from './components/BackgroundBuildingFlythrough';
 import { CursorFluidEffect } from './components/CursorFluidEffect';
-import { ALL_EVENTS } from './data/symposiumData';
 import type { EventItem } from './types';
 
 export function App() {
@@ -65,13 +62,6 @@ export function App() {
   const handleOpenRegistration = (eventId?: string) => {
     setSelectedRegistrationEventId(eventId);
     setRegistrationModalOpen(true);
-  };
-
-  const handleOpenGuidelineById = (eventId: string) => {
-    const match = ALL_EVENTS.find((e) => e.id === eventId);
-    if (match) {
-      setSelectedGuidelineEvent(match);
-    }
   };
 
   useEffect(() => {
@@ -172,9 +162,6 @@ export function App() {
         {/* COLLEGE / CAMPUS SECTION */}
         <CampusSection />
 
-        {/* GALLERY */}
-        <GallerySection />
-
         {/* CHIEF PATRONS & DIGNITARIES */}
         <DignitariesSection />
 
@@ -208,12 +195,6 @@ export function App() {
         isOpen={registrationModalOpen}
         onClose={() => setRegistrationModalOpen(false)}
         initialSelectedEventId={selectedRegistrationEventId}
-      />
-
-      {/* INTERACTIVE CSE CLI TERMINAL WIDGET */}
-      <CseTerminalWidget
-        onOpenRegister={(eventId) => handleOpenRegistration(eventId)}
-        onOpenGuideline={(eventId) => handleOpenGuidelineById(eventId)}
       />
 
       {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT */}
