@@ -71,7 +71,7 @@ export const CampusSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* PHOTO 4: OFFICIAL CSE BLOCK FACADE */}
+          {/* PHOTO 1: AUTHENTIC MAIN BLOCK */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -81,20 +81,20 @@ export const CampusSection: React.FC = () => {
           >
             <img
               src={ASSET_IMAGES.cseDepartment}
-              alt="CSE Block Building Entrance"
+              alt="Kings College Main Block Building Facade"
               className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
             <div className="relative z-10 p-6">
               <span className="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/50 text-[10px] font-mono font-bold text-cyan-300 uppercase block w-fit mb-2">
-                AUTHENTIC CSE BLOCK
+                AUTHENTIC MAIN BLOCK
               </span>
               <h4 className="text-xl font-extrabold font-orbitron text-white mb-1">
-                Department of CSE
+                Main Block
               </h4>
               <p className="text-xs text-slate-300 font-light">
-                Home of CISABZ-2K26 Technical Labs
+                Home of Kings College of Engineering
               </p>
             </div>
           </motion.div>
@@ -121,7 +121,7 @@ export const CampusSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* PHOTO 1: ENTRANCE DRIVE & BUILDING */}
+          {/* PHOTO 3: MAIN CSE BUILDING & ENTRANCE DRIVE */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -131,14 +131,14 @@ export const CampusSection: React.FC = () => {
           >
             <img
               src={ASSET_IMAGES.drive}
-              alt="Campus Entrance Drive"
+              alt="Main Building of Computer Science and Engineering"
               className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
             <div className="relative z-10 flex items-center justify-between">
               <span className="text-xs font-mono text-cyan-400 font-bold uppercase">
-                MAIN ENTRANCE DRIVE
+                MAIN CSE BLOCK
               </span>
               <Compass className="w-5 h-5 text-cyan-400" />
             </div>
@@ -146,7 +146,7 @@ export const CampusSection: React.FC = () => {
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="text-lg font-bold font-orbitron text-white mb-1">
-                  {SYMPOSIUM_CONFIG.venueName}
+                  Main Building of Computer Science and Engineering
                 </h4>
                 <p className="text-xs text-slate-300">Kings College Campus</p>
               </div>
