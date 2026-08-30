@@ -30,7 +30,7 @@ export const CinematicEventVideoModal: React.FC<CinematicEventVideoModalProps> =
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const duration = 12; // 12 seconds cinematic reel duration
+  const duration = event?.id === 'hammer-hit' ? 16 : 12; // Dynamic cinematic reel duration
 
   // Video progress timer loop
   useEffect(() => {
@@ -420,7 +420,7 @@ export const CinematicEventVideoModal: React.FC<CinematicEventVideoModalProps> =
         {/* CINEMATIC WIDESCREEN MOVIE PLAYER CONTAINER */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9, y: 30 }}
           className="relative w-full max-w-5xl aspect-video bg-slate-950 border-2 border-cyan-500/40 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(6,182,212,0.3)] z-10 flex flex-col justify-between"
         >
@@ -458,59 +458,252 @@ export const CinematicEventVideoModal: React.FC<CinematicEventVideoModalProps> =
           </div>
 
           {/* CENTER MOVIE SCENE ANIMATION DISPLAY */}
-          <div className="relative z-10 flex-1 px-4 sm:px-10 py-2 flex flex-col justify-between items-center text-center">
-            {/* TOP SCENE STAGE PILL */}
-            <motion.div
-              key={currentSceneIndex}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase shadow-lg backdrop-blur-md"
-            >
-              {currentScene.stage}
-            </motion.div>
+          {event.id === 'hammer-hit' ? (
+            /* DEDICATED HIGH-DEFINITION IPL AUCTION VIDEO SIMULATION */
+            <div className="relative z-10 flex-1 px-3 sm:px-8 py-2 flex flex-col justify-between items-center text-center">
+              <motion.div
+                key={currentSceneIndex}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-4 py-1 rounded-full bg-amber-950/90 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold tracking-widest uppercase shadow-lg backdrop-blur-md"
+              >
+                {currentSceneIndex === 0 && 'SCENE 1: STAGE PLAYER DISPLAY & FRANCHISE TABLES'}
+                {currentSceneIndex === 1 && 'SCENE 2: LIVE BIDDING WAR & PADDLE RAISING'}
+                {currentSceneIndex === 2 && 'SCENE 3: GAVEL SLAM — SOLD & POINTS ALLOCATED'}
+                {currentSceneIndex === 3 && 'SCENE 4: TOTAL POINTS SUMMATION & PRIZE WINNERS'}
+              </motion.div>
 
-            {/* REALISTIC ANIMATED VISUAL DEMO SCENE */}
-            <motion.div
-              key={currentSceneIndex + '-visual'}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-              className="my-auto max-w-3xl w-full p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-xl shadow-2xl relative overflow-hidden"
-            >
-              {/* ANAMORPHIC LENS FLARE DECORATION */}
-              <div className="absolute -top-12 -left-12 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none" />
-              <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-purple-500/20 blur-[50px] rounded-full pointer-events-none" />
+              <motion.div
+                key={currentSceneIndex + '-ipl-video'}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="my-auto max-w-4xl w-full p-4 sm:p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 backdrop-blur-xl shadow-[0_0_50px_rgba(245,158,11,0.2)] relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[60px] rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none" />
 
-              {/* STUDENT IN ACTION AVATAR + TITLE */}
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-950 border-2 border-cyan-400 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(6,182,212,0.4)]">
-                  <User className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-300 animate-bounce" />
-                  <div className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-emerald-500 text-black font-mono text-[10px] font-extrabold tracking-wider shadow-md">
-                    ACTION LIVE
+                {/* SCENE 1: STAGE PLAYER DISPLAY & FRANCHISE TABLES */}
+                {currentSceneIndex === 0 && (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="px-3 py-1 rounded-full bg-slate-950 border border-amber-500/30 text-amber-400 font-mono text-xs font-bold uppercase">
+                      IPL MOCK AUCTION SCREEN DISPLAY
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-center">
+                      <div className="md:col-span-6 p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 border-2 border-amber-500/50 flex items-center gap-4 text-left shadow-lg">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex flex-col items-center justify-center shrink-0">
+                          <Zap className="w-7 h-7 text-amber-400" />
+                          <span className="text-[9px] font-mono font-bold text-amber-300 mt-1">STAR</span>
+                        </div>
+                        <div>
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold uppercase">
+                            MARQUEE BATTER
+                          </span>
+                          <h4 className="text-xl font-black font-orbitron text-white mt-1">VIRAT KOHLI</h4>
+                          <div className="flex items-center gap-3 mt-2 text-xs font-mono">
+                            <span className="text-cyan-400 font-bold">RATING: 95 PTS</span>
+                            <span className="text-amber-400 font-bold">BASE: ₹5.0 LAKHS</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-6 grid grid-cols-3 gap-2">
+                        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+                          <span className="text-[10px] font-mono text-slate-400 block">TEAM ALPHA</span>
+                          <span className="text-xs font-bold text-white font-orbitron">TITANS</span>
+                          <span className="text-[10px] font-mono text-amber-400 block mt-1">₹50.0L PURSE</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950 border border-cyan-500/40 text-center shadow-md">
+                          <span className="text-[10px] font-mono text-cyan-400 block">TEAM BETA</span>
+                          <span className="text-xs font-bold text-white font-orbitron">KINGS</span>
+                          <span className="text-[10px] font-mono text-amber-400 block mt-1">₹50.0L PURSE</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+                          <span className="text-[10px] font-mono text-slate-400 block">TEAM GAMMA</span>
+                          <span className="text-xs font-bold text-white font-orbitron">CYBER</span>
+                          <span className="text-[10px] font-mono text-amber-400 block mt-1">₹50.0L PURSE</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SCENE 2: LIVE BIDDING WAR & PADDLE RAISING */}
+                {currentSceneIndex === 1 && (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold uppercase animate-pulse">
+                      ⚡ LIVE BIDDING WAR IN PROGRESS
+                    </div>
+
+                    <div className="w-full max-w-2xl p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono text-slate-400">ITEM: VIRAT KOHLI (95 PTS)</span>
+                        <span className="text-xs font-mono text-amber-400 font-bold">BASE PRICE: ₹5.0L</span>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/60 border border-amber-500/50 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono text-slate-400 block">CURRENT HIGHEST BID</span>
+                          <span className="text-2xl sm:text-3xl font-black font-orbitron text-amber-400">₹24.0 LAKHS</span>
+                        </div>
+                        <div className="px-3 py-1.5 rounded-xl bg-amber-500 text-black font-mono font-black text-xs uppercase animate-bounce">
+                          PADDLE RAISED: TEAM KINGS!
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-xs font-mono text-slate-400">
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                          <span className="block text-[10px] text-slate-500">TITANS BID</span>
+                          <span className="text-slate-300 font-bold">₹12.0 LAKHS</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
+                          <span className="block text-[10px] text-slate-500">CYBER BID</span>
+                          <span className="text-slate-300 font-bold">₹18.5 LAKHS</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-bold shadow-sm">
+                          <span className="block text-[10px] text-cyan-400">KINGS COUNTER</span>
+                          <span>₹24.0 LAKHS</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SCENE 3: HAMMER SLAM, SOLD & POINTS ALLOCATED */}
+                {currentSceneIndex === 2 && (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="px-3 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold uppercase">
+                      🔨 GAVEL SLAMMED — SOLD TO TEAM KINGS!
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-center">
+                      <div className="md:col-span-6 p-5 rounded-2xl bg-slate-950 border-2 border-emerald-500/60 flex flex-col items-center text-center shadow-xl">
+                        <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mb-2">
+                          <Zap className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-xl font-extrabold font-orbitron text-white">VIRAT KOHLI</h4>
+                        <span className="text-sm font-bold text-emerald-400 font-mono mt-1">
+                          SOLD FOR ₹24.0 LAKHS TO TEAM KINGS
+                        </span>
+                      </div>
+
+                      <div className="md:col-span-6 p-5 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 flex flex-col items-center text-center">
+                        <span className="text-xs font-mono text-cyan-300 mb-1">PLAYER VALUE ADDED TO SQUAD</span>
+                        <div className="text-3xl font-black font-orbitron text-cyan-400 mb-1">+95 POINTS</div>
+                        <p className="text-xs text-slate-300 font-light">
+                          Team Kings squad rating score increases from <strong className="text-white">371 PTS</strong> &rarr; <strong className="text-cyan-300">466 PTS</strong>!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SCENE 4: TOTAL POINTS SUMMATION, 1st & 2nd WINNERS PRIZE DECLARATION */}
+                {currentSceneIndex === 3 && (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="px-3 py-1 rounded-full bg-amber-500 text-black font-mono text-xs font-black uppercase">
+                      🏆 FINAL SQUAD SCORE BOARD & PRIZE WINNERS
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                      <div className="p-4 rounded-2xl bg-gradient-to-b from-amber-950/80 via-slate-900 to-slate-950 border-2 border-amber-400 text-center shadow-xl relative overflow-hidden">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[9px] font-black font-mono">
+                          PRIZE 1
+                        </div>
+                        <span className="text-2xl mb-1 block">🥇</span>
+                        <h4 className="text-base font-black font-orbitron text-amber-300">TEAM KINGS</h4>
+                        <div className="text-xs font-mono text-slate-300 my-1">5 Players Acquired</div>
+                        <div className="text-xl font-black font-orbitron text-white">466 PTS</div>
+                        <span className="text-[10px] font-mono text-emerald-400 font-bold block mt-1">1st PLACE WINNER</span>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-slate-700 text-center shadow-lg relative">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[9px] font-bold font-mono">
+                          PRIZE 2
+                        </div>
+                        <span className="text-2xl mb-1 block">🥈</span>
+                        <h4 className="text-base font-black font-orbitron text-slate-200">TEAM TITANS</h4>
+                        <div className="text-xs font-mono text-slate-300 my-1">5 Players Acquired</div>
+                        <div className="text-xl font-black font-orbitron text-white">420 PTS</div>
+                        <span className="text-[10px] font-mono text-cyan-400 font-bold block mt-1">2nd PLACE RUNNER-UP</span>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center opacity-80">
+                        <span className="text-2xl mb-1 block">🥉</span>
+                        <h4 className="text-base font-black font-orbitron text-slate-400">TEAM CYBER</h4>
+                        <div className="text-xs font-mono text-slate-400 my-1">5 Players Acquired</div>
+                        <div className="text-xl font-black font-orbitron text-slate-300">385 PTS</div>
+                        <span className="text-[10px] font-mono text-slate-500 block mt-1">3rd PLACE</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
+              <div className="w-full max-w-2xl px-4 py-2 rounded-2xl bg-slate-950/90 border border-slate-800 text-xs sm:text-sm font-mono text-slate-300 backdrop-blur-md">
+                <span className="text-amber-400 font-bold">SIMULATION REEL: </span>
+                {currentSceneIndex === 0 && <span>Displaying Player details (VIRAT KOHLI - 95 PTS, Base: ₹5.0L) & Team Franchise tables.</span>}
+                {currentSceneIndex === 1 && <span>Student teams raising bidding paddles! Bid climbs from ₹5.0L to ₹24.0L.</span>}
+                {currentSceneIndex === 2 && <span>Gavel slams! Player sold to Team Kings for ₹24.0L. +95 PTS added to squad score!</span>}
+                {currentSceneIndex === 3 && <span>Total player values summed up: Team Kings wins 1st Place (Prize 1) with 466 PTS!</span>}
+              </div>
+            </div>
+          ) : (
+            <div className="relative z-10 flex-1 px-4 sm:px-10 py-2 flex flex-col justify-between items-center text-center">
+              {/* TOP SCENE STAGE PILL */}
+              <motion.div
+                key={currentSceneIndex}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase shadow-lg backdrop-blur-md"
+              >
+                {currentScene.stage}
+              </motion.div>
+
+              {/* REALISTIC ANIMATED VISUAL DEMO SCENE */}
+              <motion.div
+                key={currentSceneIndex + '-visual'}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="my-auto max-w-3xl w-full p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-xl shadow-2xl relative overflow-hidden"
+              >
+                {/* ANAMORPHIC LENS FLARE DECORATION */}
+                <div className="absolute -top-12 -left-12 w-40 h-40 bg-cyan-500/20 blur-[50px] rounded-full pointer-events-none" />
+                <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-purple-500/20 blur-[50px] rounded-full pointer-events-none" />
+
+                {/* STUDENT IN ACTION AVATAR + TITLE */}
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-950 border-2 border-cyan-400 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(6,182,212,0.4)]">
+                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-300 animate-bounce" />
+                    <div className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-emerald-500 text-black font-mono text-[10px] font-extrabold tracking-wider shadow-md">
+                      ACTION LIVE
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl sm:text-3xl font-extrabold font-orbitron text-white mb-2 tracking-tight">
+                    {currentScene.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-300 font-light max-w-xl mb-4">
+                    {currentScene.subtitle}
+                  </p>
+
+                  {/* CODE / ACTION HIGHLIGHT BOX */}
+                  <div className="px-4 py-2.5 rounded-xl bg-slate-950 border border-cyan-500/30 font-code text-xs sm:text-sm text-cyan-300 shadow-inner flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span>{currentScene.codeHighlight}</span>
                   </div>
                 </div>
+              </motion.div>
 
-                <h3 className="text-xl sm:text-3xl font-extrabold font-orbitron text-white mb-2 tracking-tight">
-                  {currentScene.title}
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 font-light max-w-xl mb-4">
-                  {currentScene.subtitle}
-                </p>
-
-                {/* CODE / ACTION HIGHLIGHT BOX */}
-                <div className="px-4 py-2.5 rounded-xl bg-slate-950 border border-cyan-500/30 font-code text-xs sm:text-sm text-cyan-300 shadow-inner flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>{currentScene.codeHighlight}</span>
-                </div>
+              {/* NARRATIVE SUBTITLE BAR AT BOTTOM */}
+              <div className="w-full max-w-2xl px-4 py-2 rounded-2xl bg-slate-950/90 border border-slate-800 text-xs sm:text-sm font-mono text-slate-300 backdrop-blur-md">
+                <span className="text-cyan-400 font-bold">CAPTION: </span>
+                <span>{currentScene.action}</span>
               </div>
-            </motion.div>
-
-            {/* NARRATIVE SUBTITLE BAR AT BOTTOM */}
-            <div className="w-full max-w-2xl px-4 py-2 rounded-2xl bg-slate-950/90 border border-slate-800 text-xs sm:text-sm font-mono text-slate-300 backdrop-blur-md">
-              <span className="text-cyan-400 font-bold">CAPTION: </span>
-              <span>{currentScene.action}</span>
             </div>
-          </div>
+          )}
 
           {/* BOTTOM CONTROLS & TIMELINE SCRUBBER OVERLAY */}
           <div className="relative z-20 p-4 sm:p-6 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent flex flex-col gap-3">
@@ -527,7 +720,7 @@ export const CinematicEventVideoModal: React.FC<CinematicEventVideoModalProps> =
                 <span className="text-cyan-400 font-bold">
                   SCENE {currentSceneIndex + 1} OF 4
                 </span>
-                <span>00:12</span>
+                <span>00:{duration.toString().padStart(2, '0')}</span>
               </div>
             </div>
 
