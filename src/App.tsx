@@ -7,7 +7,7 @@ import { AboutSection } from './components/AboutSection';
 import { DignitariesSection } from './components/DignitariesSection';
 import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
-import { EventFilterSection } from './components/EventFilterSection';
+
 import { RegistrationPassesSection } from './components/RegistrationPassesSection';
 import { RegistrationSection } from './components/RegistrationSection';
 import { ScheduleSection } from './components/ScheduleSection';
@@ -169,13 +169,6 @@ export function App() {
 
         {/* OFFICIAL SYMPOSIUM ENTRY TICKET PASSES */}
         <RegistrationPassesSection onRegisterClick={(eventId) => handleOpenRegistration(eventId)} />
-
-        {/* INTERACTIVE EVENT EXPLORER FILTER */}
-        <EventFilterSection
-          onViewGuidelines={(event) => setSelectedGuidelineEvent(event)}
-          onRegister={(eventId) => handleOpenRegistration(eventId)}
-          onViewCinematicDemo={(event) => setSelectedCinematicDemoEvent(event)}
-        />
 
         {/* REGISTRATION SECTION */}
         <RegistrationSection onRegisterClick={() => handleOpenRegistration()} />
