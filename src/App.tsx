@@ -9,7 +9,6 @@ import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
 
 import { RegistrationPassesSection } from './components/RegistrationPassesSection';
-import { RegistrationSection } from './components/RegistrationSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { CampusSection } from './components/CampusSection';
 import { GallerySection } from './components/GallerySection';
@@ -166,9 +165,6 @@ export function App() {
 
         {/* OFFICIAL SYMPOSIUM ENTRY TICKET PASSES */}
         <RegistrationPassesSection onRegisterClick={(eventId) => handleOpenRegistration(eventId)} />
-
-        {/* REGISTRATION SECTION */}
-        <RegistrationSection onRegisterClick={() => handleOpenRegistration()} />
 
         {/* SCHEDULE / EVENT TIMELINE */}
         <ScheduleSection />

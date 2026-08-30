@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS } from '../data/symposiumData';
-import { Phone, Mail, MessageSquare, Send } from 'lucide-react';
+import { Phone, Mail, MessageSquare, Send, MapPin, Navigation, Compass, ExternalLink } from 'lucide-react';
 
 interface ContactSectionProps {
   onRegisterClick: () => void;
@@ -11,7 +11,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
   const primaryPhone = STUDENT_COORDINATORS[0].phone;
 
   return (
-    <section id="contact" className="py-24 relative bg-slate-950">
+    <section id="contact" className="py-24 relative bg-slate-950 border-t border-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -98,7 +98,67 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
             </p>
           </a>
         </div>
+
+        {/* INTERACTIVE CAMPUS LOCATION MAP VIEW */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl overflow-hidden p-6 sm:p-8 shadow-2xl"
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-semibold uppercase mb-2">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>INTERACTIVE CAMPUS NAVIGATION</span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Find Your Way to Kings College
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400 font-light mt-1">
+                {SYMPOSIUM_CONFIG.collegeAddress}
+              </p>
+            </div>
+
+            <a
+              href={SYMPOSIUM_CONFIG.googleMapsDirectionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all cursor-pointer group shrink-0"
+            >
+              <Navigation className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+              <span>GET DIRECTIONS ON GOOGLE MAPS</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+
+          {/* GOOGLE MAP IFRAME CONTAINER */}
+          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full rounded-2xl overflow-hidden border border-slate-800 shadow-inner group">
+            <iframe
+              title="Kings College of Engineering Google Map Location"
+              src={SYMPOSIUM_CONFIG.googleMapsEmbedUrl}
+              className="w-full h-full border-0 filter saturate-120 contrast-105"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+
+            {/* OVERLAY BADGE WITH DIRECT LINK */}
+            <div className="absolute bottom-4 right-4 z-10">
+              <a
+                href={SYMPOSIUM_CONFIG.googleMapsDirectionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 text-xs font-bold shadow-xl backdrop-blur-md hover:bg-cyan-950 transition-colors"
+              >
+                <Compass className="w-4 h-4 text-cyan-400" />
+                <span>Open Directions in Google Maps</span>
+              </a>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
 };
+

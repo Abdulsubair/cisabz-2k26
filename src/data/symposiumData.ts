@@ -20,6 +20,8 @@ export const SYMPOSIUM_CONFIG = {
   registrationEndDate: '23 September 2026',
   registrationLink: 'REGISTRATION_LINK_HERE',
   googleMapsUrl: 'https://maps.google.com/?q=Kings+College+of+Engineering+Pudukkottai',
+  googleMapsDirectionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Kings+College+of+Engineering+Punalkulam',
+  googleMapsEmbedUrl: 'https://maps.google.com/maps?q=Kings%20College%20of%20Engineering%20Punalkulam%20Pudukkottai&t=&z=14&ie=UTF8&iwloc=&output=embed',
   emailPlaceholder: 'cisabz2k26@gmail.com',
   instagramPlaceholder: 'https://instagram.com/cisabz2k26_official',
   registrationFee: 200,
