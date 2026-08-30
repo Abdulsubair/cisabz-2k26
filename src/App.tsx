@@ -150,9 +150,6 @@ export function App() {
         {/* ABOUT CISABZ-2K26 */}
         <AboutSection />
 
-        {/* CHIEF PATRONS & DIGNITARIES */}
-        <DignitariesSection />
-
         {/* DEDICATED TECHNICAL EVENTS */}
         <TechnicalEventsSection
           onViewGuidelines={(event) => setSelectedGuidelineEvent(event)}
@@ -181,6 +178,9 @@ export function App() {
 
         {/* GALLERY */}
         <GallerySection />
+
+        {/* CHIEF PATRONS & DIGNITARIES */}
+        <DignitariesSection />
 
         {/* COORDINATORS */}
         <CoordinatorsSection />

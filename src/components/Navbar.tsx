@@ -23,11 +23,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
       const sections = [
         'home',
         'about',
-        'patrons',
         'technical-events',
         'non-technical-events',
         'schedule',
         'gallery',
+        'patrons',
         'contact',
       ];
       const scrollPosition = window.scrollY + 120;
@@ -52,11 +52,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
   const navLinks = [
     { name: 'Home', href: '#home', id: 'home' },
     { name: 'About', href: '#about', id: 'about' },
-    { name: 'Patrons', href: '#patrons', id: 'patrons' },
     { name: 'Technical', href: '#technical-events', id: 'technical-events' },
     { name: 'Non-Technical', href: '#non-technical-events', id: 'non-technical-events' },
     { name: 'Schedule', href: '#schedule', id: 'schedule' },
     { name: 'Gallery', href: '#gallery', id: 'gallery' },
+    { name: 'Patrons', href: '#patrons', id: 'patrons' },
     { name: 'Contact', href: '#contact', id: 'contact' },
   ];
 
