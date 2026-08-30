@@ -293,6 +293,14 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, forc
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)', transition: { duration: 0.6 } }}
           >
+            {/* FULL-SCREEN ELEGANT BLURRED CISABZ LOGO WATERMARK BACKDROP */}
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-30 filter blur-md scale-110 pointer-events-none z-0"
+              style={{ backgroundImage: `url(${cisabzLogo})` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/50 to-slate-950/90" />
+            </div>
+
             {/* 3D CANVAS BACKGROUND */}
             <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-10 opacity-75" />
 
