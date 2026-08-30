@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --gold-light: #fff4d6;
+    --gold-bright: #ffd95a;
+    --gold-luxury: #d4af37;
+    --holo-cyan: #00e5ff;
+    --holo-blue: #168bff;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Rajdhani', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  
+  body {
+    background-color: #020617;
+    color: #f8fafc;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* High-Tech & Majestic Custom Fonts */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-cinzel-deco {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', 'Inter', sans-serif;
+}
+
+.font-rajdhani {
+  font-family: 'Rajdhani', 'Inter', sans-serif;
+}
+
+.font-code {
+  font-family: 'Fira Code', monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00e5ff;
+  box-shadow: 0 0 10px #00e5ff;
+}
+
+/* Luxury Gold & Cyan Gradients */
+.text-gradient-gold-luxury {
+  background: linear-gradient(135deg, #fff4d6 0%, #ffd95a 35%, #d4af37 65%, #c9a227 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.35));
+}
+
+.text-gradient-cyan-luxury {
+  background: linear-gradient(135deg, #e8f7ff 0%, #38bdf8 30%, #00e5ff 60%, #168bff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.45));
+}
+
+/* Cyber Matrix Background Patterns */
+.bg-tech-grid {
+  background-image: linear-gradient(to right, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.bg-radial-glow {
+  background: radial-gradient(circle at 50% 30%, rgba(0, 229, 255, 0.2), rgba(212, 175, 55, 0.12), transparent 70%);
+}
+
+/* Holographic Electric Border Cards */
+.holo-electric-wrap {
+  position: relative;
+  border-radius: 24px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.6), rgba(56, 189, 248, 0.2), rgba(22, 139, 255, 0.6));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.holo-electric-wrap:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: linear-gradient(135deg, #00e5ff, #ffd95a, #168bff);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 229, 255, 0.5), 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+/* Sweeping Light Shine Effect */
+@keyframes sweepLight {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  50% { transform: translateX(150%) skewX(-20deg); }
+  100% { transform: translateX(150%) skewX(-20deg); }
+}
+
+.animate-sweep-light::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  animation: sweepLight 5s linear infinite;
+  pointer-events: none;
+}
+
+/* Floating Pass Animation */
+@keyframes floatPass {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-8px); }
+}
+
+.animate-float-pass {
+  animation: floatPass 6s ease-in-out infinite alternate;
+}
+
+/* Laser Scan */
+@keyframes laserScan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(500%); opacity: 0; }
+}
+
+.animate-laser-scan {
+  animation: laserScan 4s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 5s ease-in-out infinite;
+}
