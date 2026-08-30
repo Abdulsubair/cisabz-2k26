@@ -8,7 +8,6 @@ import { DignitariesSection } from './components/DignitariesSection';
 import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
 
-import { RegistrationPassesSection } from './components/RegistrationPassesSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { CampusSection } from './components/CampusSection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
@@ -152,9 +151,6 @@ export function App() {
           onRegister={(eventId) => handleOpenRegistration(eventId)}
           onViewCinematicDemo={(event) => setSelectedCinematicDemoEvent(event)}
         />
-
-        {/* OFFICIAL SYMPOSIUM ENTRY TICKET PASSES */}
-        <RegistrationPassesSection onRegisterClick={(eventId) => handleOpenRegistration(eventId)} />
 
         {/* SCHEDULE / EVENT TIMELINE */}
         <ScheduleSection />
