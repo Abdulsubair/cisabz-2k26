@@ -101,10 +101,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     }
   };
 
-  // Handle Login per Audio Instructions: Username: cisabz, Password: kings@123
+  // Handle Login: Username: Cisabz2k26, Password: Admin@cisabz26
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim() === 'cisabz' && password.trim() === 'kings@123') {
+    if (username.trim() === 'Cisabz2k26' && password.trim() === 'Admin@cisabz26') {
       setIsAuthenticated(true);
       localStorage.setItem('cisabz_admin_authed', 'true');
       setAuthError('');
