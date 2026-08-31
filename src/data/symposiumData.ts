@@ -38,6 +38,12 @@ export const ASSET_IMAGES = {
   walkway: '/assets/campus-walkway.jpg',
   aerial: '/assets/college-aerial.jpg',
   cseDepartment: '/assets/cse-department.jpg',
+  // Real CSE Department Event Photos from Kings College website
+  cseEventGuestLecture1: '/assets/cse-event-guest-lecture-1.jpg',
+  cseEventGuestLecture2: '/assets/cse-event-guest-lecture-2.jpg',
+  cseEventOrientation: '/assets/cse-event-orientation.jpg',
+  cseEventBridgeCourse: '/assets/cse-event-bridge-course.png',
+  cseEventWorkshop: '/assets/cse-event-workshop.png',
   // Backward compatibility aliases
   gate: '/assets/campus-drive.jpg',
   campusPath: '/assets/campus-walkway.jpg',
