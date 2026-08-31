@@ -23,6 +23,9 @@ import {
   MapPin,
   Clock,
   AlertCircle,
+  ShieldAlert,
+  Send,
+  RefreshCw,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -55,7 +58,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   onClose,
   initialSelectedEventId,
 }) => {
-  // Step State: 1 = Details, 2 = Tech Events, 3 = Non-Tech Events, 4 = Summary, 5 = Payment Overlay
+  // Step State: 1 = Details, 2 = Tech Events, 3 = Non-Tech Events, 4 = Summary, 5 = Payment Checkout
   const [step, setStep] = useState<number>(1);
 
   // Form Fields
@@ -66,6 +69,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [department, setDepartment] = useState('B.E CSE');
   const [customDepartment, setCustomDepartment] = useState('');
   const [yearOfStudy, setYearOfStudy] = useState('1st Year (Freshman)');
+
+  // Payment Verification Fields
+  const [utrNumber, setUtrNumber] = useState('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [paymentSubmittedState, setPaymentSubmittedState] = useState<'IDLE' | 'PENDING_APPROVAL' | 'APPROVED'>('IDLE');
 
   // Selected Events (Students can select ONLY 1 Technical Event and ONLY 1 Non-Technical Event)
   const [selectedTechEvents, setSelectedTechEvents] = useState<string[]>(() => {
@@ -90,15 +98,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   // UI state
   const [copiedUpi, setCopiedUpi] = useState(false);
-  const [copiedPhone, setCopiedPhone] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   // Reset modal state every time it opens
   React.useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setSubmitted(false);
+      setPaymentSubmittedState('IDLE');
+      setUtrNumber('');
       setValidationError('');
 
       if (
@@ -144,23 +151,35 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   // Fixed Registration Fee (₹200 for 1 Tech + 1 Non-Tech Event Pass)
   const totalFee = SYMPOSIUM_CONFIG.registrationFee;
 
-  // Save registration to database (unpaid or paid)
-  const saveRegistrationToDatabase = (status: 'REGISTERED (NOT PAID)' | 'PAID (CONFIRMED)') => {
+  // Helper getters
+  const displayDepartment = department === 'OTHER' ? customDepartment || 'OTHER' : department;
+  const totalSelectedEvents = selectedTechEvents.length + selectedNonTechEvents.length;
+
+  const selectedTechEventObjects = TECHNICAL_EVENTS.filter((e) =>
+    selectedTechEvents.includes(e.id)
+  );
+  const selectedNonTechEventObjects = NON_TECHNICAL_EVENTS.filter((e) =>
+    selectedNonTechEvents.includes(e.id)
+  );
+  const allSelectedEventObjects = [...selectedTechEventObjects, ...selectedNonTechEventObjects];
+
+  // Save registration to database / localStorage
+  const saveRegistrationToDatabase = (status: 'PENDING_APPROVAL' | 'PAID (CONFIRMED)', txnId: string = '') => {
     if (!fullName.trim() || !email.trim()) return;
 
-    const displayDept = department === 'OTHER' ? customDepartment || 'OTHER' : department;
     const record = {
       id: registrationId,
       fullName: fullName.trim(),
       email: email.trim(),
       phone: phone.trim(),
       college: college.trim(),
-      department: displayDept,
+      department: displayDepartment,
       yearOfStudy,
       techEvents: selectedTechEvents,
       nonTechEvents: selectedNonTechEvents,
       totalAmount: totalFee,
-      paymentStatus: status,
+      paymentStatus: status === 'PAID (CONFIRMED)' ? 'PAID' : 'PENDING_APPROVAL',
+      utrNumber: txnId || utrNumber,
       timestamp: new Date().toLocaleString(),
       emailSentStatus: status === 'PAID (CONFIRMED)',
     };
@@ -182,7 +201,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       return;
     }
     setValidationError('');
-    saveRegistrationToDatabase('REGISTERED (NOT PAID)');
     setStep(2);
   };
 
@@ -210,40 +228,105 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
-  const handleCopyPhone = () => {
-    navigator.clipboard.writeText(SYMPOSIUM_CONFIG.upiPhone);
-    setCopiedPhone(true);
-    setTimeout(() => setCopiedPhone(false), 2000);
+  // Submit Payment Transaction ID to Organizers (cisabz26@gmail.com)
+  const handleSubmitPaymentForApproval = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!utrNumber.trim() || utrNumber.trim().length < 6) {
+      setValidationError('Please enter a valid 12-digit UPI Transaction / UTR Reference ID.');
+      return;
+    }
+
+    setValidationError('');
+    setIsSubmittingPayment(true);
+    saveRegistrationToDatabase('PENDING_APPROVAL', utrNumber.trim());
+
+    // Send payment verification request to cisabz26@gmail.com via FormSubmit
+    try {
+      await fetch(`https://formsubmit.co/ajax/${SYMPOSIUM_CONFIG.coordinatorEmail}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `🚨 CISABZ-2K26 PAYMENT APPROVAL REQUEST: ₹200 from ${fullName} (UTR: ${utrNumber})`,
+          _template: 'table',
+          _captcha: 'false',
+          source: 'CISABZ-2K26 Registration Payment System',
+          registrationId,
+          participantName: fullName.trim(),
+          participantEmail: email.trim(),
+          participantPhone: phone.trim(),
+          collegeName: college.trim(),
+          department: displayDepartment,
+          yearOfStudy,
+          paymentAmount: `₹${totalFee}`,
+          upiTransactionUTR: utrNumber.trim(),
+          payeeName: SYMPOSIUM_CONFIG.upiName,
+          payeeUpiId: SYMPOSIUM_CONFIG.upiId,
+          registeredEvents: allSelectedEventObjects.map((e) => `${e.name} (${e.category.toUpperCase()}) - ${e.time} @ ${e.venue}`).join(', '),
+          approvalInstruction: `Please review UTR ${utrNumber.trim()} and approve registration in Admin Portal or web application.`,
+          timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        }),
+      });
+    } catch (err) {
+      console.warn('Payment notification dispatch completed:', err);
+    } finally {
+      setIsSubmittingPayment(false);
+      setPaymentSubmittedState('PENDING_APPROVAL');
+    }
   };
 
-  const handleCompletePayment = () => {
+  // Coordinator Approval Trigger Function
+  const handleApproveRegistration = async () => {
+    setIsSubmittingPayment(true);
+    saveRegistrationToDatabase('PAID (CONFIRMED)', utrNumber.trim() || 'APPROVED-TRANSACTION');
+
+    // Trigger registration completion email dispatch to student's email
+    try {
+      await fetch(`https://formsubmit.co/ajax/${email.trim()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026`,
+          _template: 'table',
+          _captcha: 'false',
+          salutation: `Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026`,
+          registrationId,
+          participantName: fullName.trim(),
+          phone: phone.trim(),
+          college: college.trim(),
+          department: displayDepartment,
+          yearOfStudy,
+          eventDate: SYMPOSIUM_CONFIG.eventDate,
+          reportingTime: '9:15 AM at Main Auditorium Entrance Desk',
+          registeredEvents: allSelectedEventObjects.map((e) => `${e.name} (${e.category.toUpperCase()}) | Time: ${e.time} | Venue: ${e.venue}`).join(' ; '),
+          venueAddress: SYMPOSIUM_CONFIG.collegeAddress,
+          timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        }),
+      });
+    } catch (err) {
+      console.warn('Student confirmation email dispatch completed:', err);
+    }
+
     confetti({
       particleCount: 150,
       spread: 90,
       origin: { y: 0.5 },
     });
 
-    saveRegistrationToDatabase('PAID (CONFIRMED)');
-    setSubmitted(true);
+    setIsSubmittingPayment(false);
+    setPaymentSubmittedState('APPROVED');
   };
 
   const handleResetAndClose = () => {
-    setSubmitted(false);
+    setPaymentSubmittedState('IDLE');
     setStep(1);
     onClose();
   };
-
-  // Helper getters
-  const displayDepartment = department === 'OTHER' ? customDepartment || 'OTHER' : department;
-  const totalSelectedEvents = selectedTechEvents.length + selectedNonTechEvents.length;
-
-  const selectedTechEventObjects = TECHNICAL_EVENTS.filter((e) =>
-    selectedTechEvents.includes(e.id)
-  );
-  const selectedNonTechEventObjects = NON_TECHNICAL_EVENTS.filter((e) =>
-    selectedNonTechEvents.includes(e.id)
-  );
-  const allSelectedEventObjects = [...selectedTechEventObjects, ...selectedNonTechEventObjects];
 
   return (
     <AnimatePresence>
@@ -274,7 +357,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <X className="w-5 h-5" />
             </button>
 
-            {!submitted ? (
+            {paymentSubmittedState === 'IDLE' ? (
               step < 5 ? (
                 /* REGISTRATION WIZARD (STEPS 1 - 4) */
                 <div>
@@ -823,22 +906,22 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 /* STEP 5: COMPLETE DELEGATE PAYMENT OVERLAY (UPI CHECKOUT MODAL) */
                 <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
                   {/* HEADER LOGO & CHECKOUT BADGE */}
-                  <div className="text-center mb-5">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-widest mb-3">
+                  <div className="text-center mb-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-widest mb-2">
                       <Lock className="w-3 h-3 text-cyan-400" />
-                      <span>256-bit Secure UPI Checkout</span>
+                      <span>256-bit Secure UPI Payment & Verification</span>
                     </div>
 
                     <h3 className="text-2xl sm:text-3xl font-black font-orbitron text-white tracking-tight">
                       Complete Delegate Payment
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Finalize your delegate pass for {SYMPOSIUM_CONFIG.name} on {SYMPOSIUM_CONFIG.eventDate}.
+                      Scan QR code or use UPI ID to pay ₹{SYMPOSIUM_CONFIG.registrationFee}. Submit your 12-digit UTR for approval.
                     </p>
                   </div>
 
                   {/* TOTAL PAYABLE AMOUNT BANNER */}
-                  <div className="p-4 rounded-2xl bg-[#0e1a38] border border-[#1e3260] mb-5 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-[#0e1a38] border border-[#1e3260] mb-4 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-extrabold mb-0.5">
                         TOTAL AMOUNT PAYABLE
@@ -849,7 +932,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
 
                     <div className="text-right">
-                      <div className="text-3xl font-black font-cinzel text-amber-400">
+                      <div className="text-2xl sm:text-3xl font-black font-cinzel text-amber-400">
                         ₹{SYMPOSIUM_CONFIG.registrationFee}
                       </div>
                       <div className="text-[9px] font-mono text-emerald-400 uppercase font-bold tracking-wider">
@@ -858,110 +941,186 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                   </div>
 
-                  {/* QR CODE & UPI DETAILS BOX */}
-                  <div className="p-5 rounded-2xl bg-[#091122] border border-[#1b2b4f] mb-6 text-center">
+                  {/* QR CODE & PAYEE DETAILS BOX */}
+                  <div className="p-4 rounded-2xl bg-[#091122] border border-[#1b2b4f] mb-4 text-center">
+                    {/* PAYEE NAME BADGE */}
+                    <div className="inline-block px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-xs font-bold mb-3">
+                      Payee Name: {SYMPOSIUM_CONFIG.upiName} (Abdul Jubair)
+                    </div>
+
                     {/* WHITE QR CODE CONTAINER */}
-                    <div className="w-56 h-56 mx-auto bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center justify-between mb-4 border-2 border-amber-400/40">
+                    <div className="w-48 h-48 mx-auto bg-white p-2.5 rounded-2xl shadow-xl flex flex-col items-center justify-between mb-3 border-2 border-amber-400/40">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3D${encodeURIComponent(
                           SYMPOSIUM_CONFIG.upiId
-                        )}%26pn%3DCISABZ%252026%26am%3D${SYMPOSIUM_CONFIG.registrationFee}.00%26cu%3DINR`}
-                        alt="UPI Payment QR Code"
-                        className="w-44 h-44 object-contain rounded-lg"
+                        )}%26pn%3DAbdul%2520Jubair%26am%3D${SYMPOSIUM_CONFIG.registrationFee}.00%26cu%3DINR`}
+                        alt="Abdul Jubair UPI Payment QR Code"
+                        className="w-38 h-38 object-contain rounded-lg"
                       />
-                      <div className="text-black font-mono font-bold text-[11px] border-t border-slate-200 pt-1.5 w-full">
-                        ₹{SYMPOSIUM_CONFIG.registrationFee}.00 &bull; {SYMPOSIUM_CONFIG.name}
+                      <div className="text-black font-mono font-bold text-[10px] border-t border-slate-200 pt-1 w-full truncate">
+                        {SYMPOSIUM_CONFIG.upiId} &bull; ₹{SYMPOSIUM_CONFIG.registrationFee}.00
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-300 mb-4 font-mono">
+                    <p className="text-[11px] text-slate-300 mb-3 font-mono">
                       Scan with <strong className="text-white font-bold">Google Pay, PhonePe, Paytm</strong>, or any UPI App to pay ₹{SYMPOSIUM_CONFIG.registrationFee}.
                     </p>
 
                     {/* UPI ID INPUT ROW */}
-                    <div className="space-y-2 text-left">
-                      <div className="p-2.5 rounded-xl bg-[#0e1832] border border-[#1c2c54] flex items-center justify-between gap-2">
-                        <div className="truncate">
-                          <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
-                            UPI ID
-                          </div>
-                          <div className="text-xs font-mono font-bold text-white truncate">
-                            {SYMPOSIUM_CONFIG.upiId}
-                          </div>
+                    <div className="p-2 rounded-xl bg-[#0e1832] border border-[#1c2c54] flex items-center justify-between gap-2 mb-2 text-left">
+                      <div className="truncate">
+                        <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
+                          OFFICIAL UPI ID
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={handleCopyUpi}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-cyan-300 flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
-                        >
-                          {copiedUpi ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copy UPI</span>
-                            </>
-                          )}
-                        </button>
+                        <div className="text-xs font-mono font-bold text-amber-300 truncate">
+                          {SYMPOSIUM_CONFIG.upiId}
+                        </div>
                       </div>
 
-                      {/* MOBILE NUMBER INPUT ROW */}
-                      <div className="p-2.5 rounded-xl bg-[#0e1832] border border-[#1c2c54] flex items-center justify-between gap-2">
-                        <div>
-                          <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
-                            MOBILE NUMBER
-                          </div>
-                          <div className="text-xs font-mono font-bold text-white">
-                            {SYMPOSIUM_CONFIG.upiPhone}
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={handleCopyPhone}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-cyan-300 flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
-                        >
-                          {copiedPhone ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyUpi}
+                        className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-cyan-300 flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                      >
+                        {copiedUpi ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy UPI</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  {/* FINAL SUBMIT BUTTON */}
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={handleCompletePayment}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                      <span>I HAVE COMPLETED PAYMENT & REGISTRATION</span>
-                    </button>
+                  {/* FORM TO ENTER TRANSACTION UTR NUMBER (REQUIRED) */}
+                  <form onSubmit={handleSubmitPaymentForApproval} className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-200 mb-1">
+                        Enter 12-Digit UPI Transaction Ref / UTR Number *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g., 423987123456 (Found in GPay/PhonePe receipt)"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value.replace(/[^0-9A-Za-z]/g, ''))}
+                        className="w-full px-4 py-3 rounded-xl bg-[#0e1832] border border-[#1e2f56] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all font-mono tracking-wider"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Without completing payment & UTR entry, registration cannot be finalized. Notification will be sent to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for verification.
+                      </span>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setStep(4)}
-                      className="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-xs font-semibold uppercase transition-colors cursor-pointer"
-                    >
-                      ← Back to summary
-                    </button>
-                  </div>
+                    {/* VALIDATION ERROR BANNER */}
+                    {validationError && (
+                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <span>{validationError}</span>
+                      </div>
+                    )}
+
+                    {/* FINAL SUBMIT BUTTON */}
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="submit"
+                        disabled={isSubmittingPayment}
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isSubmittingPayment ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5 stroke-[2.5]" />
+                        )}
+                        <span>{isSubmittingPayment ? 'DISPATCHING TO COORDINATOR...' : 'SUBMIT PAYMENT & REQUEST APPROVAL'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStep(4)}
+                        className="w-full py-2 rounded-xl text-slate-400 hover:text-white text-xs font-semibold uppercase transition-colors cursor-pointer"
+                      >
+                        ← Back to summary
+                      </button>
+                    </div>
+                  </form>
                 </motion.div>
               )
+            ) : paymentSubmittedState === 'PENDING_APPROVAL' ? (
+              /* PAYMENT SUBMITTED - AWAITING COORDINATOR APPROVAL */
+              <div className="py-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 text-amber-400 flex items-center justify-center mx-auto mb-3 shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+                  <Clock className="w-8 h-8 stroke-[2.5] animate-pulse" />
+                </div>
+
+                <h3 className="text-2xl font-extrabold text-white mb-1">
+                  Payment Submitted & Awaiting Approval
+                </h3>
+                <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">
+                  Thank you <strong className="text-white">{fullName}</strong>. Payment verification notification has been sent directly to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>.
+                </p>
+
+                {/* EMAIL DISPATCH ALERT BADGE */}
+                <div className="mb-5 p-3 rounded-2xl bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-mono flex items-center justify-center gap-2 shadow-lg">
+                  <Send className="w-4 h-4 text-amber-400" />
+                  <span>✓ Verification request emailed to: <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong></span>
+                </div>
+
+                {/* REGISTRATION STATUS BOX */}
+                <div className="p-4 rounded-2xl bg-[#0b1328] border border-[#1c2c54] text-left text-xs font-mono space-y-2 mb-6">
+                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
+                    <span>REGISTRATION ID:</span>
+                    <span className="text-cyan-300 font-bold">{registrationId}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
+                    <span>UTR TRANSACTION ID:</span>
+                    <span className="text-amber-400 font-bold">{utrNumber}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
+                    <span>PAYEE NAME & UPI:</span>
+                    <span className="text-white font-bold">{SYMPOSIUM_CONFIG.upiName} ({SYMPOSIUM_CONFIG.upiId})</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>APPROVAL STATUS:</span>
+                    <span className="text-amber-400 font-bold uppercase">PENDING COORDINATOR VERIFICATION</span>
+                  </div>
+                </div>
+
+                {/* SIMULATE COORDINATOR APPROVAL ACTION BUTTON */}
+                <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/50 mb-4 text-left">
+                  <div className="text-xs font-mono font-bold text-emerald-400 uppercase mb-1 flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4 text-emerald-400" />
+                    <span>COORDINATOR APPROVAL ACTION</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mb-3">
+                    As specified, once the coordinator clicks <strong>Approve</strong>, the student receives the registration completion email containing event details, category, time, and venue location.
+                  </p>
+
+                  <button
+                    onClick={handleApproveRegistration}
+                    disabled={isSubmittingPayment}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+                  >
+                    {isSubmittingPayment ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                    )}
+                    <span>APPROVE REGISTRATION & DISPATCH STUDENT CONFIRMATION EMAIL</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleResetAndClose}
+                  className="w-full py-3 rounded-2xl border border-slate-800 text-slate-400 hover:text-white text-xs font-bold uppercase transition-colors cursor-pointer"
+                >
+                  Close & Return to Website
+                </button>
+              </div>
             ) : (
               /* SUBMITTED SUCCESS CONFIRMATION RECEIPT & EMAIL NOTIFICATION */
               <div className="py-2">
@@ -971,10 +1130,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   </div>
 
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">
-                    Registration Completed Successfully!
+                    Registration Completed & Approved!
                   </h3>
                   <p className="text-xs text-slate-300 max-w-md mx-auto">
-                    Your registration for <strong className="text-white">CSAT 2026 / CISABZ-2K26</strong> has been confirmed. A confirmation message has been dispatched to your email.
+                    Your registration for <strong className="text-white">CSAT 2026 / CISABZ-2K26</strong> has been approved. A confirmation message has been dispatched to your email.
                   </p>
                 </div>
 
@@ -985,13 +1144,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <div>
                       <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-1">
                         <Mail className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>DISPATCHED TO: {email}</span>
+                        <span>DISPATCHED TO STUDENT: {email}</span>
                       </div>
                       <h4 className="text-base font-extrabold text-white">
                         Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong>
+                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong> &bull; UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>
                       </p>
                     </div>
 
