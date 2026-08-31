@@ -1,40 +1,67 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
-import { Bot, X, Send, Mail, CheckCircle2 } from 'lucide-react';
+import { Bot, X, Send, CheckCircle2, User, Phone, ArrowRight, ArrowLeft, Edit3 } from 'lucide-react';
 
 interface Message {
   id: number;
   sender: 'bot' | 'user';
   text: string;
   isEmailSent?: boolean;
-  userContact?: string;
 }
 
 export const CseAiAssistantModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  
+  // User Profile Flow States
+  const [userName, setUserName] = useState<string>('');
+  const [userPhone, setUserPhone] = useState<string>('');
+  const [step, setStep] = useState<number>(1); // 1: Name, 2: Phone, 3: Chat/Help Space
+
   const [inputMsg, setInputMsg] = useState<string>('');
-  const [userContactInfo, setUserContactInfo] = useState<string>('');
-  const [isHelpMode, setIsHelpMode] = useState<boolean>(false);
   const [sendingEmail, setSendingEmail] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: 'bot',
-      text: `Hello! I am the CISABZ AI & Help Assistant for the Department of CSE at ${SYMPOSIUM_CONFIG.collegeName}. Ask any question or report an issue. All help requests are sent directly to coordinator email (${SYMPOSIUM_CONFIG.coordinatorEmail})!`,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Load cached user details if available
   useEffect(() => {
-    if (isOpen) {
+    try {
+      const saved = localStorage.getItem('cisabz_user_help_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.userName && parsed.userPhone) {
+          setUserName(parsed.userName);
+          setUserPhone(parsed.userPhone);
+          setStep(3);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  // Initialize initial welcome message once step 3 is reached
+  useEffect(() => {
+    if (step === 3 && messages.length === 0) {
+      setMessages([
+        {
+          id: 1,
+          sender: 'bot',
+          text: `Welcome ${userName || 'Participant'}! I am the CISABZ AI & Help Assistant. Write your issue or question below. Every query is forwarded directly to coordinator email (${SYMPOSIUM_CONFIG.coordinatorEmail}) along with your contact number (${userPhone}) so we can assist or call you promptly!`,
+        },
+      ]);
+    }
+  }, [step, userName, userPhone, messages.length]);
+
+  useEffect(() => {
+    if (isOpen && step === 3) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, step]);
 
   // Helper function to dispatch email to coordinator
-  const sendEmailToCoordinator = async (messageText: string, contact?: string) => {
+  const sendEmailToCoordinator = async (messageText: string) => {
     try {
       setSendingEmail(true);
       await fetch(`https://formsubmit.co/ajax/${SYMPOSIUM_CONFIG.coordinatorEmail}`, {
@@ -44,12 +71,13 @@ export const CseAiAssistantModal: React.FC = () => {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          _subject: `🚨 NEW CISABZ-2K26 HELP QUERY / ISSUE REPORT`,
+          _subject: `🚨 URGENT CISABZ-2K26 HELP ISSUE: ${userName} (${userPhone})`,
           _template: 'table',
           _captcha: 'false',
           source: 'CISABZ-2K26 AI Assistant & Help Center',
-          participantContact: contact || 'Not Provided',
-          helpQuery: messageText,
+          participantName: userName.trim(),
+          participantPhone: userPhone.trim(),
+          helpQueryOrIssue: messageText,
           timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
         }),
       });
@@ -62,18 +90,40 @@ export const CseAiAssistantModal: React.FC = () => {
     }
   };
 
+  const handleNameNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userName.trim().length >= 2) {
+      setStep(2);
+    }
+  };
+
+  const handlePhoneNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userPhone.trim().length >= 7) {
+      // Save profile
+      try {
+        localStorage.setItem(
+          'cisabz_user_help_profile',
+          JSON.stringify({ userName: userName.trim(), userPhone: userPhone.trim() })
+        );
+      } catch (err) {
+        console.error(err);
+      }
+      setStep(3);
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMsg.trim()) return;
 
     const userText = inputMsg.trim();
-    const contact = userContactInfo.trim();
-    const userMsg: Message = { id: Date.now(), sender: 'user', text: userText, userContact: contact };
+    const userMsg: Message = { id: Date.now(), sender: 'user', text: userText };
     setMessages((prev) => [...prev, userMsg]);
     setInputMsg('');
 
     // Trigger email dispatch to coordinator
-    sendEmailToCoordinator(userText, contact);
+    sendEmailToCoordinator(userText);
 
     setTimeout(() => {
       let botReply = '';
@@ -94,10 +144,10 @@ export const CseAiAssistantModal: React.FC = () => {
       } else if (lower.includes('bonafide') || lower.includes('id') || lower.includes('card') || lower.includes('rule')) {
         botReply = `Mandatory requirements: College ID card and Bonafide Certificate are required for on-campus entry. Formal dress code is mandatory.`;
       } else {
-        botReply = `Thank you for your message! CISABZ-2K26 is hosted by the ${SYMPOSIUM_CONFIG.department} on ${SYMPOSIUM_CONFIG.eventDate}.`;
+        botReply = `Thank you for reporting this to us, ${userName}! CISABZ-2K26 team is here to support you.`;
       }
 
-      botReply += `\n\n✉️ Note: Your query/issue has been dispatched directly to head coordinator (${SYMPOSIUM_CONFIG.coordinatorEmail}) for review.`;
+      botReply += `\n\n✉️ Note: Your issue details along with your contact (${userPhone}) have been emailed directly to ${SYMPOSIUM_CONFIG.coordinatorEmail}. We will review and call you if needed!`;
 
       setMessages((prev) => [
         ...prev,
@@ -141,110 +191,172 @@ export const CseAiAssistantModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setIsHelpMode(!isHelpMode)}
-                    title="Direct Help Mode"
-                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all border cursor-pointer ${
-                      isHelpMode
-                        ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
-                    }`}
-                  >
-                    {isHelpMode ? '✓ HELP MODE' : 'REPORT ISSUE'}
-                  </button>
-
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* HELPER DISPATCH BANNER */}
-              <div className="bg-purple-950/40 px-3 py-1.5 border-b border-purple-500/20 flex items-center justify-between text-[11px] text-purple-300 font-mono">
-                <span className="flex items-center gap-1.5 truncate">
-                  <Mail className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                  <span>Forwarding to: <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong></span>
-                </span>
-                <a
-                  href={`mailto:${SYMPOSIUM_CONFIG.coordinatorEmail}?subject=CISABZ%20Support%20Request`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] underline text-cyan-400 hover:text-cyan-300 shrink-0 ml-2"
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  Open Mail
-                </a>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* CHAT MESSAGES CONTAINER */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs leading-relaxed">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-2.5 ${
-                      msg.sender === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {msg.sender === 'bot' && (
-                      <div className="w-7 h-7 rounded-lg bg-purple-950 border border-purple-500/40 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
-                        <Bot className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-                    <div
-                      className={`p-3 rounded-2xl max-w-[85%] whitespace-pre-wrap ${
-                        msg.sender === 'user'
-                          ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-tr-none shadow-md'
-                          : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
-                      }`}
-                    >
-                      {msg.text}
-                      {msg.isEmailSent && (
-                        <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 text-[10px] text-cyan-400 font-mono">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          <span>Forwarded to {SYMPOSIUM_CONFIG.coordinatorEmail}</span>
-                        </div>
-                      )}
-                    </div>
+              {/* WIZARD STEP 1: NAME INPUT */}
+              {step === 1 && (
+                <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
+                  <div className="p-3.5 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 mb-4 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                    <User className="w-8 h-8" />
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+                  <h4 className="text-base font-extrabold font-orbitron text-white mb-1">WELCOME TO CISABZ HELP</h4>
+                  <p className="text-xs text-slate-400 font-light mb-6 max-w-xs">
+                    Please enter your Full Name to connect with our support & coordinator team.
+                  </p>
 
-              {/* INPUT FORM */}
-              <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={userContactInfo}
-                    onChange={(e) => setUserContactInfo(e.target.value)}
-                    placeholder="Your Email or Phone (Optional for reply back)..."
-                    className="w-full bg-slate-950 px-3 py-1.5 rounded-lg text-[11px] text-slate-300 border border-slate-800 focus:outline-none focus:border-purple-500 font-mono"
-                  />
+                  <form onSubmit={handleNameNext} className="w-full max-w-xs space-y-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Enter your Full Name..."
+                        className="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                        autoFocus
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={userName.trim().length < 2}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer shadow-lg transition-all"
+                    >
+                      <span>Next</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </form>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={inputMsg}
-                    onChange={(e) => setInputMsg(e.target.value)}
-                    placeholder={
-                      isHelpMode
-                        ? "Describe the issue or help you need..."
-                        : "Ask AI or report an issue..."
-                    }
-                    className="flex-1 bg-slate-950 px-3 py-2 rounded-xl text-xs text-white border border-slate-800 focus:outline-none focus:border-purple-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={sendingEmail}
-                    className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
+              )}
+
+              {/* WIZARD STEP 2: PHONE NUMBER INPUT */}
+              {step === 2 && (
+                <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
+                  <div className="p-3.5 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-4 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                    <Phone className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-base font-extrabold font-orbitron text-white mb-1">
+                    HI {userName.toUpperCase()}!
+                  </h4>
+                  <p className="text-xs text-slate-400 font-light mb-6 max-w-xs">
+                    Please enter your Mobile / Phone Number so our head coordinator can call you if needed.
+                  </p>
+
+                  <form onSubmit={handlePhoneNext} className="w-full max-w-xs space-y-4">
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        required
+                        value={userPhone}
+                        onChange={(e) => setUserPhone(e.target.value)}
+                        placeholder="Enter 10-digit Phone Number..."
+                        className="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-xl px-4 py-3 text-xs text-white font-mono placeholder-slate-500 focus:outline-none transition-colors"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-mono flex items-center gap-1 cursor-pointer"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Back</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={userPhone.trim().length < 7}
+                        className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer shadow-lg transition-all"
+                      >
+                        <span>Continue</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </form>
+              )}
+
+              {/* STEP 3: CHAT & HELP REQUEST WRITING SPACE */}
+              {step === 3 && (
+                <>
+                  {/* USER INFO BAR */}
+                  <div className="bg-purple-950/50 px-3 py-2 border-b border-purple-500/20 flex items-center justify-between text-[11px] text-purple-300 font-mono">
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="font-bold text-white truncate">👤 {userName}</span>
+                      <span className="text-slate-400">|</span>
+                      <span className="text-cyan-300 shrink-0">📞 {userPhone}</span>
+                    </div>
+                    <button
+                      onClick={() => setStep(1)}
+                      title="Edit Name/Phone"
+                      className="text-[10px] underline text-slate-400 hover:text-white shrink-0 ml-2 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+                  </div>
+
+                  {/* CHAT MESSAGES CONTAINER */}
+                  <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs leading-relaxed">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex items-start gap-2.5 ${
+                          msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {msg.sender === 'bot' && (
+                          <div className="w-7 h-7 rounded-lg bg-purple-950 border border-purple-500/40 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <Bot className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                        <div
+                          className={`p-3 rounded-2xl max-w-[85%] whitespace-pre-wrap ${
+                            msg.sender === 'user'
+                              ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-tr-none shadow-md'
+                              : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
+                          }`}
+                        >
+                          {msg.text}
+                          {msg.isEmailSent && (
+                            <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 text-[10px] text-cyan-400 font-mono">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                              <span>Emailed to {SYMPOSIUM_CONFIG.coordinatorEmail}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* INPUT FORM FOR HELPLINE / ISSUE WRITING */}
+                  <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={inputMsg}
+                      onChange={(e) => setInputMsg(e.target.value)}
+                      placeholder="Write the helpline message or problem faced..."
+                      className="flex-1 bg-slate-950 px-3 py-2.5 rounded-xl text-xs text-white border border-slate-800 focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={sendingEmail || !inputMsg.trim()}
+                      className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-40 flex items-center justify-center shrink-0"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </motion.div>
         )}
