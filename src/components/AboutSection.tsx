@@ -1,45 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SYMPOSIUM_CONFIG, ASSET_IMAGES } from '../data/symposiumData';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
 import {
   Building2,
   GraduationCap,
-  ChevronLeft,
-  ChevronRight,
   Cpu,
   Calendar,
   CheckCircle2,
   BookOpen,
   Layers,
+  Sparkles,
+  ShieldCheck,
+  Terminal,
+  Database,
+  Presentation,
 } from 'lucide-react';
 
-interface CseDepartmentEventSlide {
+interface CseEventBox {
   id: number;
   title: string;
   category: string;
   academicYear: string;
   date: string;
-  image: string;
+  icon: any;
   description: string;
-  purpose: string;
+  objective: string;
+  badgeColor: string;
+  borderColor: string;
 }
 
 export const AboutSection: React.FC = () => {
-  const [activeSlide, setActiveSlide] = useState<number>(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
-
-  // OFFICIAL CSE DEPARTMENT EVENTS FROM KINGS COLLEGE WEBSITE (Academic Year 2025-2026 EVEN & ODD)
-  const cseEvents: CseDepartmentEventSlide[] = [
+  // OFFICIAL CSE DEPARTMENT EVENTS (BOX TYPE - NO IMAGES)
+  const cseEventBoxes: CseEventBox[] = [
     {
       id: 1,
-      title: 'Guest Lecture: Essential Network Troubleshooting & AI Rapid Prototyping',
-      category: 'Department Guest Lecture Programme',
+      title: 'Guest Lecture: Network Troubleshooting & AI Rapid Prototyping',
+      category: 'Department Guest Lecture',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '24.02.2026 & 27.02.2026',
-      image: ASSET_IMAGES.cseEventGuestLecture1,
+      icon: Presentation,
       description:
         'Guest Lecture titled "Back to Basics: Essential Network Troubleshooting Techniques" organized on 24.02.2026 and "AI & Innovation Sprints Rapid Prototyping for Digital Transformation" organized on 27.02.2026.',
-      purpose: 'Goal: Empowering students with real-world network troubleshooting skills & rapid AI prototyping.',
+      objective: 'Empowering CSE students with real-world network troubleshooting skills & rapid AI prototyping.',
+      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      borderColor: 'hover:border-cyan-400',
     },
     {
       id: 2,
@@ -47,10 +51,12 @@ export const AboutSection: React.FC = () => {
       category: 'Cyber Security & AR/VR Conclave',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '21.02.2026 & 31.03.2026',
-      image: ASSET_IMAGES.cseEventGuestLecture2,
+      icon: ShieldCheck,
       description:
         'Guest Lecture titled "Enterprise Cybers Defense: Essentials and Best Practices" organized on 21.02.2026 and "Immersive Technologies - AR / VR" organized on 31.03.2026.',
-      purpose: 'Goal: Training CSE delegates in enterprise cybersecurity defense mechanisms and AR/VR spatial computing.',
+      objective: 'Training CSE delegates in enterprise cybersecurity defense mechanisms and AR/VR spatial computing.',
+      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      borderColor: 'hover:border-purple-400',
     },
     {
       id: 3,
@@ -58,10 +64,12 @@ export const AboutSection: React.FC = () => {
       category: 'Department Orientation Programme',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '05.01.2025',
-      image: ASSET_IMAGES.cseEventOrientation,
+      icon: Layers,
       description:
-        'Bridging Gap Between Industry with Education, GATE / Competitive Exam Awareness & Evolution of Microprocessor & Microcontroller, NPTEL Swayam Course.',
-      purpose: 'Goal: Preparing students for GATE competitive exams, industry readiness & NPTEL Swayam certifications.',
+        'Bridging Gap Between Industry with Education, GATE / Competitive Exam Awareness & Evolution of Microprocessor & Microcontroller, NPTEL Swayam Course Orientation.',
+      objective: 'Preparing students for GATE competitive exams, industry readiness & NPTEL Swayam certifications.',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      borderColor: 'hover:border-amber-400',
     },
     {
       id: 4,
@@ -69,42 +77,40 @@ export const AboutSection: React.FC = () => {
       category: 'Technical Foundation Bridge Course',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '05.01.2025',
-      image: ASSET_IMAGES.cseEventBridgeCourse,
+      icon: Terminal,
       description:
         'Specialized Bridge Course Programme covering Cyber Security and Renewable Energy, Linux Commands, HTML, CSS, and JAVASCRIPT organized on 05.01.2025.',
-      purpose: 'Goal: Hands-on web technology, Linux terminal commands, and fundamental cybersecurity practices.',
+      objective: 'Hands-on web development, Linux shell commands, and fundamental cybersecurity practices.',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      borderColor: 'hover:border-emerald-400',
     },
     {
       id: 5,
       title: 'Workshop: Structured Query Language & Project Ideas into Patents',
-      category: 'Hands-on Technical & Patent Workshop',
+      category: 'Technical & Patent Workshop',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '25.02.2026 & 09.04.2026',
-      image: ASSET_IMAGES.cseEventWorkshop,
+      icon: Database,
       description:
         '3-Day Workshop titled "Structured Query Language" (SQL) organized from 09.04.2026 to 11.04.2026 and "Converting Project Ideas into Patents" organized on 25.02.2026.',
-      purpose: 'Goal: Master database query design and convert student research projects into registered patents.',
+      objective: 'Master database query architecture and convert innovative student research into registered patents.',
+      badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+      borderColor: 'hover:border-blue-400',
+    },
+    {
+      id: 6,
+      title: 'CISABZ-2K26 National Level Technical & Non-Technical Symposium',
+      category: 'Flagship National Symposium',
+      academicYear: 'Academic Year 2025-2026 (EVEN)',
+      date: '25 SEPTEMBER 2026',
+      icon: Sparkles,
+      description:
+        'National Level Technical & Non-Technical Symposium featuring Paper Presentations (TechVerse), AI Prompt Fusion, Code Debugging (Bug Bash), Technical Quiz, and Bidding Events.',
+      objective: 'Providing a premier national arena for computer science visionaries to compete and innovate.',
+      badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      borderColor: 'hover:border-rose-400',
     },
   ];
-
-  // Auto-play slider
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    const interval = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % cseEvents.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, cseEvents.length]);
-
-  const handleNext = () => {
-    setIsAutoPlaying(false);
-    setActiveSlide((prev) => (prev + 1) % cseEvents.length);
-  };
-
-  const handlePrev = () => {
-    setIsAutoPlaying(false);
-    setActiveSlide((prev) => (prev - 1 + cseEvents.length) % cseEvents.length);
-  };
 
   const departmentPillars = [
     {
@@ -169,117 +175,69 @@ export const AboutSection: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* INTERACTIVE CAROUSEL: CSE DEPARTMENT OFFICIAL EVENTS (ACADEMIC YEAR 2025-2026) */}
+        {/* OFFICIAL CSE DEPARTMENT EVENTS - BOX TYPE (NO IMAGES) */}
         <div className="mb-16">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-amber-400" />
-                <span>CSE DEPARTMENT OFFICIAL EVENTS & ACTIVITIES</span>
-              </h3>
-              <p className="text-xs text-slate-400 font-mono mt-1">
-                Explore official events conducted by the Dept. of CSE (Academic Year 2025-2026 EVEN & ODD)
-              </p>
-            </div>
-
-            {/* NAVIGATION ARROW BUTTONS */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePrev}
-                className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white transition-all cursor-pointer shadow-lg"
-                title="Previous Event Photo"
-              >
-                <ChevronLeft className="w-5 h-5 text-cyan-400" />
-              </button>
-              <button
-                onClick={handleNext}
-                className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white transition-all cursor-pointer shadow-lg"
-                title="Next Event Photo"
-              >
-                <ChevronRight className="w-5 h-5 text-cyan-400" />
-              </button>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <h3 className="text-xl sm:text-3xl font-black font-orbitron text-white flex items-center justify-center gap-2 mb-2">
+              <Sparkles className="w-6 h-6 text-amber-400" />
+              <span>DEPARTMENT OF CSE OFFICIAL EVENTS</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 font-mono">
+              Academic Year 2025-2026 (EVEN & ODD) &bull; Guest Lectures, Orientation Programmes, Bridge Courses & Workshops
+            </p>
           </div>
 
-          {/* SLIDER CONTAINER */}
-          <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-xl">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSlide}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -40 }}
-                transition={{ duration: 0.4 }}
-                className="grid grid-cols-1 lg:grid-cols-12 min-h-[380px]"
-              >
-                {/* LEFT PHOTO DISPLAY */}
-                <div className="lg:col-span-7 relative overflow-hidden min-h-[260px] lg:min-h-full">
-                  <img
-                    src={cseEvents[activeSlide].image}
-                    alt={cseEvents[activeSlide].title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-slate-900" />
-                  
-                  {/* CATEGORY & ACADEMIC YEAR OVERLAY */}
-                  <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
-                    <span className="px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
-                      {cseEvents[activeSlide].category}
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-mono font-bold">
-                      {cseEvents[activeSlide].academicYear}
-                    </span>
-                  </div>
-                </div>
-
-                {/* RIGHT TEXT DETAILS */}
-                <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono text-amber-400 font-bold">
-                      <Calendar className="w-4 h-4" />
-                      <span>Date: {cseEvents[activeSlide].date}</span>
+          {/* BOX CARDS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cseEventBoxes.map((item) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: item.id * 0.08 }}
+                  className={`p-6 rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group`}
+                >
+                  <div className="space-y-4">
+                    {/* CARD TOP META */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
+                        <Icon className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase border ${item.badgeColor}`}>
+                        {item.category}
+                      </span>
                     </div>
 
-                    <h4 className="text-xl sm:text-2xl font-black font-orbitron text-white leading-snug">
-                      {cseEvents[activeSlide].title}
+                    {/* EVENT TITLE */}
+                    <h4 className="text-lg font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors">
+                      {item.title}
                     </h4>
 
-                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans font-normal">
-                      {cseEvents[activeSlide].description}
+                    {/* EVENT DATE & ACADEMIC YEAR */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 font-bold pt-1">
+                      <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{item.date}</span>
+                      <span className="text-slate-600">&bull;</span>
+                      <span className="text-slate-400 text-[11px] font-normal">{item.academicYear}</span>
+                    </div>
+
+                    {/* DESCRIPTION */}
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans font-normal">
+                      {item.description}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-800 flex flex-col space-y-3">
-                    <div className="inline-flex items-start gap-2 text-xs font-sans text-cyan-300">
-                      <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>{cseEvents[activeSlide].purpose}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-1">
-                      <span>Organized by Dept. of CSE</span>
-                      <span>Event {activeSlide + 1} of {cseEvents.length}</span>
-                    </div>
+                  {/* OBJECTIVE FOOTER */}
+                  <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-start gap-2 text-xs font-sans text-emerald-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{item.objective}</span>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* BOTTOM INDICATOR DOTS */}
-            <div className="absolute bottom-4 left-6 z-20 flex items-center gap-2">
-              {cseEvents.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setIsAutoPlaying(false);
-                    setActiveSlide(idx);
-                  }}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    activeSlide === idx ? 'w-8 bg-cyan-400 shadow-[0_0_10px_#00e5ff]' : 'w-2 bg-slate-700'
-                  }`}
-                  title={`Go to event ${idx + 1}`}
-                />
-              ))}
-            </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
