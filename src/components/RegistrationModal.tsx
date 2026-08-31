@@ -19,6 +19,10 @@ import {
   Zap,
   Flame,
   CreditCard,
+  Printer,
+  MapPin,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -63,18 +67,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [customDepartment, setCustomDepartment] = useState('');
   const [yearOfStudy, setYearOfStudy] = useState('1st Year (Freshman)');
 
-  // Selected Events
-  // Tech Brainiac ('tech-brainiac') is mandatory/compulsory per audio instructions
+  // Selected Events (Students can select ONLY 1 Technical Event and ONLY 1 Non-Technical Event)
   const [selectedTechEvents, setSelectedTechEvents] = useState<string[]>(() => {
-    const defaultTech = ['tech-brainiac'];
     if (
       initialSelectedEventId &&
-      TECHNICAL_EVENTS.some((e) => e.id === initialSelectedEventId) &&
-      initialSelectedEventId !== 'tech-brainiac'
+      TECHNICAL_EVENTS.some((e) => e.id === initialSelectedEventId)
     ) {
-      defaultTech.push(initialSelectedEventId);
+      return [initialSelectedEventId];
     }
-    return defaultTech;
+    return ['techverse'];
   });
 
   const [selectedNonTechEvents, setSelectedNonTechEvents] = useState<string[]>(() => {
@@ -84,7 +85,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     ) {
       return [initialSelectedEventId];
     }
-    return ['hammer-hit']; // default preset non-tech event as in design screenshot
+    return ['hammer-hit'];
   });
 
   // UI state
@@ -100,15 +101,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       setSubmitted(false);
       setValidationError('');
 
-      const defaultTech = ['tech-brainiac'];
       if (
         initialSelectedEventId &&
-        TECHNICAL_EVENTS.some((e) => e.id === initialSelectedEventId) &&
-        initialSelectedEventId !== 'tech-brainiac'
+        TECHNICAL_EVENTS.some((e) => e.id === initialSelectedEventId)
       ) {
-        defaultTech.push(initialSelectedEventId);
+        setSelectedTechEvents([initialSelectedEventId]);
+      } else {
+        setSelectedTechEvents(['techverse']);
       }
-      setSelectedTechEvents(defaultTech);
 
       if (
         initialSelectedEventId &&
@@ -121,28 +121,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     }
   }, [isOpen, initialSelectedEventId]);
 
-  // Toggle Technical Event (Tech Brainiac is compulsory)
+  // Toggle Technical Event (Only 1 Technical Event Allowed)
   const toggleTechEvent = (id: string) => {
-    if (id === 'tech-brainiac') {
-      // Mandatory event cannot be unchecked
-      setValidationError('Tech Brainiac (Technical Quiz) is mandatory for all delegates.');
-      setTimeout(() => setValidationError(''), 3000);
-      return;
-    }
-
     if (selectedTechEvents.includes(id)) {
-      setSelectedTechEvents(selectedTechEvents.filter((e) => e !== id));
+      setSelectedTechEvents([]);
     } else {
-      if (selectedTechEvents.length >= 2) {
-        setValidationError('You can select a maximum of 2 technical events.');
-        setTimeout(() => setValidationError(''), 3000);
-        return;
-      }
-      setSelectedTechEvents([...selectedTechEvents, id]);
+      setSelectedTechEvents([id]);
     }
   };
 
-  // Toggle Non-Technical Event (1 allowed)
+  // Toggle Non-Technical Event (Only 1 Non-Technical Event Allowed)
   const toggleNonTechEvent = (id: string) => {
     if (selectedNonTechEvents.includes(id)) {
       setSelectedNonTechEvents([]);
@@ -151,15 +139,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     }
   };
 
-  const [registrationId] = useState<string>(() => `CISABZ-2K26-REG-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [registrationId] = useState<string>(() => `CSAT-2026-REG-${Math.floor(1000 + Math.random() * 9000)}`);
 
-  // Price calculation formula per user audio:
-  // Base combo (2 Tech + 1 Non-Tech) = ₹200
-  // Extra events = +₹50 per event
-  const extraTechCount = Math.max(0, selectedTechEvents.length - 2);
-  const extraNonTechCount = Math.max(0, selectedNonTechEvents.length - 1);
-  const extraEventsCount = extraTechCount + extraNonTechCount;
-  const totalFee = SYMPOSIUM_CONFIG.registrationFee + extraEventsCount * SYMPOSIUM_CONFIG.additionalEventFee;
+  // Fixed Registration Fee (₹200 for 1 Tech + 1 Non-Tech Event Pass)
+  const totalFee = SYMPOSIUM_CONFIG.registrationFee;
 
   // Save registration to database (unpaid or paid)
   const saveRegistrationToDatabase = (status: 'REGISTERED (NOT PAID)' | 'PAID (CONFIRMED)') => {
@@ -199,9 +182,26 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       return;
     }
     setValidationError('');
-    // Log registration immediately into database as REGISTERED (NOT PAID)
     saveRegistrationToDatabase('REGISTERED (NOT PAID)');
     setStep(2);
+  };
+
+  const handleNextFromStep2 = () => {
+    if (selectedTechEvents.length === 0) {
+      setValidationError('Please select 1 Technical Event to continue.');
+      return;
+    }
+    setValidationError('');
+    setStep(3);
+  };
+
+  const handleNextFromStep3 = () => {
+    if (selectedNonTechEvents.length === 0) {
+      setValidationError('Please select 1 Non-Technical Event to continue.');
+      return;
+    }
+    setValidationError('');
+    setStep(4);
   };
 
   const handleCopyUpi = () => {
@@ -218,9 +218,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   const handleCompletePayment = () => {
     confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.6 },
+      particleCount: 150,
+      spread: 90,
+      origin: { y: 0.5 },
     });
 
     saveRegistrationToDatabase('PAID (CONFIRMED)');
@@ -243,6 +243,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const selectedNonTechEventObjects = NON_TECHNICAL_EVENTS.filter((e) =>
     selectedNonTechEvents.includes(e.id)
   );
+  const allSelectedEventObjects = [...selectedTechEventObjects, ...selectedNonTechEventObjects];
 
   return (
     <AnimatePresence>
@@ -263,7 +264,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="relative w-full max-w-xl bg-[#091122] border border-cyan-500/40 rounded-3xl p-5 sm:p-7 shadow-[0_0_60px_rgba(0,0,0,0.9)] z-10 my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700"
+            className="relative w-full max-w-2xl bg-[#091122] border border-cyan-500/40 rounded-3xl p-5 sm:p-8 shadow-[0_0_60px_rgba(0,0,0,0.9)] z-10 my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700"
           >
             {/* CLOSE BUTTON */}
             <button
@@ -315,15 +316,25 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <motion.div
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold text-center"
+                      className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center gap-2"
                     >
-                      {validationError}
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span>{validationError}</span>
                     </motion.div>
                   )}
 
                   {/* STEP 1: PARTICIPANT DETAILS */}
                   {step === 1 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <div className="mb-6 text-center">
+                        <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white">
+                          Step 1: Delegate Registration
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Enter your student credential details to get started.
+                        </p>
+                      </div>
+
                       <form onSubmit={handleNextFromStep1} className="space-y-4">
                         {/* FULL NAME */}
                         <div>
@@ -346,7 +357,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         {/* EMAIL ADDRESS */}
                         <div>
                           <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                            Email Address *
+                            Email Address * (Event Confirmation Sent Here)
                           </label>
                           <div className="relative">
                             <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -361,22 +372,28 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           </div>
                         </div>
 
-                        {/* PHONE NUMBER */}
+                        {/* PHONE NUMBER - DIGITS ONLY (NUMERIC KEYPAD ON MOBILE) */}
                         <div>
                           <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                            WhatsApp / Phone Number *
+                            WhatsApp / Phone Number * (Numbers Only)
                           </label>
                           <div className="relative">
                             <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                               type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
                               required
-                              placeholder="+91 98765 43210"
+                              placeholder="e.g., 9876543210"
                               value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
+                              maxLength={15}
+                              onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
                               className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#0e1832] border border-[#1e2f56] text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all font-mono"
                             />
                           </div>
+                          <span className="text-[10px] text-slate-400 mt-1 block">
+                            Only numeric digits (0–9) allowed. Opens numeric keypad on mobile devices.
+                          </span>
                         </div>
 
                         {/* COLLEGE NAME */}
@@ -464,7 +481,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             type="submit"
                             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                           >
-                            <span>NEXT: TECHNICAL EVENTS</span>
+                            <span>NEXT: TECHNICAL EVENT (1 EVENT)</span>
                             <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
@@ -472,7 +489,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </motion.div>
                   )}
 
-                  {/* STEP 2: TECHNICAL EVENTS SELECTION */}
+                  {/* STEP 2: TECHNICAL EVENT SELECTION (1 EVENT ALLOWED) */}
                   {step === 2 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <div className="flex items-start justify-between mb-4">
@@ -480,16 +497,16 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           <div className="flex items-center gap-2">
                             <Zap className="w-5 h-5 text-cyan-400 shrink-0" />
                             <h3 className="text-xl font-black font-orbitron text-white">
-                              Step 2: Technical Events Selection
+                              Step 2: Technical Event Selection
                             </h3>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
-                            Choose up to <strong>2 technical showdowns</strong>.
+                            Students can select <strong>1 technical event</strong> to participate.
                           </p>
                         </div>
 
                         <div className="px-3.5 py-1.5 rounded-full bg-[#0d1835] border border-[#1e305c] text-xs font-mono text-cyan-300 font-bold shrink-0">
-                          {selectedTechEvents.length} / 2 Selected
+                          {selectedTechEvents.length} / 1 Selected
                         </div>
                       </div>
 
@@ -497,7 +514,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <div className="space-y-3 mb-6">
                         {TECHNICAL_EVENTS.map((event) => {
                           const isSelected = selectedTechEvents.includes(event.id);
-                          const isCompulsory = event.id === 'tech-brainiac';
 
                           return (
                             <div
@@ -515,30 +531,37 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                       {event.name}
                                     </span>
                                     <span className="px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-mono text-cyan-400 uppercase font-semibold">
-                                      Tech
+                                      Technical
                                     </span>
-                                    {isCompulsory && (
-                                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-[10px] font-mono text-amber-300 uppercase font-bold">
-                                        Mandatory
+                                  </div>
+                                  <div className="text-xs font-semibold text-cyan-300 mb-1.5 flex items-center gap-3">
+                                    <span>{event.subtitle}</span>
+                                    {event.time && (
+                                      <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                                        <Clock className="w-3 h-3 text-cyan-400" />
+                                        {event.time}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-xs font-semibold text-cyan-300 mb-1.5">
-                                    {event.subtitle}
-                                  </div>
-                                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+                                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 mb-1.5">
                                     {event.shortDescription}
                                   </p>
+                                  {event.venue && (
+                                    <div className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-amber-400" />
+                                      <span>Venue: {event.venue}</span>
+                                    </div>
+                                  )}
                                 </div>
 
-                                {/* CHECKBOX */}
+                                {/* RADIO/CHECK MARK */}
                                 <div
-                                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${isSelected
+                                  className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
                                     ? 'bg-cyan-500 border-cyan-400 text-black shadow-md'
                                     : 'border-slate-600 bg-slate-900/50'
                                     }`}
                                 >
-                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                                 </div>
                               </div>
                             </div>
@@ -559,20 +582,17 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setValidationError('');
-                            setStep(3);
-                          }}
+                          onClick={handleNextFromStep2}
                           className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
-                          <span>NEXT: NON-TECHNICAL EVENTS</span>
+                          <span>NEXT: NON-TECHNICAL EVENT (1 EVENT)</span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </motion.div>
                   )}
 
-                  {/* STEP 3: NON-TECHNICAL EVENTS SELECTION */}
+                  {/* STEP 3: NON-TECHNICAL EVENT SELECTION (1 EVENT ALLOWED) */}
                   {step === 3 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <div className="flex items-start justify-between mb-4">
@@ -584,7 +604,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             </h3>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
-                            Choose <strong>1 non-technical event</strong>.
+                            Students can select <strong>1 non-technical event</strong> to participate.
                           </p>
                         </div>
 
@@ -617,22 +637,34 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                       Non-Tech
                                     </span>
                                   </div>
-                                  <div className="text-xs font-semibold text-purple-300 mb-1.5">
-                                    {event.subtitle}
+                                  <div className="text-xs font-semibold text-purple-300 mb-1.5 flex items-center gap-3">
+                                    <span>{event.subtitle}</span>
+                                    {event.time && (
+                                      <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                                        <Clock className="w-3 h-3 text-amber-400" />
+                                        {event.time}
+                                      </span>
+                                    )}
                                   </div>
-                                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+                                  <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 mb-1.5">
                                     {event.shortDescription}
                                   </p>
+                                  {event.venue && (
+                                    <div className="text-[10px] text-slate-300 font-mono flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-cyan-400" />
+                                      <span>Venue: {event.venue}</span>
+                                    </div>
+                                  )}
                                 </div>
 
-                                {/* CHECKBOX */}
+                                {/* RADIO/CHECK MARK */}
                                 <div
-                                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${isSelected
+                                  className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
                                     ? 'bg-purple-500 border-purple-400 text-black shadow-md'
                                     : 'border-slate-600 bg-slate-900/50'
                                     }`}
                                 >
-                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                                 </div>
                               </div>
                             </div>
@@ -653,13 +685,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setValidationError('');
-                            setStep(4);
-                          }}
+                          onClick={handleNextFromStep3}
                           className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
-                          <span>REVIEW & FEE →</span>
+                          <span>REVIEW & SUMMARY →</span>
                         </button>
                       </div>
                     </motion.div>
@@ -672,11 +701,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
                           <h3 className="text-xl font-black font-orbitron text-white">
-                            Step 4: Summary & Fee (₹{SYMPOSIUM_CONFIG.registrationFee})
+                            Step 4: Summary & Registration Fee (₹{SYMPOSIUM_CONFIG.registrationFee})
                           </h3>
                         </div>
                         <p className="text-xs text-slate-400 mt-1">
-                          Review your credentials and transfer ₹{SYMPOSIUM_CONFIG.registrationFee} to confirm your pass.
+                          Review your credentials and selected events for {SYMPOSIUM_CONFIG.name}.
                         </p>
                       </div>
 
@@ -696,35 +725,54 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             {phone || '0000000000'}
                           </div>
                           <div className="text-xs font-semibold text-cyan-300 uppercase">
-                            {displayDepartment} &bull; {college || 'COLLEGE NAME'}
+                            {displayDepartment} &bull; {college || 'COLLEGE NAME'} &bull; {yearOfStudy}
                           </div>
                         </div>
 
-                        {/* SELECTED CONTESTS CARD */}
+                        {/* SELECTED CONTESTS CARD WITH VENUE AND TIME */}
                         <div className="p-4 rounded-2xl bg-[#0a1226] border border-[#18284c]">
-                          <div className="text-[10px] font-mono font-extrabold tracking-widest text-amber-400 uppercase mb-2.5">
-                            SELECTED CONTESTS ({totalSelectedEvents} / 3)
+                          <div className="text-[10px] font-mono font-extrabold tracking-widest text-amber-400 uppercase mb-2.5 flex justify-between items-center">
+                            <span>SELECTED CONTESTS ({totalSelectedEvents} Events: 1 Tech + 1 Non-Tech)</span>
+                            <span className="text-cyan-400">Date: {SYMPOSIUM_CONFIG.eventDate}</span>
                           </div>
 
-                          <div className="flex flex-wrap gap-2">
+                          <div className="space-y-2">
                             {selectedTechEventObjects.map((e) => (
-                              <span
+                              <div
                                 key={e.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0d2242] border border-cyan-500/40 text-xs font-mono text-cyan-300 font-semibold"
+                                className="p-3 rounded-xl bg-[#0d2242] border border-cyan-500/40 flex items-center justify-between text-xs font-mono text-cyan-300"
                               >
-                                <Zap className="w-3.5 h-3.5 text-cyan-400" />
-                                <span>{e.name}</span>
-                              </span>
+                                <div className="flex items-center gap-2">
+                                  <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+                                  <div>
+                                    <span className="font-bold text-white uppercase">{e.name}</span> ({e.subtitle})
+                                    <div className="text-[10px] text-slate-400 font-sans">Category: Technical Event</div>
+                                  </div>
+                                </div>
+                                <div className="text-right text-[11px] shrink-0">
+                                  <div className="text-cyan-300 font-bold">{e.time || '11:15 AM'}</div>
+                                  <div className="text-slate-400 text-[10px]">{e.venue || 'Main Auditorium'}</div>
+                                </div>
+                              </div>
                             ))}
 
                             {selectedNonTechEventObjects.map((e) => (
-                              <span
+                              <div
                                 key={e.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2d1b15] border border-amber-500/40 text-xs font-mono text-amber-300 font-semibold"
+                                className="p-3 rounded-xl bg-[#2d1b15] border border-amber-500/40 flex items-center justify-between text-xs font-mono text-amber-300"
                               >
-                                <Flame className="w-3.5 h-3.5 text-amber-400" />
-                                <span>{e.name}</span>
-                              </span>
+                                <div className="flex items-center gap-2">
+                                  <Flame className="w-4 h-4 text-amber-400 shrink-0" />
+                                  <div>
+                                    <span className="font-bold text-white uppercase">{e.name}</span> ({e.subtitle})
+                                    <div className="text-[10px] text-slate-400 font-sans">Category: Non-Technical Event</div>
+                                  </div>
+                                </div>
+                                <div className="text-right text-[11px] shrink-0">
+                                  <div className="text-amber-300 font-bold">{e.time || '2:00 PM'}</div>
+                                  <div className="text-slate-400 text-[10px]">{e.venue || 'Main Auditorium'}</div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -737,7 +785,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                               <span>Delegate Entry Fee</span>
                             </div>
                             <p className="text-[11px] text-slate-400">
-                              Includes kit, events, buffet lunch & physical certificate
+                              Includes event participation, welcome kit, buffet lunch & physical certificate
                             </p>
                           </div>
 
@@ -796,7 +844,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         TOTAL AMOUNT PAYABLE
                       </div>
                       <p className="text-[11px] text-slate-300 max-w-xs">
-                        Covers all events, delegate badge, buffet lunch & physical certificate
+                        Covers 1 Technical + 1 Non-Technical event, welcome kit, buffet lunch & physical certificate
                       </p>
                     </div>
 
@@ -901,7 +949,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                      <span>I HAVE COMPLETED PAYMENT</span>
+                      <span>I HAVE COMPLETED PAYMENT & REGISTRATION</span>
                     </button>
 
                     <button
@@ -915,51 +963,152 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </motion.div>
               )
             ) : (
-              /* SUBMITTED SUCCESS CONFIRMATION RECEIPT */
-              <div className="text-center py-6">
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(16,185,129,0.4)]">
-                  <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+              /* SUBMITTED SUCCESS CONFIRMATION RECEIPT & EMAIL NOTIFICATION */
+              <div className="py-2">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center mx-auto mb-3 shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+                    <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+                  </div>
+
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">
+                    Registration Completed Successfully!
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-md mx-auto">
+                    Your registration for <strong className="text-white">CSAT 2026 / CISABZ-2K26</strong> has been confirmed. A confirmation message has been dispatched to your email.
+                  </p>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">
-                  Registration Confirmed!
-                </h3>
-                <p className="text-xs text-slate-300 max-w-sm mx-auto mb-6">
-                  Thank you <strong className="text-white">{fullName}</strong>. Your delegate pass application for {SYMPOSIUM_CONFIG.name} has been received.
-                </p>
+                {/* EMAIL NOTIFICATION PREVIEW CARD */}
+                <div className="rounded-2xl bg-[#0b1328] border border-cyan-500/40 p-5 shadow-2xl space-y-4 mb-6 font-sans">
+                  {/* EMAIL HEADER BANNER */}
+                  <div className="border-b border-slate-800 pb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                        <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>DISPATCHED TO: {email}</span>
+                      </div>
+                      <h4 className="text-base font-extrabold text-white">
+                        Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong>
+                      </p>
+                    </div>
 
-                {/* EMAIL DISPATCH ALERT BADGE */}
-                <div className="mb-4 p-3 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center justify-center gap-2 shadow-lg">
-                  <Mail className="w-4 h-4 text-emerald-400 animate-bounce" />
-                  <span>✓ Confirmation Email Dispatched to: <strong>{email}</strong></span>
+                    <div className="px-2.5 py-1 rounded-md bg-emerald-950 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 font-bold shrink-0">
+                      PAID & CONFIRMED
+                    </div>
+                  </div>
+
+                  {/* WELCOME SALUTATION */}
+                  <div className="text-xs text-slate-200 leading-relaxed">
+                    Dear <strong className="text-amber-300 font-bold">{fullName}</strong>,<br />
+                    Welcome to <strong>Kings College of Engineering</strong>! We are pleased to confirm your participation in <strong>CSAT 2026 / CISABZ-2K26 National Level Technical & Non-Technical Symposium</strong> organized by the Department of Computer Science and Engineering.
+                  </div>
+
+                  {/* PARTICIPANT INFO GRID */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono p-3 rounded-xl bg-[#070d1c] border border-slate-800">
+                    <div>
+                      <span className="text-slate-400">Participant Name:</span>{' '}
+                      <strong className="text-white">{fullName}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Phone Number:</span>{' '}
+                      <strong className="text-white">{phone}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">College:</span>{' '}
+                      <strong className="text-cyan-300 truncate inline-block max-w-[200px] align-bottom">{college}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Department / Year:</span>{' '}
+                      <strong className="text-white">{displayDepartment} ({yearOfStudy})</strong>
+                    </div>
+                  </div>
+
+                  {/* REGISTERED EVENTS DETAILS TABLE WITH CATEGORY, TIME & PLACE */}
+                  <div>
+                    <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      <span>YOUR REGISTERED EVENTS, CATEGORY, TIME & VENUE PLACE:</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {allSelectedEventObjects.map((evt) => {
+                        const isTech = evt.category === 'technical';
+                        return (
+                          <div
+                            key={evt.id}
+                            className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono ${
+                              isTech
+                                ? 'bg-[#0d2242]/80 border-cyan-500/40 text-cyan-200'
+                                : 'bg-[#2d1b15]/80 border-amber-500/40 text-amber-200'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white text-sm uppercase">{evt.name}</span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold border ${
+                                    isTech
+                                      ? 'bg-cyan-950 text-cyan-300 border-cyan-500/40'
+                                      : 'bg-purple-950 text-purple-300 border-purple-500/40'
+                                  }`}
+                                >
+                                  {isTech ? 'Technical Event' : 'Non-Technical Event'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-300 mt-0.5">{evt.subtitle} &bull; {evt.rounds}</div>
+                            </div>
+
+                            <div className="sm:text-right shrink-0 text-[11px]">
+                              <div className="flex items-center sm:justify-end gap-1 font-bold text-white">
+                                <Clock className="w-3 h-3 text-cyan-400" />
+                                <span>{evt.time || 'Scheduled Session'}</span>
+                              </div>
+                              <div className="flex items-center sm:justify-end gap-1 text-slate-300 font-semibold text-[10px]">
+                                <MapPin className="w-3 h-3 text-amber-400" />
+                                <span>Venue: {evt.venue || 'Main Auditorium'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* SYMPOSIUM SCHEDULE & REPORTING VENUE */}
+                  <div className="p-3 rounded-xl bg-[#09152b] border border-blue-500/30 text-xs font-mono space-y-1">
+                    <div className="text-cyan-300 font-bold flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Event Date: {SYMPOSIUM_CONFIG.eventDate}</span>
+                    </div>
+                    <div className="text-slate-300">
+                      <strong>Reporting Desk:</strong> 9:15 AM at Main Auditorium Entrance Desk
+                    </div>
+                    <div className="text-slate-400 text-[11px]">
+                      <strong>Campus Location:</strong> Kings College of Engineering, Punalkulam, Gandarvakkottai Taluk, Pudukkottai District.
+                    </div>
+                  </div>
                 </div>
 
-                {/* RECEIPT SUMMARY BOX */}
-                <div className="p-4 rounded-2xl bg-[#0b1328] border border-[#1c2c54] text-left text-xs font-mono space-y-2 mb-6">
-                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
-                    <span>PASS TYPE:</span>
-                    <span className="text-amber-400 font-bold">DELEGATE PASS (2 TECH + 1 NON-TECH)</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
-                    <span>COLLEGE:</span>
-                    <span className="text-white font-bold truncate max-w-[200px]">{college}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
-                    <span>CONTESTS:</span>
-                    <span className="text-cyan-300 font-bold">{totalSelectedEvents} Events ({selectedTechEvents.length} Tech + {selectedNonTechEvents.length} Non-Tech)</span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>AMOUNT PAID:</span>
-                    <span className="text-emerald-400 font-bold">₹{totalFee}</span>
-                  </div>
-                </div>
+                {/* ACTION BUTTONS */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Print Confirmation Receipt</span>
+                  </button>
 
-                <button
-                  onClick={handleResetAndClose}
-                  className="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                >
-                  Close & Return to Website
-                </button>
+                  <button
+                    onClick={handleResetAndClose}
+                    className="flex-1 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Close & Return to Website
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>

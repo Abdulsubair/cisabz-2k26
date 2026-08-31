@@ -15,9 +15,9 @@ export const SYMPOSIUM_CONFIG = {
   collegeName: 'KINGS COLLEGE OF ENGINEERING', // Editable Placeholder
   collegeAddress: 'Punalkulam, Gandarvakkottai Taluk, Pudukkottai District, Tamil Nadu', // Editable Placeholder
   venueName: 'Main Auditorium & CSE Labs', // Editable Placeholder
-  eventDate: '25 SEPTEMBER 2026',
+  eventDate: 'Friday 25th SEPTEMBER 2026',
   eventDateISO: '2026-09-25T09:00:00',
-  registrationEndDate: '23 September 2026',
+  registrationEndDate: '22 September 2026',
   registrationLink: 'REGISTRATION_LINK_HERE',
   googleMapsUrl: 'https://maps.google.com/?q=Kings+College+of+Engineering+Pudukkottai',
   googleMapsDirectionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Kings+College+of+Engineering+Punalkulam',
@@ -61,6 +61,8 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Participants present an innovative idea via PPT with optional working models/demos.',
     rounds: 'Single Round Event',
     teamSize: 'Individual or up to 2 members',
+    time: '11:30 AM to 1:00 PM',
+    venue: 'Seminar Hall',
     guidelines: [
       'Single round event.',
       'Team size: individual or up to 2 members.',
@@ -90,6 +92,8 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Multi-round competitive tech quiz spanning emerging tech, CS fundamentals, and rapid-fire rounds.',
     rounds: '2–3 Level Rounds (Prelims → Rapid Fire → Final)',
     teamSize: 'Individual or up to 2 members',
+    time: '11:15 AM to 12:00 PM',
+    venue: 'Main Auditorium & CSE Labs',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Example structure: Prelims → Rapid Fire → Final.',
@@ -113,6 +117,8 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Intense AI and emerging tech rounds testing CS fundamentals and rapid reasoning.',
     rounds: '2–3 Level Rounds (Prelims → Rapid Fire → Final)',
     teamSize: 'Individual or up to 2 members',
+    time: '12:00 PM to 1:00 PM',
+    venue: 'CSE Computer Lab 2',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Example structure: Prelims → Rapid Fire → Final.',
@@ -136,6 +142,8 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Sharpen your debugging prowess across multi-tiered tech and logic rounds.',
     rounds: '2–3 Level Rounds (Prelims → Rapid Fire → Final)',
     teamSize: 'Individual or up to 2 members',
+    time: '11:30 AM to 12:30 PM',
+    venue: 'CSE Computer Lab 1',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Example structure: Prelims → Rapid Fire → Final.',
@@ -162,6 +170,8 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Guess the secret word or category revealed through 5 progressive clue words.',
     rounds: '2–3 Level Rounds',
     teamSize: 'Individual or up to 2 members',
+    time: '2:00 PM to 3:00 PM',
+    venue: 'Classroom Block A',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation, up to 2 members.',
@@ -184,6 +194,8 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Identify brands from cropped, blurred, or partially obscured logo images under time pressure.',
     rounds: '2–3 Level Rounds',
     teamSize: 'Individual or up to 2 members',
+    time: '2:30 PM to 3:30 PM',
+    venue: 'Classroom Block B',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation, up to 2 members.',
@@ -207,6 +219,8 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Tactical mock cricket auction where teams bid on players to maximize total squad value.',
     rounds: 'Single Round Event',
     teamSize: 'Team participation, up to 2 members',
+    time: '2:00 PM to 3:30 PM',
+    venue: 'Main Auditorium',
     guidelines: [
       'Single round event.',
       'Team participation, up to 2 members per team.',
@@ -230,6 +244,8 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     shortDescription: 'Connect multi-image puzzle grids to identify underlying words and shared concepts.',
     rounds: '2–3 Level Rounds',
     teamSize: 'Individual or up to 2 members',
+    time: '2:30 PM to 3:30 PM',
+    venue: 'Seminar Hall',
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation, up to 2 members.',
@@ -396,7 +412,7 @@ export const DIGNITARIES: Dignitary[] = [
 
 export const SCHEDULE_DATA: ScheduleDay[] = [
   {
-    date: '25 SEPTEMBER 2026',
+    date: 'Friday 25th SEPTEMBER 2026',
     title: 'Symposium Inauguration & Event Schedule',
     status: 'announced',
     items: [

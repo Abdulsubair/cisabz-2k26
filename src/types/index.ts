@@ -16,6 +16,8 @@ export interface EventItem {
   iconName: string;
   colorTheme: string;
   registrationLink?: string;
+  time?: string;
+  venue?: string;
 }
 
 export interface Coordinator {
