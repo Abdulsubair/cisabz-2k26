@@ -391,26 +391,26 @@ export const DIGNITARIES: Dignitary[] = [
 export const SCHEDULE_DATA: ScheduleDay[] = [
   {
     date: '25 SEPTEMBER 2026',
-    title: 'Symposium Inaugural & Event Schedule',
+    title: 'Symposium Inauguration & Event Schedule',
     status: 'announced',
     items: [
       {
         sNo: 1,
-        time: '9:15 AM to 9:45 AM (30 Min)',
+        time: '9:15 AM to 10:00 AM (45 Min)',
         event: 'Registration',
         venue: 'Main Auditorium Entrance Desk',
         type: 'General',
       },
       {
         sNo: 2,
-        time: '9:45 AM to 10:45 AM (1 hr)',
-        event: 'Inaugural',
+        time: '10:00 AM to 11:00 AM (1 hr)',
+        event: 'Inauguration',
         venue: 'Main Auditorium',
         type: 'Ceremony',
       },
       {
         sNo: 3,
-        time: '10:45 AM to 11:00 AM (15 Min)',
+        time: '11:00 AM to 11:15 AM (15 Min)',
         event: 'Morning Break',
         venue: 'Main Lawn & Cafeteria',
         type: 'Break',
@@ -418,7 +418,7 @@ export const SCHEDULE_DATA: ScheduleDay[] = [
       },
       {
         sNo: 4,
-        time: '11:00 AM to 11:30 AM (30 Min)',
+        time: '11:15 AM to 12:00 PM (45 Min)',
         event: 'Technical Quiz (Tech Brainiac)',
         venue: 'Main Auditorium & CSE Labs',
         type: 'Technical',
@@ -490,7 +490,7 @@ export const SCHEDULE_DATA: ScheduleDay[] = [
       },
       {
         sNo: 14,
-        time: '3:45 PM to 4:30 PM (45 Min)',
+        time: '3:45 PM to 4:15 PM (30 Min)',
         event: 'Ceremony (Valedictory & Prize Distribution)',
         venue: 'Main Auditorium',
         type: 'Ceremony',
