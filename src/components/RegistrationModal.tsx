@@ -75,7 +75,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [paymentSubmittedState, setPaymentSubmittedState] = useState<'IDLE' | 'PENDING_APPROVAL' | 'APPROVED'>('IDLE');
 
-  // Selected Events (Students can select ONLY 1 Technical Event and ONLY 1 Non-Technical Event)
+  // Selected Events (Students can select multiple events if desired)
   const [selectedTechEvents, setSelectedTechEvents] = useState<string[]>(() => {
     if (
       initialSelectedEventId &&
@@ -128,32 +128,35 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     }
   }, [isOpen, initialSelectedEventId]);
 
-  // Toggle Technical Event (Only 1 Technical Event Allowed)
+  // Toggle Technical Event (Multiple Events Allowed)
   const toggleTechEvent = (id: string) => {
     if (selectedTechEvents.includes(id)) {
-      setSelectedTechEvents([]);
+      setSelectedTechEvents(selectedTechEvents.filter((e) => e !== id));
     } else {
-      setSelectedTechEvents([id]);
+      setSelectedTechEvents([...selectedTechEvents, id]);
     }
   };
 
-  // Toggle Non-Technical Event (Only 1 Non-Technical Event Allowed)
+  // Toggle Non-Technical Event (Multiple Events Allowed)
   const toggleNonTechEvent = (id: string) => {
     if (selectedNonTechEvents.includes(id)) {
-      setSelectedNonTechEvents([]);
+      setSelectedNonTechEvents(selectedNonTechEvents.filter((e) => e !== id));
     } else {
-      setSelectedNonTechEvents([id]);
+      setSelectedNonTechEvents([...selectedNonTechEvents, id]);
     }
   };
 
   const [registrationId] = useState<string>(() => `CSAT-2026-REG-${Math.floor(1000 + Math.random() * 9000)}`);
 
-  // Fixed Registration Fee (₹200 for 1 Tech + 1 Non-Tech Event Pass)
-  const totalFee = SYMPOSIUM_CONFIG.registrationFee;
+  // Dynamic Fee Calculation per user request:
+  // Base 2 events (1 Tech + 1 Non-Tech) = ₹200
+  // Additional events = +₹50 per extra event (e.g. 3 events = ₹250)
+  const totalSelectedEventsCount = selectedTechEvents.length + selectedNonTechEvents.length;
+  const extraEventsCount = Math.max(0, totalSelectedEventsCount - 2);
+  const totalFee = SYMPOSIUM_CONFIG.registrationFee + extraEventsCount * SYMPOSIUM_CONFIG.additionalEventFee;
 
   // Helper getters
   const displayDepartment = department === 'OTHER' ? customDepartment || 'OTHER' : department;
-  const totalSelectedEvents = selectedTechEvents.length + selectedNonTechEvents.length;
 
   const selectedTechEventObjects = TECHNICAL_EVENTS.filter((e) =>
     selectedTechEvents.includes(e.id)
@@ -206,7 +209,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   const handleNextFromStep2 = () => {
     if (selectedTechEvents.length === 0) {
-      setValidationError('Please select 1 Technical Event to continue.');
+      setValidationError('Please select at least 1 Technical Event to continue.');
       return;
     }
     setValidationError('');
@@ -214,8 +217,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   };
 
   const handleNextFromStep3 = () => {
-    if (selectedNonTechEvents.length === 0) {
-      setValidationError('Please select 1 Non-Technical Event to continue.');
+    if (selectedNonTechEvents.length === 0 && selectedTechEvents.length === 0) {
+      setValidationError('Please select at least 1 Event to continue.');
       return;
     }
     setValidationError('');
@@ -249,7 +252,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          _subject: `🚨 CISABZ-2K26 PAYMENT APPROVAL REQUEST: ₹200 from ${fullName} (UTR: ${utrNumber})`,
+          _subject: `🚨 CISABZ-2K26 PAYMENT APPROVAL REQUEST: ₹${totalFee} from ${fullName} (UTR: ${utrNumber})`,
           _template: 'table',
           _captcha: 'false',
           source: 'CISABZ-2K26 Registration Payment System',
@@ -564,7 +567,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             type="submit"
                             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                           >
-                            <span>NEXT: TECHNICAL EVENT (1 EVENT)</span>
+                            <span>NEXT: TECHNICAL EVENTS</span>
                             <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
@@ -572,7 +575,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </motion.div>
                   )}
 
-                  {/* STEP 2: TECHNICAL EVENT SELECTION (1 EVENT ALLOWED) */}
+                  {/* STEP 2: TECHNICAL EVENT SELECTION */}
                   {step === 2 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <div className="flex items-start justify-between mb-4">
@@ -584,12 +587,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             </h3>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
-                            Students can select <strong>1 technical event</strong> to participate.
+                            Select technical events to participate. (Extra events beyond 2 total events add +₹50).
                           </p>
                         </div>
 
                         <div className="px-3.5 py-1.5 rounded-full bg-[#0d1835] border border-[#1e305c] text-xs font-mono text-cyan-300 font-bold shrink-0">
-                          {selectedTechEvents.length} / 1 Selected
+                          {selectedTechEvents.length} Selected
                         </div>
                       </div>
 
@@ -637,9 +640,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                   )}
                                 </div>
 
-                                {/* RADIO/CHECK MARK */}
+                                {/* CHECK MARK */}
                                 <div
-                                  className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
+                                  className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 transition-all ${isSelected
                                     ? 'bg-cyan-500 border-cyan-400 text-black shadow-md'
                                     : 'border-slate-600 bg-slate-900/50'
                                     }`}
@@ -668,14 +671,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           onClick={handleNextFromStep2}
                           className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
-                          <span>NEXT: NON-TECHNICAL EVENT (1 EVENT)</span>
+                          <span>NEXT: NON-TECHNICAL EVENTS</span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </motion.div>
                   )}
 
-                  {/* STEP 3: NON-TECHNICAL EVENT SELECTION (1 EVENT ALLOWED) */}
+                  {/* STEP 3: NON-TECHNICAL EVENT SELECTION */}
                   {step === 3 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <div className="flex items-start justify-between mb-4">
@@ -687,12 +690,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             </h3>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
-                            Students can select <strong>1 non-technical event</strong> to participate.
+                            Select non-technical events to participate. (Extra events beyond 2 total events add +₹50).
                           </p>
                         </div>
 
                         <div className="px-3.5 py-1.5 rounded-full bg-[#0d1835] border border-[#1e305c] text-xs font-mono text-amber-300 font-bold shrink-0">
-                          {selectedNonTechEvents.length} / 1 Selected
+                          {selectedNonTechEvents.length} Selected
                         </div>
                       </div>
 
@@ -740,9 +743,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                                   )}
                                 </div>
 
-                                {/* RADIO/CHECK MARK */}
+                                {/* CHECK MARK */}
                                 <div
-                                  className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
+                                  className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 transition-all ${isSelected
                                     ? 'bg-purple-500 border-purple-400 text-black shadow-md'
                                     : 'border-slate-600 bg-slate-900/50'
                                     }`}
@@ -784,7 +787,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
                           <h3 className="text-xl font-black font-orbitron text-white">
-                            Step 4: Summary & Registration Fee (₹{SYMPOSIUM_CONFIG.registrationFee})
+                            Step 4: Summary & Fee (₹{totalFee})
                           </h3>
                         </div>
                         <p className="text-xs text-slate-400 mt-1">
@@ -815,7 +818,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         {/* SELECTED CONTESTS CARD WITH VENUE AND TIME */}
                         <div className="p-4 rounded-2xl bg-[#0a1226] border border-[#18284c]">
                           <div className="text-[10px] font-mono font-extrabold tracking-widest text-amber-400 uppercase mb-2.5 flex justify-between items-center">
-                            <span>SELECTED CONTESTS ({totalSelectedEvents} Events: 1 Tech + 1 Non-Tech)</span>
+                            <span>SELECTED CONTESTS ({totalSelectedEventsCount} Events)</span>
                             <span className="text-cyan-400">Date: {SYMPOSIUM_CONFIG.eventDate}</span>
                           </div>
 
@@ -860,7 +863,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           </div>
                         </div>
 
-                        {/* ENTRY FEE CARD */}
+                        {/* ENTRY FEE CARD DYNAMIC BREAKDOWN */}
                         <div className="p-4 rounded-2xl bg-[#0a1226] border border-[#18284c] flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-2 text-sm font-bold text-white mb-0.5">
@@ -868,12 +871,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                               <span>Delegate Entry Fee</span>
                             </div>
                             <p className="text-[11px] text-slate-400">
-                              Includes event participation, welcome kit, buffet lunch & physical certificate
+                              Base fee ₹200 for up to 2 events {extraEventsCount > 0 && `+ ₹${extraEventsCount * SYMPOSIUM_CONFIG.additionalEventFee} for ${extraEventsCount} extra event(s)`}
                             </p>
                           </div>
 
                           <div className="text-2xl font-black font-cinzel text-amber-400 shrink-0">
-                            ₹{SYMPOSIUM_CONFIG.registrationFee}
+                            ₹{totalFee}
                           </div>
                         </div>
                       </div>
@@ -886,7 +889,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                           className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:opacity-95 text-black font-extrabold text-sm tracking-wider uppercase shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
                           <Lock className="w-4 h-4 stroke-[2.5]" />
-                          <span>PROCEED TO PAY ₹{SYMPOSIUM_CONFIG.registrationFee}</span>
+                          <span>PROCEED TO PAY ₹{totalFee}</span>
                           <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                         </button>
 
@@ -916,7 +919,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       Complete Delegate Payment
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Scan QR code or use UPI ID to pay ₹{SYMPOSIUM_CONFIG.registrationFee}. Submit your 12-digit UTR for approval.
+                      Scan QR code with GPay/PhonePe and enter <strong>₹{totalFee}</strong>. Submit your 12-digit UTR for approval.
                     </p>
                   </div>
 
@@ -924,46 +927,46 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="p-3.5 rounded-2xl bg-[#0e1a38] border border-[#1e3260] mb-4 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-extrabold mb-0.5">
-                        TOTAL AMOUNT PAYABLE
+                        TOTAL CALCULATED AMOUNT
                       </div>
                       <p className="text-[11px] text-slate-300 max-w-xs">
-                        Covers 1 Technical + 1 Non-Technical event, welcome kit, buffet lunch & physical certificate
+                        Covers {totalSelectedEventsCount} event(s), welcome kit, buffet lunch & physical certificate
                       </p>
                     </div>
 
                     <div className="text-right">
                       <div className="text-2xl sm:text-3xl font-black font-cinzel text-amber-400">
-                        ₹{SYMPOSIUM_CONFIG.registrationFee}
+                        ₹{totalFee}
                       </div>
                       <div className="text-[9px] font-mono text-emerald-400 uppercase font-bold tracking-wider">
-                        INC. OF ALL TAXES
+                        ENTER THIS AMOUNT IN GPAY
                       </div>
                     </div>
                   </div>
 
-                  {/* QR CODE & PAYEE DETAILS BOX */}
+                  {/* QR CODE & PAYEE DETAILS BOX (OPEN AMOUNT QR WITHOUT FIXED &am PARAMETER) */}
                   <div className="p-4 rounded-2xl bg-[#091122] border border-[#1b2b4f] mb-4 text-center">
                     {/* PAYEE NAME BADGE */}
                     <div className="inline-block px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-xs font-bold mb-3">
                       Payee Name: {SYMPOSIUM_CONFIG.upiName} (Abdul Jubair)
                     </div>
 
-                    {/* WHITE QR CODE CONTAINER */}
+                    {/* WHITE QR CODE CONTAINER - OPEN AMOUNT QR CODE */}
                     <div className="w-48 h-48 mx-auto bg-white p-2.5 rounded-2xl shadow-xl flex flex-col items-center justify-between mb-3 border-2 border-amber-400/40">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3D${encodeURIComponent(
                           SYMPOSIUM_CONFIG.upiId
-                        )}%26pn%3DAbdul%2520Jubair%26am%3D${SYMPOSIUM_CONFIG.registrationFee}.00%26cu%3DINR`}
-                        alt="Abdul Jubair UPI Payment QR Code"
+                        )}%26pn%3DAbdul%2520Jubair%26cu%3DINR`}
+                        alt="Abdul Jubair Open UPI Payment QR Code"
                         className="w-38 h-38 object-contain rounded-lg"
                       />
                       <div className="text-black font-mono font-bold text-[10px] border-t border-slate-200 pt-1 w-full truncate">
-                        {SYMPOSIUM_CONFIG.upiId} &bull; ₹{SYMPOSIUM_CONFIG.registrationFee}.00
+                        {SYMPOSIUM_CONFIG.upiId} &bull; Open Amount Entry
                       </div>
                     </div>
 
                     <p className="text-[11px] text-slate-300 mb-3 font-mono">
-                      Scan with <strong className="text-white font-bold">Google Pay, PhonePe, Paytm</strong>, or any UPI App to pay ₹{SYMPOSIUM_CONFIG.registrationFee}.
+                      Scan with <strong className="text-white font-bold">Google Pay, PhonePe, Paytm</strong>, or any UPI App and enter amount <strong className="text-amber-300 font-bold">₹{totalFee}</strong>.
                     </p>
 
                     {/* UPI ID INPUT ROW */}
@@ -1061,7 +1064,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   Payment Submitted & Awaiting Approval
                 </h3>
                 <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">
-                  Thank you <strong className="text-white">{fullName}</strong>. Payment verification notification has been sent directly to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>.
+                  Thank you <strong className="text-white">{fullName}</strong>. Payment verification notification for ₹<strong className="text-amber-300 font-mono">{totalFee}</strong> has been sent directly to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>.
                 </p>
 
                 {/* EMAIL DISPATCH ALERT BADGE */}
@@ -1079,6 +1082,10 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
                     <span>UTR TRANSACTION ID:</span>
                     <span className="text-amber-400 font-bold">{utrNumber}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
+                    <span>TOTAL AMOUNT PAID:</span>
+                    <span className="text-emerald-400 font-bold">₹{totalFee}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
                     <span>PAYEE NAME & UPI:</span>
@@ -1150,7 +1157,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong> &bull; UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>
+                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong> &bull; UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong> &bull; Amount: <strong className="text-emerald-400 font-mono">₹{totalFee}</strong>
                       </p>
                     </div>
 
@@ -1189,7 +1196,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div>
                     <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 text-amber-400" />
-                      <span>YOUR REGISTERED EVENTS, CATEGORY, TIME & VENUE PLACE:</span>
+                      <span>YOUR REGISTERED EVENTS ({totalSelectedEventsCount}), CATEGORY, TIME & VENUE PLACE:</span>
                     </div>
 
                     <div className="space-y-2">
