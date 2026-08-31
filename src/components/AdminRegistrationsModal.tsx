@@ -46,20 +46,18 @@ export const AdminRegistrationsModal: React.FC<AdminRegistrationsModalProps> = (
   // Load live records from localStorage
   const loadRecords = () => {
     try {
+      const purged = localStorage.getItem('cisabz_purged_test_v3');
+      if (!purged) {
+        localStorage.setItem('cisabz_registrations', JSON.stringify([]));
+        localStorage.setItem('cisabz_purged_test_v3', 'true');
+        setRecords([]);
+        return;
+      }
+
       const stored = localStorage.getItem('cisabz_registrations');
       if (stored) {
         const parsed: RegistrationRecord[] = JSON.parse(stored);
-        const sampleIds = [
-          'CISABZ-2K26-REG-1001',
-          'CISABZ-2K26-REG-1002',
-          'CISABZ-2K26-REG-1003',
-          'CISABZ-2K26-REG-1004',
-          'CISABZ-2K26-REG-1005',
-          'CISABZ-2K26-REG-1006',
-        ];
-        const cleaned = parsed.filter((r) => !sampleIds.includes(r.id));
-        setRecords(cleaned);
-        localStorage.setItem('cisabz_registrations', JSON.stringify(cleaned));
+        setRecords(parsed);
       } else {
         localStorage.setItem('cisabz_registrations', JSON.stringify(DEFAULT_RECORDS));
         setRecords(DEFAULT_RECORDS);

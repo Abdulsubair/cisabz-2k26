@@ -67,21 +67,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
   const loadRecords = () => {
     try {
+      // Purge past test records for fresh page opening
+      const purged = localStorage.getItem('cisabz_purged_test_v3');
+      if (!purged) {
+        localStorage.setItem('cisabz_registrations', JSON.stringify([]));
+        localStorage.setItem('cisabz_purged_test_v3', 'true');
+        setRecords([]);
+        return;
+      }
+
       const stored = localStorage.getItem('cisabz_registrations');
       if (stored) {
         const parsed: RegistrationRecord[] = JSON.parse(stored);
-        // Filter out legacy sample records (REG-1001 to REG-1006)
-        const sampleIds = [
-          'CISABZ-2K26-REG-1001',
-          'CISABZ-2K26-REG-1002',
-          'CISABZ-2K26-REG-1003',
-          'CISABZ-2K26-REG-1004',
-          'CISABZ-2K26-REG-1005',
-          'CISABZ-2K26-REG-1006',
-        ];
-        const cleaned = parsed.filter((r) => !sampleIds.includes(r.id));
-        setRecords(cleaned);
-        localStorage.setItem('cisabz_registrations', JSON.stringify(cleaned));
+        setRecords(parsed);
       } else {
         localStorage.setItem('cisabz_registrations', JSON.stringify(DEFAULT_RECORDS));
         setRecords(DEFAULT_RECORDS);
@@ -94,6 +92,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   useEffect(() => {
     loadRecords();
   }, []);
+
+  const handleDeleteSingleRecord = (idToDelete: string, name: string) => {
+    if (window.confirm(`Delete registration for "${name}" (${idToDelete})?`)) {
+      const updated = records.filter((r) => r.id !== idToDelete);
+      setRecords(updated);
+      localStorage.setItem('cisabz_registrations', JSON.stringify(updated));
+    }
+  };
 
   // Handle Login per Audio Instructions: Username: cisabz, Password: kings@123
   const handleLogin = (e: React.FormEvent) => {
@@ -465,12 +471,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                     <th className="p-3.5">Events Selected</th>
                     <th className="p-3.5">Fee</th>
                     <th className="p-3.5">Registration Status</th>
+                    <th className="p-3.5 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-900 text-slate-300">
                   {filteredMasterRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-500 font-sans">
+                      <td colSpan={8} className="p-8 text-center text-slate-500 font-sans">
                         No registrations matching selected filters.
                       </td>
                     </tr>
@@ -515,6 +522,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                               <span>PAID (CONFIRMED)</span>
                             </span>
                           )}
+                        </td>
+                        <td className="p-3.5 text-center">
+                          <button
+                            onClick={() => handleDeleteSingleRecord(r.id, r.fullName)}
+                            title="Delete this registration"
+                            className="p-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))
