@@ -23,7 +23,6 @@ interface CseEventBox {
   academicYear: string;
   date: string;
   icon: any;
-  image: string;
   description: string;
   objective: string;
   badgeColor: string;
@@ -31,7 +30,7 @@ interface CseEventBox {
 }
 
 export const AboutSection: React.FC = () => {
-  // OFFICIAL CSE DEPARTMENT EVENTS WITH RELEVANT IMAGES
+  // OFFICIAL CSE DEPARTMENT EVENTS (BOX TYPE - NO IMAGES)
   const cseEventBoxes: CseEventBox[] = [
     {
       id: 1,
@@ -40,7 +39,6 @@ export const AboutSection: React.FC = () => {
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '24.02.2026 & 27.02.2026',
       icon: Presentation,
-      image: '/assets/cse-event-guest-lecture-1.jpg',
       description:
         'Guest Lecture titled "Back to Basics: Essential Network Troubleshooting Techniques" organized on 24.02.2026 and "AI & Innovation Sprints Rapid Prototyping for Digital Transformation" organized on 27.02.2026.',
       objective: 'Empowering CSE students with real-world network troubleshooting skills & rapid AI prototyping.',
@@ -54,7 +52,6 @@ export const AboutSection: React.FC = () => {
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '21.02.2026 & 31.03.2026',
       icon: ShieldCheck,
-      image: '/assets/cse-event-guest-lecture-2.jpg',
       description:
         'Guest Lecture titled "Enterprise Cybers Defense: Essentials and Best Practices" organized on 21.02.2026 and "Immersive Technologies - AR / VR" organized on 31.03.2026.',
       objective: 'Training CSE delegates in enterprise cybersecurity defense mechanisms and AR/VR spatial computing.',
@@ -68,7 +65,6 @@ export const AboutSection: React.FC = () => {
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '05.01.2025',
       icon: Layers,
-      image: '/assets/cse-event-orientation.jpg',
       description:
         'Bridging Gap Between Industry with Education, GATE / Competitive Exam Awareness & Evolution of Microprocessor & Microcontroller, NPTEL Swayam Course Orientation.',
       objective: 'Preparing students for GATE competitive exams, industry readiness & NPTEL Swayam certifications.',
@@ -82,7 +78,6 @@ export const AboutSection: React.FC = () => {
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '05.01.2025',
       icon: Terminal,
-      image: '/assets/cse-event-bridge-course.png',
       description:
         'Specialized Bridge Course Programme covering Cyber Security and Renewable Energy, Linux Commands, HTML, CSS, and JAVASCRIPT organized on 05.01.2025.',
       objective: 'Hands-on web development, Linux shell commands, and fundamental cybersecurity practices.',
@@ -96,7 +91,6 @@ export const AboutSection: React.FC = () => {
       academicYear: 'Academic Year 2025-2026 (EVEN)',
       date: '25.02.2026 & 09.04.2026',
       icon: Database,
-      image: '/assets/cse-event-workshop.png',
       description:
         '3-Day Workshop titled "Structured Query Language" (SQL) organized from 09.04.2026 to 11.04.2026 and "Converting Project Ideas into Patents" organized on 25.02.2026.',
       objective: 'Master database query architecture and convert innovative student research into registered patents.',
@@ -108,9 +102,8 @@ export const AboutSection: React.FC = () => {
       title: 'CISABZ-2K26 National Level Technical & Non-Technical Symposium',
       category: 'Flagship National Symposium',
       academicYear: 'Academic Year 2025-2026 (EVEN)',
-      date: '25 SEPTEMBER 2026',
+      date: SYMPOSIUM_CONFIG.eventDate,
       icon: Sparkles,
-      image: '/assets/cse-department.jpg',
       description:
         'National Level Technical & Non-Technical Symposium featuring Paper Presentations (TechVerse), AI Prompt Fusion, Code Debugging (Bug Bash), Technical Quiz, and Bidding Events.',
       objective: 'Providing a premier national arena for computer science visionaries to compete and innovate.',
@@ -127,21 +120,21 @@ export const AboutSection: React.FC = () => {
       color: 'border-cyan-500/40 text-cyan-400',
     },
     {
-      icon: GraduationCap,
-      title: 'Academic Excellence',
-      desc: 'Rich curriculum with choice-based credit system, outcome-based education, and focus on practical coding skills.',
+      icon: Cpu,
+      title: 'State-of-the-Art Computing Labs',
+      desc: 'Full-fledged computer laboratories supported by high-speed fiber internet, wireless networks, and AI computing hardware.',
       color: 'border-amber-500/40 text-amber-400',
     },
     {
-      icon: Cpu,
-      title: 'Advanced AI & Security Labs',
-      desc: 'State-of-the-art computer labs with high-speed internet, cloud computing environments, and AI hardware acceleration.',
+      icon: BookOpen,
+      title: 'IIT Bombay & Professional Societies',
+      desc: 'Active student chapters of IEI and ISTE regularly conducting workshops, seminars, and IIT Bombay Spoken Tutorial certifications.',
       color: 'border-purple-500/40 text-purple-400',
     },
     {
-      icon: BookOpen,
-      title: 'Professional Chapters',
-      desc: 'Active student chapters of IEI, ISTE, and CSI conducting regular workshops, webinars, and hackathons.',
+      icon: GraduationCap,
+      title: 'Global Career & Research Placements',
+      desc: 'Our CSE graduates occupy top technology leadership positions in premier IT corporate companies and research institutions globally.',
       color: 'border-emerald-500/40 text-emerald-400',
     },
   ];
@@ -164,7 +157,7 @@ export const AboutSection: React.FC = () => {
               <span>ABOUT KINGS COLLEGE & DEPARTMENT OF CSE</span>
             </div>
 
-            {/* MAIN TITLE */}
+            {/* MAIN TITLE REQUESTED BY USER */}
             <h2 className="text-3xl sm:text-5xl font-black font-orbitron tracking-tight text-white mb-4 leading-tight">
               WELCOME TO{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-amber-300 to-yellow-400">
@@ -182,7 +175,7 @@ export const AboutSection: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* OFFICIAL CSE DEPARTMENT EVENTS CARDS GRID WITH RICH IMAGES */}
+        {/* OFFICIAL CSE DEPARTMENT EVENTS - BOX TYPE (NO IMAGES) */}
         <div className="mb-16">
           <div className="text-center max-w-3xl mx-auto mb-10">
             <h3 className="text-xl sm:text-3xl font-black font-orbitron text-white flex items-center justify-center gap-2 mb-2">
@@ -205,55 +198,42 @@ export const AboutSection: React.FC = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: item.id * 0.08 }}
-                  className={`rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between overflow-hidden group hover:shadow-[0_0_30px_rgba(6,182,212,0.2)]`}
+                  className={`p-6 rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group`}
                 >
-                  {/* EVENT IMAGE HEADER */}
-                  <div className="relative h-48 w-full overflow-hidden bg-slate-950">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-
-                    {/* CATEGORY BADGE FLOATING ON IMAGE */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-                      <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/80 text-cyan-400 backdrop-blur-md">
-                        <Icon className="w-4 h-4 text-cyan-400" />
+                  <div className="space-y-4">
+                    {/* CARD TOP META */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
+                        <Icon className="w-5 h-5 text-cyan-400" />
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase border backdrop-blur-md shadow-md ${item.badgeColor}`}>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase border ${item.badgeColor}`}>
                         {item.category}
                       </span>
                     </div>
+
+                    {/* EVENT TITLE */}
+                    <h4 className="text-lg font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors">
+                      {item.title}
+                    </h4>
+
+                    {/* EVENT DATE & ACADEMIC YEAR */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 font-bold pt-1">
+                      <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{item.date}</span>
+                      <span className="text-slate-600">&bull;</span>
+                      <span className="text-slate-400 text-[11px] font-normal">{item.academicYear}</span>
+                    </div>
+
+                    {/* DESCRIPTION */}
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans font-normal">
+                      {item.description}
+                    </p>
                   </div>
 
-                  {/* CARD BODY CONTENT */}
-                  <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-3">
-                      {/* EVENT TITLE */}
-                      <h4 className="text-base font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors">
-                        {item.title}
-                      </h4>
-
-                      {/* EVENT DATE & ACADEMIC YEAR */}
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 font-bold">
-                        <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span>{item.date}</span>
-                        <span className="text-slate-600">&bull;</span>
-                        <span className="text-slate-400 text-[11px] font-normal">{item.academicYear}</span>
-                      </div>
-
-                      {/* DESCRIPTION */}
-                      <p className="text-xs text-slate-300 leading-relaxed font-sans font-normal">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* OBJECTIVE FOOTER */}
-                    <div className="pt-4 border-t border-slate-800/80 flex items-start gap-2 text-xs font-sans text-emerald-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{item.objective}</span>
-                    </div>
+                  {/* OBJECTIVE FOOTER */}
+                  <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-start gap-2 text-xs font-sans text-emerald-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{item.objective}</span>
                   </div>
                 </motion.div>
               );
@@ -278,8 +258,12 @@ export const AboutSection: React.FC = () => {
                   <Icon className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-base font-bold font-orbitron text-white mb-2">{pillar.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">{pillar.desc}</p>
+                  <h4 className="text-base font-extrabold font-orbitron text-white mb-2 leading-snug">
+                    {pillar.title}
+                  </h4>
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    {pillar.desc}
+                  </p>
                 </div>
               </motion.div>
             );
