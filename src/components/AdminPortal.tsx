@@ -703,7 +703,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   <div className="font-bold border-b-2 border-slate-600 print:border-black w-56" />
                 </div>
                 <div className="text-right">
-                  <div className="text-slate-400 print:text-black mb-8">Student Coordinator Signature:</div>
+                  <div className="text-slate-400 print:text-black mb-8">Head of the Department Signature:</div>
                   <div className="font-bold border-b-2 border-slate-600 print:border-black w-56 ml-auto" />
                 </div>
               </div>

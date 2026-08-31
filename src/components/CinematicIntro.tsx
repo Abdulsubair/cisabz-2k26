@@ -213,27 +213,28 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, forc
       exit={{ opacity: 0, transition: { duration: 0.8 } }}
       className="fixed inset-0 z-50 bg-black overflow-hidden select-none font-sans flex flex-col justify-between"
     >
-      {/* TOP RIGHT SKIP BUTTON */}
-      <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+      {/* BOTTOM-CENTER CONTAINER FOR ENTER WEBSITE BUTTON & PROGRESS STEPPER */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3">
+        {/* CENTERED ENTER WEBSITE / SKIP INTRO BUTTON */}
         <button
           onClick={handleSkip}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-950/90 hover:bg-slate-900 text-slate-200 border border-cyan-500/40 text-xs font-mono font-bold tracking-widest uppercase transition-all shadow-2xl backdrop-blur-xl group cursor-pointer"
+          className="flex items-center gap-2.5 px-6 py-3 rounded-full bg-slate-950/95 hover:bg-cyan-950 text-white border-2 border-cyan-500/60 hover:border-cyan-400 text-xs sm:text-sm font-mono font-bold tracking-widest uppercase transition-all shadow-[0_0_25px_rgba(6,182,212,0.5)] hover:shadow-[0_0_35px_rgba(6,182,212,0.8)] backdrop-blur-2xl group cursor-pointer"
         >
           <span>ENTER WEBSITE</span>
-          <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1.5 transition-transform" />
         </button>
-      </div>
 
-      {/* PROGRESS STEPPER (5 STEPS) */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-slate-950/80 border border-slate-800/80 backdrop-blur-xl">
-        {[1, 2, 3, 4, 5].map((s) => (
-          <div
-            key={s}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              step === s ? 'w-8 bg-cyan-400 shadow-[0_0_12px_#00e5ff]' : 'w-2 bg-slate-700'
-            }`}
-          />
-        ))}
+        {/* PROGRESS STEPPER (5 STEPS) */}
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-slate-800/80 backdrop-blur-xl">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <div
+              key={s}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                step === s ? 'w-8 bg-cyan-400 shadow-[0_0_12px_#00e5ff]' : 'w-2 bg-slate-700'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* STAGE 1: KINGS CAMPUS REEL (STEPS 1 TO 4) */}
