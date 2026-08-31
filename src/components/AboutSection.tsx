@@ -8,65 +8,82 @@ import {
   ChevronRight,
   Cpu,
   Calendar,
-  Sparkles,
   CheckCircle2,
-  Users,
+  BookOpen,
+  Layers,
 } from 'lucide-react';
 
-interface DepartmentEventSlide {
+interface CseDepartmentEventSlide {
   id: number;
   title: string;
   category: string;
+  academicYear: string;
   date: string;
   image: string;
   description: string;
-  stats: string;
+  purpose: string;
 }
 
 export const AboutSection: React.FC = () => {
   const [activeSlide, setActiveSlide] = useState<number>(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
 
-  const eventSlides: DepartmentEventSlide[] = [
+  // OFFICIAL CSE DEPARTMENT EVENTS FROM KINGS COLLEGE WEBSITE (Academic Year 2025-2026 EVEN & ODD)
+  const cseEvents: CseDepartmentEventSlide[] = [
     {
       id: 1,
-      title: 'CISABZ-2K26 National Technical & Non-Technical Symposium',
-      category: 'Flagship Department Event',
-      date: '25 SEPTEMBER 2026',
+      title: 'Orientation Programme: Bridging Gap Between Industry & Education',
+      category: 'Department Orientation & Career Awareness',
+      academicYear: 'Academic Year 2025-2026 (EVEN)',
+      date: '05.01.2025',
       image: ASSET_IMAGES.cseDepartment,
       description:
-        'The Department of Computer Science & Engineering presents CISABZ-2K26—a premier technical arena bringing together delegates from across top engineering institutions to compete in Paper Presentations, AI Prompt Engineering, Code Debugging, Technical Quiz, and High-Energy Bidding.',
-      stats: '500+ Expected Delegates • 8 Elite Events',
+        'Bridging gap between Industry with Education & GATE / Competitive Examination Awareness Programme organized by the Department of Computer Science and Engineering.',
+      purpose: 'Goal: Aligning academic CS curriculum with current IT industry benchmarks and GATE exam preparation.',
     },
     {
       id: 2,
-      title: 'National Workshop on AI, Machine Learning & Cloud Architectures',
-      category: 'Hands-on Technology Conclave',
-      date: 'CSE Department Special Event',
+      title: 'Orientation Programme: Evolution of Microprocessor & Microcontroller & NPTEL Swayam',
+      category: 'Academic & Professional Course Orientation',
+      academicYear: 'Academic Year 2025-2026 (EVEN)',
+      date: '05.01.2025',
       image: ASSET_IMAGES.drive,
       description:
-        'Hands-on technical workshop series organized by CSE Department faculty and industry experts, training students in modern Neural Networks, LLMs, and Cloud Deployment in our high-end computing laboratories.',
-      stats: '200+ Student Technocrats Trained',
+        'Technical session on the Evolution of Microprocessor & Microcontroller architecture, combined with NPTEL Swayam Course Orientation for CSE delegates.',
+      purpose: 'Goal: Enhancing hardware-software co-design fundamentals and encouraging NPTEL Swayam certifications.',
     },
     {
       id: 3,
-      title: 'Competitive Algorithmic Coding & Bug Debugging League',
-      category: 'Department Technical Challenge',
-      date: 'Annual CSE Hackathon',
+      title: 'Bridge Course Programme for CSE Engineers',
+      category: 'Fundamental Technical Foundations',
+      academicYear: 'Academic Year 2025-2026 (EVEN)',
+      date: 'Academic Session 2025-2026',
       image: ASSET_IMAGES.walkway,
       description:
-        'Intensive speed-coding competition fostering algorithmic thinking, syntax optimization, and real-time debugging skills under simulated industrial constraints.',
-      stats: 'CSE Computing Lab 1 & 2',
+        'Specialized Bridge Course Programme conducted by CSE veteran faculty to strengthen programming logic, problem-solving skills, and core computer science fundamentals.',
+      purpose: 'Goal: Ensuring strong coding proficiency and mathematical foundations for computer science students.',
     },
     {
       id: 4,
-      title: 'Industry-Institute Interface & Guest Lecture Series',
-      category: 'Career & Tech Seminar',
-      date: 'Regular Department Conclave',
+      title: 'IIT Bombay Spoken Tutorial & Open Source Certification Workshops',
+      category: 'Professional Society Event (IEI & ISTE)',
+      academicYear: 'Academic Year 2025-2026 (ODD & EVEN)',
+      date: 'Regular Academic Event',
       image: ASSET_IMAGES.aerial,
       description:
-        'Interactive conclave with chief software architects, IT industry leaders, and distinguished alumni guiding students on full-stack software development and career opportunities.',
-      stats: '100% Student Placement Guidance',
+        'Hands-on certification workshops conducted in partnership with IIT Bombay Spoken Tutorials, training students in Python, Linux, C++, and Open Source Software.',
+      purpose: 'Goal: Fostering professional society participation (IEI, ISTE) and industry-recognized certifications.',
+    },
+    {
+      id: 5,
+      title: 'CISABZ-2K26 National Level Technical & Non-Technical Symposium',
+      category: 'Flagship CSE Department Symposium',
+      academicYear: 'Academic Year 2025-2026 (EVEN)',
+      date: '25 SEPTEMBER 2026',
+      image: ASSET_IMAGES.cseDepartment,
+      description:
+        'National Level Technical & Non-Technical Symposium featuring Paper Presentations (TechVerse), AI Prompt Fusion, Code Debugging (Bug Bash), Technical Quiz, and Bidding Events.',
+      purpose: 'Goal: Providing a premier national arena for computer science visionaries to compete and showcase innovation.',
     },
   ];
 
@@ -74,44 +91,44 @@ export const AboutSection: React.FC = () => {
   useEffect(() => {
     if (!isAutoPlaying) return;
     const interval = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % eventSlides.length);
+      setActiveSlide((prev) => (prev + 1) % cseEvents.length);
     }, 4500);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, eventSlides.length]);
+  }, [isAutoPlaying, cseEvents.length]);
 
   const handleNext = () => {
     setIsAutoPlaying(false);
-    setActiveSlide((prev) => (prev + 1) % eventSlides.length);
+    setActiveSlide((prev) => (prev + 1) % cseEvents.length);
   };
 
   const handlePrev = () => {
     setIsAutoPlaying(false);
-    setActiveSlide((prev) => (prev - 1 + eventSlides.length) % eventSlides.length);
+    setActiveSlide((prev) => (prev - 1 + cseEvents.length) % cseEvents.length);
   };
 
   const departmentPillars = [
     {
       icon: Building2,
-      title: 'Autonomous & NAAC Accredited',
-      desc: 'Kings College of Engineering operates with Autonomous status, offering industry-aligned computer science curriculum.',
+      title: 'Established in 2001',
+      desc: 'Approved by AICTE New Delhi and affiliated to Anna University, Chennai. Offering B.E. CSE and M.E. CSE programmes.',
       color: 'border-cyan-500/40 text-cyan-400',
     },
     {
       icon: Cpu,
-      title: 'Advanced Computing Labs',
-      desc: 'State-of-the-art computer laboratories equipped with high-speed fiber internet and high-performance AI development rigs.',
+      title: 'State-of-the-Art Computing Labs',
+      desc: 'Full-fledged computer laboratories supported by high-speed fiber internet, wireless networks, and AI computing hardware.',
       color: 'border-amber-500/40 text-amber-400',
     },
     {
-      icon: GraduationCap,
-      title: 'High Placement Track Record',
-      desc: 'Dedicated career guidance ensuring our CSE graduates land lucrative roles across leading IT product and service companies.',
+      icon: BookOpen,
+      title: 'IIT Bombay & Professional Societies',
+      desc: 'Active student chapters of IEI and ISTE regularly conducting workshops, seminars, and IIT Bombay Spoken Tutorial certifications.',
       color: 'border-purple-500/40 text-purple-400',
     },
     {
-      icon: Users,
-      title: 'Dynamic CISABZ Association',
-      desc: 'Vibrant student-led association fostering continuous technical innovation, coding clubs, and national-level symposiums.',
+      icon: GraduationCap,
+      title: 'Global Career & Research Placements',
+      desc: 'Our CSE graduates occupy top technology leadership positions in premier IT corporate companies and research institutions globally.',
       color: 'border-emerald-500/40 text-emerald-400',
     },
   ];
@@ -131,7 +148,7 @@ export const AboutSection: React.FC = () => {
             {/* BADGE */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase mb-6 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
               <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>ABOUT KINGS COLLEGE & CSE DEPARTMENT</span>
+              <span>ABOUT KINGS COLLEGE & DEPARTMENT OF CSE</span>
             </div>
 
             {/* MAIN TITLE REQUESTED BY USER */}
@@ -147,21 +164,21 @@ export const AboutSection: React.FC = () => {
             </p>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl mx-auto font-sans font-normal">
-              <strong className="text-white font-semibold">Kings College of Engineering (Autonomous)</strong>, Punalkulam, is a premier NAAC-accredited institution approved by AICTE New Delhi and affiliated to Anna University, Chennai. The <strong className="text-cyan-300 font-semibold">Department of Computer Science and Engineering</strong> strives for technical excellence, research innovation, and holistic student development—empowering future software leaders through industry-aligned education, hands-on workshops, and our flagship National Level Technical Symposium, <strong className="text-amber-400 font-semibold font-orbitron">{SYMPOSIUM_CONFIG.name}</strong>.
+              The <strong className="text-white font-semibold">Department of Computer Science and Engineering (CSE)</strong> at Kings College of Engineering (Autonomous) was established in the year 2001. Approved by AICTE, New Delhi and affiliated to Anna University, Chennai, the department administers B.E. Computer Science & Engineering and M.E. Computer Science & Engineering programmes. Our primary goal is to provide world-class IT infrastructure, a research-oriented learning environment, and foster technological leadership through active professional societies (IEI, ISTE) and industry collaborations.
             </p>
           </motion.div>
         </div>
 
-        {/* INTERACTIVE CAROUSEL: CSE DEPARTMENT EVENTS & ACTIVITIES */}
+        {/* INTERACTIVE CAROUSEL: CSE DEPARTMENT OFFICIAL EVENTS (ACADEMIC YEAR 2025-2026) */}
         <div className="mb-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
               <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <span>CSE DEPARTMENT EVENT MILESTONES & ACTIVITIES</span>
+                <Layers className="w-5 h-5 text-amber-400" />
+                <span>CSE DEPARTMENT OFFICIAL EVENTS & ACTIVITIES</span>
               </h3>
               <p className="text-xs text-slate-400 font-mono mt-1">
-                Explore key symposiums, technical workshops, and conclaves organized by the CSE Department
+                Explore official events conducted by the Dept. of CSE (Academic Year 2025-2026 EVEN & ODD)
               </p>
             </div>
 
@@ -170,14 +187,14 @@ export const AboutSection: React.FC = () => {
               <button
                 onClick={handlePrev}
                 className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white transition-all cursor-pointer shadow-lg"
-                title="Previous Photo Event"
+                title="Previous Event Photo"
               >
                 <ChevronLeft className="w-5 h-5 text-cyan-400" />
               </button>
               <button
                 onClick={handleNext}
                 className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white transition-all cursor-pointer shadow-lg"
-                title="Next Photo Event"
+                title="Next Event Photo"
               >
                 <ChevronRight className="w-5 h-5 text-cyan-400" />
               </button>
@@ -198,15 +215,20 @@ export const AboutSection: React.FC = () => {
                 {/* LEFT PHOTO DISPLAY */}
                 <div className="lg:col-span-7 relative overflow-hidden min-h-[260px] lg:min-h-full">
                   <img
-                    src={eventSlides[activeSlide].image}
-                    alt={eventSlides[activeSlide].title}
+                    src={cseEvents[activeSlide].image}
+                    alt={cseEvents[activeSlide].title}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-slate-900" />
                   
-                  {/* CATEGORY TAG OVERLAY */}
-                  <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[11px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
-                    {eventSlides[activeSlide].category}
+                  {/* CATEGORY & ACADEMIC YEAR OVERLAY */}
+                  <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
+                    <span className="px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
+                      {cseEvents[activeSlide].category}
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-mono font-bold">
+                      {cseEvents[activeSlide].academicYear}
+                    </span>
                   </div>
                 </div>
 
@@ -215,27 +237,28 @@ export const AboutSection: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs font-mono text-amber-400 font-bold">
                       <Calendar className="w-4 h-4" />
-                      <span>{eventSlides[activeSlide].date}</span>
+                      <span>Date: {cseEvents[activeSlide].date}</span>
                     </div>
 
                     <h4 className="text-xl sm:text-2xl font-black font-orbitron text-white leading-snug">
-                      {eventSlides[activeSlide].title}
+                      {cseEvents[activeSlide].title}
                     </h4>
 
                     <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans font-normal">
-                      {eventSlides[activeSlide].description}
+                      {cseEvents[activeSlide].description}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                    <div className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>{eventSlides[activeSlide].stats}</span>
+                  <div className="pt-4 border-t border-slate-800 flex flex-col space-y-3">
+                    <div className="inline-flex items-start gap-2 text-xs font-sans text-cyan-300">
+                      <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                      <span>{cseEvents[activeSlide].purpose}</span>
                     </div>
 
-                    <span className="text-[11px] font-mono text-slate-500">
-                      {activeSlide + 1} / {eventSlides.length}
-                    </span>
+                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-1">
+                      <span>Organized by Dept. of CSE</span>
+                      <span>Event {activeSlide + 1} of {cseEvents.length}</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -243,7 +266,7 @@ export const AboutSection: React.FC = () => {
 
             {/* BOTTOM INDICATOR DOTS */}
             <div className="absolute bottom-4 left-6 z-20 flex items-center gap-2">
-              {eventSlides.map((_, idx) => (
+              {cseEvents.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
@@ -253,7 +276,7 @@ export const AboutSection: React.FC = () => {
                   className={`h-2 rounded-full transition-all cursor-pointer ${
                     activeSlide === idx ? 'w-8 bg-cyan-400 shadow-[0_0_10px_#00e5ff]' : 'w-2 bg-slate-700'
                   }`}
-                  title={`Go to slide ${idx + 1}`}
+                  title={`Go to event ${idx + 1}`}
                 />
               ))}
             </div>
