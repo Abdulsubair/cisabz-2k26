@@ -26,6 +26,7 @@ import {
   ShieldAlert,
   Send,
   RefreshCw,
+  IndianRupee,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -72,6 +73,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   // Payment Verification Fields
   const [utrNumber, setUtrNumber] = useState('');
+  const [paidAmount, setPaidAmount] = useState('');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [paymentSubmittedState, setPaymentSubmittedState] = useState<'IDLE' | 'PENDING_APPROVAL' | 'APPROVED'>('IDLE');
 
@@ -100,12 +102,20 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [validationError, setValidationError] = useState('');
 
+  // Dynamic Fee Calculation per user request:
+  // Base 2 events (1 Tech + 1 Non-Tech) = ₹200
+  // Additional events = +₹50 per extra event (e.g. 3 events = ₹250)
+  const totalSelectedEventsCount = selectedTechEvents.length + selectedNonTechEvents.length;
+  const extraEventsCount = Math.max(0, totalSelectedEventsCount - 2);
+  const totalFee = SYMPOSIUM_CONFIG.registrationFee + extraEventsCount * SYMPOSIUM_CONFIG.additionalEventFee;
+
   // Reset modal state every time it opens
   React.useEffect(() => {
     if (isOpen) {
       setStep(1);
       setPaymentSubmittedState('IDLE');
       setUtrNumber('');
+      setPaidAmount(totalFee.toString());
       setValidationError('');
 
       if (
@@ -128,6 +138,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     }
   }, [isOpen, initialSelectedEventId]);
 
+  // Keep paidAmount in sync with totalFee if user hasn't typed custom amount yet
+  React.useEffect(() => {
+    if (!paidAmount) {
+      setPaidAmount(totalFee.toString());
+    }
+  }, [totalFee]);
+
   // Toggle Technical Event (Multiple Events Allowed)
   const toggleTechEvent = (id: string) => {
     if (selectedTechEvents.includes(id)) {
@@ -148,13 +165,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
   const [registrationId] = useState<string>(() => `CSAT-2026-REG-${Math.floor(1000 + Math.random() * 9000)}`);
 
-  // Dynamic Fee Calculation per user request:
-  // Base 2 events (1 Tech + 1 Non-Tech) = ₹200
-  // Additional events = +₹50 per extra event (e.g. 3 events = ₹250)
-  const totalSelectedEventsCount = selectedTechEvents.length + selectedNonTechEvents.length;
-  const extraEventsCount = Math.max(0, totalSelectedEventsCount - 2);
-  const totalFee = SYMPOSIUM_CONFIG.registrationFee + extraEventsCount * SYMPOSIUM_CONFIG.additionalEventFee;
-
   // Helper getters
   const displayDepartment = department === 'OTHER' ? customDepartment || 'OTHER' : department;
 
@@ -165,6 +175,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     selectedNonTechEvents.includes(e.id)
   );
   const allSelectedEventObjects = [...selectedTechEventObjects, ...selectedNonTechEventObjects];
+
+  const actualPaidNum = parseFloat(paidAmount) || totalFee;
 
   // Save registration to database / localStorage
   const saveRegistrationToDatabase = (status: 'PENDING_APPROVAL' | 'PAID (CONFIRMED)', txnId: string = '') => {
@@ -181,6 +193,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       techEvents: selectedTechEvents,
       nonTechEvents: selectedNonTechEvents,
       totalAmount: totalFee,
+      actualPaidAmount: actualPaidNum,
       paymentStatus: status === 'PAID (CONFIRMED)' ? 'PAID' : 'PENDING_APPROVAL',
       utrNumber: txnId || utrNumber,
       timestamp: new Date().toLocaleString(),
@@ -238,10 +251,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       setValidationError('Please enter a valid 12-digit UPI Transaction / UTR Reference ID.');
       return;
     }
+    if (!paidAmount.trim() || parseFloat(paidAmount) <= 0) {
+      setValidationError('Please enter the actual amount paid via UPI.');
+      return;
+    }
 
     setValidationError('');
     setIsSubmittingPayment(true);
     saveRegistrationToDatabase('PENDING_APPROVAL', utrNumber.trim());
+
+    const isMatch = actualPaidNum === totalFee;
+    const verificationStatusText = isMatch
+      ? `✅ FULL PAYMENT (Paid ₹${actualPaidNum} matches Fee ₹${totalFee})`
+      : actualPaidNum < totalFee
+        ? `⚠️ INCOMPLETE PAYMENT (Paid ₹${actualPaidNum} vs Required Fee ₹${totalFee})`
+        : `✅ EXCESS PAYMENT (Paid ₹${actualPaidNum} vs Required Fee ₹${totalFee})`;
 
     // Send payment verification request to cisabz26@gmail.com via FormSubmit
     try {
@@ -252,7 +276,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          _subject: `🚨 CISABZ-2K26 PAYMENT APPROVAL REQUEST: ₹${totalFee} from ${fullName} (UTR: ${utrNumber})`,
+          _subject: `🚨 CISABZ-2K26 PAYMENT APPROVAL REQUEST: Paid ₹${actualPaidNum} (Fee ₹${totalFee}) - UTR: ${utrNumber}`,
           _template: 'table',
           _captcha: 'false',
           source: 'CISABZ-2K26 Registration Payment System',
@@ -263,12 +287,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           collegeName: college.trim(),
           department: displayDepartment,
           yearOfStudy,
-          paymentAmount: `₹${totalFee}`,
+          actualAmountPaidByUser: `₹${actualPaidNum}`,
+          requiredRegistrationFee: `₹${totalFee}`,
+          paymentVerificationStatus: verificationStatusText,
           upiTransactionUTR: utrNumber.trim(),
           payeeName: SYMPOSIUM_CONFIG.upiName,
           payeeUpiId: SYMPOSIUM_CONFIG.upiId,
           registeredEvents: allSelectedEventObjects.map((e) => `${e.name} (${e.category.toUpperCase()}) - ${e.time} @ ${e.venue}`).join(', '),
-          approvalInstruction: `Please review UTR ${utrNumber.trim()} and approve registration in Admin Portal or web application.`,
+          approvalInstruction: `Please verify UTR ${utrNumber.trim()} for ₹${actualPaidNum} against bank account before approving.`,
           timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
         }),
       });
@@ -304,6 +330,9 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
           college: college.trim(),
           department: displayDepartment,
           yearOfStudy,
+          actualAmountPaid: `₹${actualPaidNum}`,
+          requiredFee: `₹${totalFee}`,
+          transactionUTR: utrNumber.trim(),
           eventDate: SYMPOSIUM_CONFIG.eventDate,
           reportingTime: '9:15 AM at Main Auditorium Entrance Desk',
           registeredEvents: allSelectedEventObjects.map((e) => `${e.name} (${e.category.toUpperCase()}) | Time: ${e.time} | Venue: ${e.venue}`).join(' ; '),
@@ -919,7 +948,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       Complete Delegate Payment
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Scan QR code with GPay/PhonePe and enter <strong>₹{totalFee}</strong>. Submit your 12-digit UTR for approval.
+                      Scan QR code with GPay/PhonePe. Enter the actual paid amount & 12-digit UTR for verification.
                     </p>
                   </div>
 
@@ -927,7 +956,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <div className="p-3.5 rounded-2xl bg-[#0e1a38] border border-[#1e3260] mb-4 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-extrabold mb-0.5">
-                        TOTAL CALCULATED AMOUNT
+                        EXPECTED REGISTRATION FEE
                       </div>
                       <p className="text-[11px] text-slate-300 max-w-xs">
                         Covers {totalSelectedEventsCount} event(s), welcome kit, buffet lunch & physical certificate
@@ -939,7 +968,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         ₹{totalFee}
                       </div>
                       <div className="text-[9px] font-mono text-emerald-400 uppercase font-bold tracking-wider">
-                        ENTER THIS AMOUNT IN GPAY
+                        REQUIRED AMOUNT
                       </div>
                     </div>
                   </div>
@@ -966,7 +995,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
 
                     <p className="text-[11px] text-slate-300 mb-3 font-mono">
-                      Scan with <strong className="text-white font-bold">Google Pay, PhonePe, Paytm</strong>, or any UPI App and enter amount <strong className="text-amber-300 font-bold">₹{totalFee}</strong>.
+                      Scan with <strong className="text-white font-bold">Google Pay, PhonePe, Paytm</strong>, or any UPI App and enter your payment amount.
                     </p>
 
                     {/* UPI ID INPUT ROW */}
@@ -1000,8 +1029,32 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                   </div>
 
-                  {/* FORM TO ENTER TRANSACTION UTR NUMBER (REQUIRED) */}
+                  {/* FORM TO ENTER ACTUAL AMOUNT PAID & UTR NUMBER */}
                   <form onSubmit={handleSubmitPaymentForApproval} className="space-y-3">
+                    {/* INPUT 1: ACTUAL AMOUNT PAID BY USER */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-200 mb-1 flex items-center justify-between">
+                        <span>Actual Amount Paid via UPI (₹) *</span>
+                        <span className="text-[10px] text-cyan-400 font-mono">Required Fee: ₹{totalFee}</span>
+                      </label>
+                      <div className="relative">
+                        <IndianRupee className="w-4 h-4 text-amber-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          placeholder={`Enter amount paid (e.g. ${totalFee})`}
+                          value={paidAmount}
+                          onChange={(e) => setPaidAmount(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0e1832] border border-[#1e2f56] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all font-mono font-bold"
+                        />
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Enter the exact amount transferred via GPay/PhonePe so organizers can verify the exact payment amount against bank records.
+                      </span>
+                    </div>
+
+                    {/* INPUT 2: UTR TRANSACTION NUMBER */}
                     <div>
                       <label className="block text-xs font-bold text-slate-200 mb-1">
                         Enter 12-Digit UPI Transaction Ref / UTR Number *
@@ -1009,13 +1062,13 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       <input
                         type="text"
                         required
-                        placeholder="e.g., 423987123456 (Found in GPay/PhonePe receipt)"
+                        placeholder="e.g., 660982055096 (Found in GPay/PhonePe receipt)"
                         value={utrNumber}
                         onChange={(e) => setUtrNumber(e.target.value.replace(/[^0-9A-Za-z]/g, ''))}
                         className="w-full px-4 py-3 rounded-xl bg-[#0e1832] border border-[#1e2f56] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/80 transition-all font-mono tracking-wider"
                       />
                       <span className="text-[10px] text-slate-400 mt-1 block">
-                        Without completing payment & UTR entry, registration cannot be finalized. Notification will be sent to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for verification.
+                        Notification will be sent to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> showing both the UTR number and your actual paid amount (₹{actualPaidNum}).
                       </span>
                     </div>
 
@@ -1064,7 +1117,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   Payment Submitted & Awaiting Approval
                 </h3>
                 <p className="text-xs text-slate-300 max-w-md mx-auto mb-4">
-                  Thank you <strong className="text-white">{fullName}</strong>. Payment verification notification for ₹<strong className="text-amber-300 font-mono">{totalFee}</strong> has been sent directly to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>.
+                  Thank you <strong className="text-white">{fullName}</strong>. Payment verification notification for actual paid amount <strong className="text-emerald-400 font-mono">₹{actualPaidNum}</strong> (Fee Required: ₹{totalFee}) has been sent directly to <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong> for UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong>.
                 </p>
 
                 {/* EMAIL DISPATCH ALERT BADGE */}
@@ -1084,8 +1137,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <span className="text-amber-400 font-bold">{utrNumber}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
-                    <span>TOTAL AMOUNT PAID:</span>
-                    <span className="text-emerald-400 font-bold">₹{totalFee}</span>
+                    <span>ACTUAL AMOUNT PAID:</span>
+                    <span className="text-emerald-400 font-bold">₹{actualPaidNum}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
+                    <span>REQUIRED REGISTRATION FEE:</span>
+                    <span className="text-amber-300 font-bold">₹{totalFee}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 border-b border-slate-800 pb-2">
                     <span>PAYEE NAME & UPI:</span>
@@ -1104,7 +1161,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <span>COORDINATOR APPROVAL ACTION</span>
                   </div>
                   <p className="text-[11px] text-slate-300 mb-3">
-                    As specified, once the coordinator clicks <strong>Approve</strong>, the student receives the registration completion email containing event details, category, time, and venue location.
+                    As specified, once the coordinator verifies the paid amount (₹{actualPaidNum}) against UTR {utrNumber} and clicks <strong>Approve</strong>, the student receives the registration completion email containing event details, category, time, and venue location.
                   </p>
 
                   <button
@@ -1157,7 +1214,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         Welcome from Kings College of Engineering, Department of Computer Science and Engineering, CSAT 2026
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong> &bull; UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong> &bull; Amount: <strong className="text-emerald-400 font-mono">₹{totalFee}</strong>
+                        Symposium ID: <strong className="text-cyan-300 font-mono">{registrationId}</strong> &bull; UTR: <strong className="text-amber-300 font-mono">{utrNumber}</strong> &bull; Amount Paid: <strong className="text-emerald-400 font-mono">₹{actualPaidNum}</strong>
                       </p>
                     </div>
 
