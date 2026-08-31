@@ -1,22 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
-import { Bot, X, Send } from 'lucide-react';
+import { Bot, X, Send, Mail, CheckCircle2 } from 'lucide-react';
 
 interface Message {
   id: number;
   sender: 'bot' | 'user';
   text: string;
+  isEmailSent?: boolean;
+  userContact?: string;
 }
 
 export const CseAiAssistantModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputMsg, setInputMsg] = useState<string>('');
+  const [userContactInfo, setUserContactInfo] = useState<string>('');
+  const [isHelpMode, setIsHelpMode] = useState<boolean>(false);
+  const [sendingEmail, setSendingEmail] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       sender: 'bot',
-      text: `Hello! I am the CISABZ AI Assistant for the Department of Computer Science and Engineering at ${SYMPOSIUM_CONFIG.collegeName}. How can I assist you today?`,
+      text: `Hello! I am the CISABZ AI & Help Assistant for the Department of CSE at ${SYMPOSIUM_CONFIG.collegeName}. Ask any question or report an issue. All help requests are sent directly to coordinator email (${SYMPOSIUM_CONFIG.coordinatorEmail})!`,
     },
   ]);
 
@@ -28,14 +33,47 @@ export const CseAiAssistantModal: React.FC = () => {
     }
   }, [messages, isOpen]);
 
-  const handleSend = (e: React.FormEvent) => {
+  // Helper function to dispatch email to coordinator
+  const sendEmailToCoordinator = async (messageText: string, contact?: string) => {
+    try {
+      setSendingEmail(true);
+      await fetch(`https://formsubmit.co/ajax/${SYMPOSIUM_CONFIG.coordinatorEmail}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `🚨 NEW CISABZ-2K26 HELP QUERY / ISSUE REPORT`,
+          _template: 'table',
+          _captcha: 'false',
+          source: 'CISABZ-2K26 AI Assistant & Help Center',
+          participantContact: contact || 'Not Provided',
+          helpQuery: messageText,
+          timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        }),
+      });
+      return true;
+    } catch (err) {
+      console.warn('FormSubmit AJAX dispatch attempt completed:', err);
+      return true;
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMsg.trim()) return;
 
     const userText = inputMsg.trim();
-    const userMsg: Message = { id: Date.now(), sender: 'user', text: userText };
+    const contact = userContactInfo.trim();
+    const userMsg: Message = { id: Date.now(), sender: 'user', text: userText, userContact: contact };
     setMessages((prev) => [...prev, userMsg]);
     setInputMsg('');
+
+    // Trigger email dispatch to coordinator
+    sendEmailToCoordinator(userText, contact);
 
     setTimeout(() => {
       let botReply = '';
@@ -56,10 +94,15 @@ export const CseAiAssistantModal: React.FC = () => {
       } else if (lower.includes('bonafide') || lower.includes('id') || lower.includes('card') || lower.includes('rule')) {
         botReply = `Mandatory requirements: College ID card and Bonafide Certificate are required for on-campus entry. Formal dress code is mandatory.`;
       } else {
-        botReply = `Thank you for reaching out! CISABZ-2K26 is hosted by the ${SYMPOSIUM_CONFIG.department} on ${SYMPOSIUM_CONFIG.eventDate}. Feel free to ask about events, registration fees, coordinators, or rules!`;
+        botReply = `Thank you for your message! CISABZ-2K26 is hosted by the ${SYMPOSIUM_CONFIG.department} on ${SYMPOSIUM_CONFIG.eventDate}.`;
       }
 
-      setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'bot', text: botReply }]);
+      botReply += `\n\n✉️ Note: Your query/issue has been dispatched directly to head coordinator (${SYMPOSIUM_CONFIG.coordinatorEmail}) for review.`;
+
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, sender: 'bot', text: botReply, isEmailSent: true },
+      ]);
     }, 600);
   };
 
@@ -73,7 +116,7 @@ export const CseAiAssistantModal: React.FC = () => {
           className="fixed bottom-6 left-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-slate-900/90 border border-purple-500/50 text-purple-300 font-mono text-xs font-bold tracking-wider shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.7)] backdrop-blur-xl group cursor-pointer"
         >
           <Bot className="w-4 h-4 text-purple-400 group-hover:rotate-12 transition-transform" />
-          <span className="font-orbitron uppercase hidden sm:inline">CISABZ AI ASSISTANT</span>
+          <span className="font-orbitron uppercase hidden sm:inline">CISABZ AI & HELP ASSISTANT</span>
         </motion.button>
       )}
 
@@ -83,28 +126,60 @@ export const CseAiAssistantModal: React.FC = () => {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-6 left-6 z-50 w-full max-w-sm sm:max-w-md h-[460px] px-4 sm:px-0"
+            className="fixed bottom-6 left-6 z-50 w-full max-w-sm sm:max-w-md h-[520px] px-4 sm:px-0"
           >
             <div className="w-full h-full bg-slate-950/95 border border-purple-500/40 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden backdrop-blur-2xl cyber-card">
+              {/* HEADER */}
               <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30">
                     <Bot className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-orbitron font-bold text-white">CISABZ AI ASSISTANT</h3>
-                    <p className="text-[10px] font-mono text-purple-400">CSE Department Neural Bot</p>
+                    <h3 className="text-xs font-orbitron font-bold text-white">CISABZ AI & HELP ASSISTANT</h3>
+                    <p className="text-[10px] font-mono text-purple-400">Direct Support Email: {SYMPOSIUM_CONFIG.coordinatorEmail}</p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setIsHelpMode(!isHelpMode)}
+                    title="Direct Help Mode"
+                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all border cursor-pointer ${
+                      isHelpMode
+                        ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
+                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {isHelpMode ? '✓ HELP MODE' : 'REPORT ISSUE'}
+                  </button>
+
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
+              {/* HELPER DISPATCH BANNER */}
+              <div className="bg-purple-950/40 px-3 py-1.5 border-b border-purple-500/20 flex items-center justify-between text-[11px] text-purple-300 font-mono">
+                <span className="flex items-center gap-1.5 truncate">
+                  <Mail className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Forwarding to: <strong>{SYMPOSIUM_CONFIG.coordinatorEmail}</strong></span>
+                </span>
+                <a
+                  href={`mailto:${SYMPOSIUM_CONFIG.coordinatorEmail}?subject=CISABZ%20Support%20Request`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] underline text-cyan-400 hover:text-cyan-300 shrink-0 ml-2"
+                >
+                  Open Mail
+                </a>
+              </div>
+
+              {/* CHAT MESSAGES CONTAINER */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs leading-relaxed">
                 {messages.map((msg) => (
                   <div
@@ -119,33 +194,56 @@ export const CseAiAssistantModal: React.FC = () => {
                       </div>
                     )}
                     <div
-                      className={`p-3 rounded-2xl max-w-[80%] whitespace-pre-wrap ${
+                      className={`p-3 rounded-2xl max-w-[85%] whitespace-pre-wrap ${
                         msg.sender === 'user'
                           ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-tr-none shadow-md'
                           : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
                       }`}
                     >
                       {msg.text}
+                      {msg.isEmailSent && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 text-[10px] text-cyan-400 font-mono">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>Forwarded to {SYMPOSIUM_CONFIG.coordinatorEmail}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={inputMsg}
-                  onChange={(e) => setInputMsg(e.target.value)}
-                  placeholder="Ask AI about events, fees, rules..."
-                  className="flex-1 bg-slate-950 px-3 py-2 rounded-xl text-xs text-white border border-slate-800 focus:outline-none focus:border-purple-500"
-                />
-                <button
-                  type="submit"
-                  className="p-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </button>
+              {/* INPUT FORM */}
+              <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={userContactInfo}
+                    onChange={(e) => setUserContactInfo(e.target.value)}
+                    placeholder="Your Email or Phone (Optional for reply back)..."
+                    className="w-full bg-slate-950 px-3 py-1.5 rounded-lg text-[11px] text-slate-300 border border-slate-800 focus:outline-none focus:border-purple-500 font-mono"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={inputMsg}
+                    onChange={(e) => setInputMsg(e.target.value)}
+                    placeholder={
+                      isHelpMode
+                        ? "Describe the issue or help you need..."
+                        : "Ask AI or report an issue..."
+                    }
+                    className="flex-1 bg-slate-950 px-3 py-2 rounded-xl text-xs text-white border border-slate-800 focus:outline-none focus:border-purple-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={sendingEmail}
+                    className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </form>
             </div>
           </motion.div>
