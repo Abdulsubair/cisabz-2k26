@@ -323,13 +323,13 @@ export const STUDENT_COORDINATORS: Coordinator[] = [
   },
 ];
 
-export const STAFF_COORDINATORS: Coordinator[] = [
+export const FACULTY_COORDINATORS: Coordinator[] = [
   {
     name: 'Ms. B. BAVITHRA',
     role: 'Asst. Prof., CSE Department',
     department: 'Department of CSE',
     phone: '78452 86608',
-    type: 'staff',
+    type: 'faculty',
     avatar: bavithraImg,
   },
   {
@@ -337,10 +337,12 @@ export const STAFF_COORDINATORS: Coordinator[] = [
     role: 'Asst. Prof., CSE Department',
     department: 'Department of CSE',
     phone: '80128 15838',
-    type: 'staff',
+    type: 'faculty',
     avatar: abikayilImg,
   },
 ];
+
+export const STAFF_COORDINATORS = FACULTY_COORDINATORS;
 
 export const DIGNITARIES: Dignitary[] = [
   {

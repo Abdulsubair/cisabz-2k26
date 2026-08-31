@@ -23,7 +23,7 @@ export interface Coordinator {
   role: string;
   department?: string;
   phone: string;
-  type: 'student' | 'staff';
+  type: 'student' | 'staff' | 'faculty';
   avatar?: string;
 }
 

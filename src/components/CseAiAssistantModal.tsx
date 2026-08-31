@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS, STAFF_COORDINATORS } from '../data/symposiumData';
+import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
 import { Bot, X, Send } from 'lucide-react';
 
 interface Message {
@@ -52,7 +52,7 @@ export const CseAiAssistantModal: React.FC = () => {
       } else if (lower.includes('patron') || lower.includes('dignitary') || lower.includes('principal') || lower.includes('secretary') || lower.includes('sivakumar') || lower.includes('rajendran') || lower.includes('selvi') || lower.includes('uma')) {
         botReply = `Our Distinguished Leadership & Dignitaries:\n1. Dr. R. Rajendran (Secretary, Raj Educational Trust)\n2. Dr. J. Arputha Vijaya Selvi (Principal, Kings College of Engineering)\n3. Dr. S. Sivakumar (Vice Principal, Kings College of Engineering)\n4. Dr. S. M. Uma (HOD & Assoc. Prof, CSE Dept)`;
       } else if (lower.includes('coordinator') || lower.includes('phone') || lower.includes('contact') || lower.includes('vignesh') || lower.includes('mubashir')) {
-        botReply = `Student Coordinators:\n• C VIGNESH: ${STUDENT_COORDINATORS[0].phone}\n• M MUBASHIR: ${STUDENT_COORDINATORS[1].phone}\n\nStaff Coordinators:\n• Ms. B. BAVITHRA: ${STAFF_COORDINATORS[0].phone}\n• Ms. S. ABIKAYIL AARTHI: ${STAFF_COORDINATORS[1].phone}`;
+        botReply = `Faculty Coordinators:\n• Ms. B. BAVITHRA: ${FACULTY_COORDINATORS[0].phone}\n• Ms. S. ABIKAYIL AARTHI: ${FACULTY_COORDINATORS[1].phone}\n\nStudent Coordinators:\n• C VIGNESH: ${STUDENT_COORDINATORS[0].phone}\n• M MUBASHIR: ${STUDENT_COORDINATORS[1].phone}`;
       } else if (lower.includes('bonafide') || lower.includes('id') || lower.includes('card') || lower.includes('rule')) {
         botReply = `Mandatory requirements: College ID card and Bonafide Certificate are required for on-campus entry. Formal dress code is mandatory.`;
       } else {

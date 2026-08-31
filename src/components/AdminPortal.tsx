@@ -728,10 +728,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </tbody>
               </table>
 
-              {/* EVENT STAFF COORDINATOR SIGNATURE FOOTER */}
+              {/* EVENT FACULTY COORDINATOR SIGNATURE FOOTER */}
               <div className="mt-12 pt-6 border-t border-slate-800 print:border-black grid grid-cols-2 text-xs print:text-black font-mono">
                 <div>
-                  <div className="text-slate-400 print:text-black mb-8">Staff Coordinator Signature:</div>
+                  <div className="text-slate-400 print:text-black mb-8">Faculty Coordinator Signature:</div>
                   <div className="font-bold border-b-2 border-slate-600 print:border-black w-56" />
                 </div>
                 <div className="text-right">
