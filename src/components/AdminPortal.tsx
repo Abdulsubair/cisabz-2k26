@@ -581,30 +581,44 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
             {/* OFFICIAL PRINTABLE PDF REPORT CONTAINER MATCHING COLLEGE ASSESSMENT REPORT STRUCTURE */}
             <div className="p-8 sm:p-10 rounded-3xl bg-slate-950 print:bg-white text-slate-100 print:text-black border border-slate-800 print:border-none shadow-2xl print:shadow-none font-sans">
-              {/* OFFICIAL KINGS COLLEGE HEADER BLOCK (MATCHING REFERENCE CAT REPORT LAYOUT) */}
-              <div className="flex items-start justify-between pb-4 mb-4 border-b-2 border-slate-700 print:border-black">
+              {/* OFFICIAL KINGS & CISABZ DUAL LOGO HEADER BLOCK */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 print:grid-cols-3 items-center justify-between gap-4 pb-4 mb-4 border-b-2 border-slate-700 print:border-black">
                 {/* LEFT: KINGS LOGO & TITLE */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <img
                     src={kingsLogo}
                     alt="KINGS College Shield Logo"
-                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0"
                   />
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white print:text-black uppercase">
+                    <h1 className="text-base sm:text-xl font-black tracking-tight text-white print:text-black uppercase">
                       KINGS
                     </h1>
-                    <h2 className="text-xs sm:text-sm font-bold text-cyan-400 print:text-black uppercase">
+                    <h2 className="text-[10px] sm:text-xs font-bold text-cyan-400 print:text-black uppercase">
                       COLLEGE OF ENGINEERING
                     </h2>
-                    <p className="text-[10px] text-slate-400 print:text-black font-semibold">
+                    <p className="text-[9px] text-slate-400 print:text-black font-semibold">
                       (AUTONOMOUS)
                     </p>
                   </div>
                 </div>
 
+                {/* CENTER: CISABZ-2K26 SYMPOSIUM LOGO */}
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black border-2 border-amber-400 print:border-black p-1 shadow-[0_0_15px_rgba(212,175,55,0.4)] print:shadow-none overflow-hidden flex items-center justify-center">
+                    <img
+                      src={cisabzLogo}
+                      alt="CISABZ-2K26 Official Logo"
+                      className="w-full h-full object-contain rounded-xl"
+                    />
+                  </div>
+                  <span className="text-[9px] font-orbitron font-bold text-amber-400 print:text-black uppercase mt-1 tracking-wider">
+                    {SYMPOSIUM_CONFIG.name}
+                  </span>
+                </div>
+
                 {/* RIGHT: ACCREDITATION DETAILS */}
-                <div className="text-right text-[10px] text-slate-400 print:text-gray-700 font-semibold space-y-0.5">
+                <div className="text-right text-[9px] sm:text-[10px] text-slate-400 print:text-gray-700 font-semibold space-y-0.5">
                   <div>Approved by AICTE, New Delhi</div>
                   <div>Affiliated to Anna University, Chennai</div>
                   <div>Recognized under 2(f) & 12B, UGC</div>
