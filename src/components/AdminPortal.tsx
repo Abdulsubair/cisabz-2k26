@@ -13,6 +13,7 @@ import {
   LogOut,
   ArrowLeft,
   Layers,
+  Trash2,
 } from 'lucide-react';
 import { SYMPOSIUM_CONFIG, ALL_EVENTS, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
 import cisabzLogo from '../assets/cisabz-logo.jpg';
@@ -34,98 +35,7 @@ export interface RegistrationRecord {
   emailSentStatus: boolean;
 }
 
-const DEFAULT_RECORDS: RegistrationRecord[] = [
-  {
-    id: 'CISABZ-2K26-REG-1001',
-    fullName: 'K. Aravind',
-    email: 'aravind.k@aamec.edu.in',
-    phone: '9842104921',
-    college: 'Anjalai Ammal Mahalingam Engineering College',
-    department: 'B.E CSE',
-    yearOfStudy: '1st Year (Freshman)',
-    techEvents: ['techverse', 'tech-brainiac'],
-    nonTechEvents: ['hammer-hit'],
-    totalAmount: 200,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 09:15:20',
-    emailSentStatus: true,
-  },
-  {
-    id: 'CISABZ-2K26-REG-1002',
-    fullName: 'S. Priyadharshini',
-    email: 'priya.s@aamec.edu.in',
-    phone: '9789214012',
-    college: 'Anjalai Ammal Mahalingam Engineering College',
-    department: 'B.TECH IT',
-    yearOfStudy: '2nd Year',
-    techEvents: ['bug-bash', 'tech-brainiac'],
-    nonTechEvents: ['pinpoint'],
-    totalAmount: 200,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 09:42:11',
-    emailSentStatus: true,
-  },
-  {
-    id: 'CISABZ-2K26-REG-1003',
-    fullName: 'R. Vigneshwar',
-    email: 'vignesh.r@aamec.edu.in',
-    phone: '9443210984',
-    college: 'Anjalai Ammal Mahalingam Engineering College',
-    department: 'B.E AI & DS',
-    yearOfStudy: '3rd Year',
-    techEvents: ['prompt-fusion', 'tech-brainiac', 'bug-bash'],
-    nonTechEvents: ['hammer-hit'],
-    totalAmount: 250,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 10:05:45',
-    emailSentStatus: true,
-  },
-  {
-    id: 'CISABZ-2K26-REG-1004',
-    fullName: 'M. Koushik',
-    email: 'koushik.m@kingsengg.edu.in',
-    phone: '9123456789',
-    college: 'Kings College of Engineering',
-    department: 'B.E CSE',
-    yearOfStudy: '4th Year (Final)',
-    techEvents: ['techverse', 'tech-brainiac'],
-    nonTechEvents: ['connection'],
-    totalAmount: 200,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 10:20:00',
-    emailSentStatus: true,
-  },
-  {
-    id: 'CISABZ-2K26-REG-1005',
-    fullName: 'N. Deepa',
-    email: 'deepa.n@sastra.edu',
-    phone: '9944112233',
-    college: 'SASTRA Deemed University',
-    department: 'B.E ECE',
-    yearOfStudy: '2nd Year',
-    techEvents: ['tech-brainiac'],
-    nonTechEvents: ['brand-spot'],
-    totalAmount: 200,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 10:35:12',
-    emailSentStatus: true,
-  },
-  {
-    id: 'CISABZ-2K26-REG-1006',
-    fullName: 'V. Barath',
-    email: 'barath.v@nitt.edu',
-    phone: '9876543210',
-    college: 'National Institute of Technology (NIT) Trichy',
-    department: 'B.E CSE',
-    yearOfStudy: '3rd Year',
-    techEvents: ['bug-bash', 'prompt-fusion', 'tech-brainiac'],
-    nonTechEvents: ['hammer-hit', 'connection'],
-    totalAmount: 300,
-    paymentStatus: 'PAID',
-    timestamp: '2026-08-30 11:10:05',
-    emailSentStatus: true,
-  },
-];
+const DEFAULT_RECORDS: RegistrationRecord[] = [];
 
 interface AdminPortalProps {
   onBackToWebsite: () => void;
@@ -159,7 +69,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     try {
       const stored = localStorage.getItem('cisabz_registrations');
       if (stored) {
-        setRecords(JSON.parse(stored));
+        const parsed: RegistrationRecord[] = JSON.parse(stored);
+        // Filter out legacy sample records (REG-1001 to REG-1006)
+        const sampleIds = [
+          'CISABZ-2K26-REG-1001',
+          'CISABZ-2K26-REG-1002',
+          'CISABZ-2K26-REG-1003',
+          'CISABZ-2K26-REG-1004',
+          'CISABZ-2K26-REG-1005',
+          'CISABZ-2K26-REG-1006',
+        ];
+        const cleaned = parsed.filter((r) => !sampleIds.includes(r.id));
+        setRecords(cleaned);
+        localStorage.setItem('cisabz_registrations', JSON.stringify(cleaned));
       } else {
         localStorage.setItem('cisabz_registrations', JSON.stringify(DEFAULT_RECORDS));
         setRecords(DEFAULT_RECORDS);
@@ -190,6 +112,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     localStorage.removeItem('cisabz_admin_authed');
     setUsername('');
     setPassword('');
+  };
+
+  const handleResetDatabase = () => {
+    if (window.confirm('Are you sure you want to clear all registration data and start with a fresh blank page?')) {
+      localStorage.setItem('cisabz_registrations', JSON.stringify([]));
+      setRecords([]);
+    }
   };
 
   // Filter master records
@@ -379,6 +308,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleResetDatabase}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 text-xs font-mono font-bold transition-all cursor-pointer"
+            title="Clear all saved data and start fresh"
+          >
+            <Trash2 className="w-4 h-4 text-rose-400" />
+            <span>CLEAR ALL DATA</span>
+          </button>
+
           <button
             onClick={onBackToWebsite}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono font-bold transition-all cursor-pointer"
