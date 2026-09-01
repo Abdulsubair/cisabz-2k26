@@ -51,7 +51,7 @@ export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps>
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {NON_TECHNICAL_EVENTS.map((event) => (
             <EventCard
               key={event.id}
