@@ -8,13 +8,11 @@ import { Cpu } from 'lucide-react';
 interface TechnicalEventsSectionProps {
   onViewGuidelines: (event: EventItem) => void;
   onRegister: (eventId: string) => void;
-  onViewCinematicDemo?: (event: EventItem) => void;
 }
 
 export const TechnicalEventsSection: React.FC<TechnicalEventsSectionProps> = ({
   onViewGuidelines,
   onRegister,
-  onViewCinematicDemo,
 }) => {
   return (
     <section id="technical-events" className="py-24 relative bg-slate-950/90 border-t border-slate-900">
@@ -58,7 +56,6 @@ export const TechnicalEventsSection: React.FC<TechnicalEventsSectionProps> = ({
               event={event}
               onViewGuidelines={onViewGuidelines}
               onRegister={onRegister}
-              onViewCinematicDemo={onViewCinematicDemo}
             />
           ))}
         </div>

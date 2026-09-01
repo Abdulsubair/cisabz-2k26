@@ -139,14 +139,12 @@ export function App() {
         <TechnicalEventsSection
           onViewGuidelines={(event) => setSelectedGuidelineEvent(event)}
           onRegister={(eventId) => handleOpenRegistration(eventId)}
-          onViewCinematicDemo={(event) => setSelectedCinematicDemoEvent(event)}
         />
 
         {/* DEDICATED NON-TECHNICAL EVENTS */}
         <NonTechnicalEventsSection
           onViewGuidelines={(event) => setSelectedGuidelineEvent(event)}
           onRegister={(eventId) => handleOpenRegistration(eventId)}
-          onViewCinematicDemo={(event) => setSelectedCinematicDemoEvent(event)}
         />
 
         {/* SCHEDULE / EVENT TIMELINE */}
@@ -173,7 +171,6 @@ export function App() {
         event={selectedGuidelineEvent}
         onClose={() => setSelectedGuidelineEvent(null)}
         onRegister={(eventId) => handleOpenRegistration(eventId)}
-        onOpenCinematicDemo={(event) => setSelectedCinematicDemoEvent(event)}
       />
 
       {/* FULL-SCREEN CINEMATIC EVENT VIDEO REEL MODAL */}
@@ -183,8 +180,10 @@ export function App() {
         onRegister={(eventId) => handleOpenRegistration(eventId)}
       />
 
-      {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT */}
-      <CseAiAssistantModal onOpenRegistration={(eventId) => handleOpenRegistration(eventId)} />
+      {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT (ONLY AFTER INTRO IS COMPLETED) */}
+      {introCompleted && !replayIntro && (
+        <CseAiAssistantModal onOpenRegistration={(eventId) => handleOpenRegistration(eventId)} />
+      )}
     </div>
   );
 }

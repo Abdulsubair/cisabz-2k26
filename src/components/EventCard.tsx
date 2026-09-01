@@ -22,7 +22,6 @@ interface EventCardProps {
   event: EventItem;
   onViewGuidelines: (event: EventItem) => void;
   onRegister: (eventId: string) => void;
-  onViewCinematicDemo?: (event: EventItem) => void;
 }
 
 const iconMap: Record<string, React.ElementType> = {
@@ -40,7 +39,6 @@ export const EventCard: React.FC<EventCardProps> = ({
   event,
   onViewGuidelines,
   onRegister,
-  onViewCinematicDemo,
 }) => {
   const IconComponent = iconMap[event.iconName] || FileText;
 
@@ -195,28 +193,20 @@ export const EventCard: React.FC<EventCardProps> = ({
         </div>
       </div>
 
-      <div className="pt-4 border-t border-slate-800/80 grid grid-cols-3 gap-2">
-        <button
-          onClick={() => (onViewCinematicDemo ? onViewCinematicDemo(event) : onViewGuidelines(event))}
-          className="flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40 text-[10px] font-mono font-bold tracking-wider uppercase transition-all cursor-pointer shadow-md hover:shadow-cyan-500/20"
-        >
-          <Play className="w-3.5 h-3.5 text-cyan-400 fill-current" />
-          <span>DEMO</span>
-        </button>
-
+      <div className="pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-3">
         <button
           onClick={() => onViewGuidelines(event)}
-          className="flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[10px] font-mono font-bold tracking-wider uppercase transition-colors cursor-pointer"
+          className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-mono font-bold tracking-wider uppercase transition-colors cursor-pointer"
         >
-          <Info className="w-3.5 h-3.5 text-slate-400" />
+          <Info className="w-4 h-4 text-slate-400" />
           <span>RULES</span>
         </button>
 
         <button
           onClick={() => onRegister(event.id)}
-          className="flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-mono font-bold text-[10px] tracking-wider uppercase shadow-md hover:shadow-cyan-500/30 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-mono font-bold text-xs tracking-wider uppercase shadow-md hover:shadow-cyan-500/30 transition-all cursor-pointer"
         >
-          <CheckCircle2 className="w-3.5 h-3.5" />
+          <CheckCircle2 className="w-4 h-4" />
           <span>REGISTER</span>
         </button>
       </div>

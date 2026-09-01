@@ -8,13 +8,11 @@ import { Gamepad2 } from 'lucide-react';
 interface NonTechnicalEventsSectionProps {
   onViewGuidelines: (event: EventItem) => void;
   onRegister: (eventId: string) => void;
-  onViewCinematicDemo?: (event: EventItem) => void;
 }
 
 export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps> = ({
   onViewGuidelines,
   onRegister,
-  onViewCinematicDemo,
 }) => {
   return (
     <section id="non-technical-events" className="py-24 relative bg-slate-950 border-t border-slate-900">
@@ -58,7 +56,6 @@ export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps>
               event={event}
               onViewGuidelines={onViewGuidelines}
               onRegister={onRegister}
-              onViewCinematicDemo={onViewCinematicDemo}
             />
           ))}
         </div>

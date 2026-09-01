@@ -9,14 +9,12 @@ interface EventGuidelineModalProps {
   event: EventItem | null;
   onClose: () => void;
   onRegister: (eventId: string) => void;
-  onOpenCinematicDemo?: (event: EventItem) => void;
 }
 
 export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
   event,
   onClose,
   onRegister,
-  onOpenCinematicDemo,
 }) => {
   const [activeTab, setActiveTab] = useState<'demo' | 'guidelines'>('demo');
 
@@ -59,20 +57,10 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
             <h3 className="text-2xl sm:text-4xl font-extrabold font-orbitron text-white tracking-tight">
               {event.name}
             </h3>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-2">
+            <div className="mt-2">
               <p className="text-cyan-400 font-semibold text-sm sm:text-base">
                 {event.subtitle} — {event.tagline}
               </p>
-
-              {onOpenCinematicDemo && (
-                <button
-                  onClick={() => onOpenCinematicDemo(event)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-mono font-bold uppercase transition-all shadow-md cursor-pointer"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-                  <span>🎬 LAUNCH 4K CINEMATIC REEL</span>
-                </button>
-              )}
             </div>
           </div>
 
