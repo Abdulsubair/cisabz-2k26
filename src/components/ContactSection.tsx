@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS } from '../data/symposiumData';
+import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
 import { Phone, Mail, MessageSquare, Send, MapPin, Navigation, Compass, ExternalLink } from 'lucide-react';
 import igQrCode from '../assets/cisabz26-ig-qr.png';
 
