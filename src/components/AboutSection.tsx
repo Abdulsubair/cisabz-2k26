@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
 import {
   Building2,
@@ -11,6 +11,8 @@ import {
   Terminal,
   Database,
   Presentation,
+  Info,
+  X,
 } from 'lucide-react';
 
 interface CseEventBox {
@@ -27,6 +29,8 @@ interface CseEventBox {
 }
 
 export const AboutSection: React.FC = () => {
+  const [activePopupEvent, setActivePopupEvent] = useState<CseEventBox | null>(null);
+
   // OFFICIAL CSE DEPARTMENT EVENTS (BOX TYPE - NO IMAGES)
   const cseEventBoxes: CseEventBox[] = [
     {
@@ -145,20 +149,20 @@ export const AboutSection: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* OFFICIAL CSE DEPARTMENT EVENTS - BOX TYPE (NO IMAGES) */}
+        {/* OFFICIAL CSE DEPARTMENT EVENTS - 2 PER ROW ON MOBILE WITH LONG PRESS POPUP */}
         <div className="mb-16">
-          <div className="text-center max-w-3xl mx-auto mb-10">
+          <div className="text-center max-w-3xl mx-auto mb-8">
             <h3 className="text-xl sm:text-3xl font-black font-orbitron text-white flex items-center justify-center gap-2 mb-2">
               <Sparkles className="w-6 h-6 text-amber-400" />
               <span>DEPARTMENT OF CSE OFFICIAL EVENTS</span>
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 font-mono">
-              Academic Year 2025-2026 (EVEN & ODD) &bull; Guest Lectures, Orientation Programmes, Bridge Courses & Workshops
+              Academic Year 2025-2026 (EVEN & ODD) &bull; Hold card on mobile to preview full details
             </p>
           </div>
 
-          {/* BOX CARDS GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* BOX CARDS GRID: 2 COLUMNS ON MOBILE, 2 ON TABLET, 3 ON DESKTOP */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 select-none">
             {cseEventBoxes.map((item) => {
               const Icon = item.icon;
               return (
@@ -168,48 +172,124 @@ export const AboutSection: React.FC = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: item.id * 0.08 }}
-                  className={`p-6 rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group`}
+                  onTouchStart={() => setActivePopupEvent(item)}
+                  onTouchEnd={() => setActivePopupEvent(null)}
+                  onMouseDown={() => setActivePopupEvent(item)}
+                  onMouseUp={() => setActivePopupEvent(null)}
+                  onMouseLeave={() => setActivePopupEvent(null)}
+                  className={`p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group cursor-pointer active:scale-98`}
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-4">
                     {/* CARD TOP META */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
-                        <Icon className="w-5 h-5 text-cyan-400" />
+                    <div className="flex items-center justify-between gap-1.5">
+                      <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase border ${item.badgeColor}`}>
+                      <span className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-bold uppercase border truncate max-w-[120px] sm:max-w-none ${item.badgeColor}`}>
                         {item.category}
                       </span>
                     </div>
 
                     {/* EVENT TITLE */}
-                    <h4 className="text-lg font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors">
+                    <h4 className="text-xs sm:text-lg font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors line-clamp-2 sm:line-clamp-none">
                       {item.title}
                     </h4>
 
-                    {/* EVENT DATE & ACADEMIC YEAR */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 font-bold pt-1">
-                      <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{item.date}</span>
-                      <span className="text-slate-600">&bull;</span>
-                      <span className="text-slate-400 text-[11px] font-normal">{item.academicYear}</span>
+                    {/* EVENT DATE */}
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate">{item.date}</span>
                     </div>
 
-                    {/* DESCRIPTION */}
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans font-normal">
+                    {/* DESCRIPTION (SHOWN FULLY ON DESKTOP, HIDDEN ON MOBILE UNLESS HELD) */}
+                    <p className="hidden sm:block text-xs text-slate-300 leading-relaxed font-sans font-normal">
                       {item.description}
                     </p>
                   </div>
 
-                  {/* OBJECTIVE FOOTER */}
-                  <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-start gap-2 text-xs font-sans text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{item.objective}</span>
+                  {/* MOBILE TAP / HOLD INSTRUCTION TAG */}
+                  <div className="mt-3 pt-2 sm:pt-4 border-t border-slate-800/80 flex items-center justify-between text-[9px] sm:text-xs font-mono text-cyan-400">
+                    <span className="hidden sm:flex items-center gap-1.5 text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{item.objective}</span>
+                    </span>
+                    <span className="sm:hidden flex items-center gap-1 text-amber-300 font-bold">
+                      <Info className="w-3 h-3 animate-pulse text-amber-400" />
+                      <span>Hold for info 👆</span>
+                    </span>
                   </div>
                 </motion.div>
               );
             })}
           </div>
         </div>
+
+        {/* LONG-PRESS POPUP MODAL FOR MOBILE & DESKTOP PREVIEW */}
+        <AnimatePresence>
+          {activePopupEvent && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-slate-950/85 backdrop-blur-md"
+                onClick={() => setActivePopupEvent(null)}
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                className="relative w-full max-w-lg bg-slate-900 border border-cyan-500/50 rounded-3xl p-6 shadow-[0_0_50px_rgba(0,229,255,0.3)] z-10 flex flex-col gap-4 text-slate-100"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400">
+                      {React.createElement(activePopupEvent.icon, { className: 'w-6 h-6 text-cyan-400' })}
+                    </div>
+                    <div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${activePopupEvent.badgeColor}`}>
+                        {activePopupEvent.category}
+                      </span>
+                      <h4 className="text-base sm:text-xl font-extrabold font-orbitron text-white mt-1 leading-snug">
+                        {activePopupEvent.title}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setActivePopupEvent(null)}
+                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 font-bold bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                  <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>{activePopupEvent.date}</span>
+                  <span className="text-slate-600">&bull;</span>
+                  <span className="text-slate-300 font-normal">{activePopupEvent.academicYear}</span>
+                </div>
+
+                <div className="space-y-2 text-xs text-slate-300 leading-relaxed font-sans bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/60">
+                  <span className="font-bold font-mono text-cyan-300 text-[11px] uppercase block">Detailed Event Overview:</span>
+                  <p>{activePopupEvent.description}</p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-emerald-950/50 border border-emerald-500/30 flex items-start gap-2.5 text-xs text-emerald-300 font-sans">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span><strong>Objective:</strong> {activePopupEvent.objective}</span>
+                </div>
+
+                <p className="text-[10px] text-center text-slate-500 font-mono uppercase tracking-wider">
+                  Release press to close details
+                </p>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </section>
