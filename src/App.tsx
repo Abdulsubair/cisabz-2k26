@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SYMPOSIUM_CONFIG } from './data/symposiumData';
 import { CinematicIntro } from './components/CinematicIntro';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -15,7 +16,6 @@ import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { EventGuidelineModal } from './components/EventGuidelineModal';
 import { CinematicEventVideoModal } from './components/CinematicEventVideoModal';
-import { RegistrationModal } from './components/RegistrationModal';
 import { AdminPortal } from './components/AdminPortal';
 import { CseAiAssistantModal } from './components/CseAiAssistantModal';
 import { BackgroundBuildingFlythrough } from './components/BackgroundBuildingFlythrough';
@@ -27,8 +27,6 @@ export function App() {
   const [replayIntro, setReplayIntro] = useState<boolean>(false);
   const [selectedGuidelineEvent, setSelectedGuidelineEvent] = useState<EventItem | null>(null);
   const [selectedCinematicDemoEvent, setSelectedCinematicDemoEvent] = useState<EventItem | null>(null);
-  const [registrationModalOpen, setRegistrationModalOpen] = useState<boolean>(false);
-  const [selectedRegistrationEventId, setSelectedRegistrationEventId] = useState<string | undefined>();
 
   // Route check for /admin or #admin
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => {
@@ -58,9 +56,8 @@ export function App() {
     };
   }, []);
 
-  const handleOpenRegistration = (eventId?: string) => {
-    setSelectedRegistrationEventId(eventId);
-    setRegistrationModalOpen(true);
+  const handleOpenRegistration = (_eventId?: string) => {
+    window.open(SYMPOSIUM_CONFIG.registrationLink, '_blank', 'noopener,noreferrer');
   };
 
   useEffect(() => {
@@ -184,13 +181,6 @@ export function App() {
         event={selectedCinematicDemoEvent}
         onClose={() => setSelectedCinematicDemoEvent(null)}
         onRegister={(eventId) => handleOpenRegistration(eventId)}
-      />
-
-      {/* REGISTRATION MODAL */}
-      <RegistrationModal
-        isOpen={registrationModalOpen}
-        onClose={() => setRegistrationModalOpen(false)}
-        initialSelectedEventId={selectedRegistrationEventId}
       />
 
       {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT */}

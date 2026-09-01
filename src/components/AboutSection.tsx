@@ -3,11 +3,8 @@ import { motion } from 'framer-motion';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
 import {
   Building2,
-  GraduationCap,
-  Cpu,
   Calendar,
   CheckCircle2,
-  BookOpen,
   Layers,
   Sparkles,
   ShieldCheck,
@@ -112,33 +109,6 @@ export const AboutSection: React.FC = () => {
     },
   ];
 
-  const departmentPillars = [
-    {
-      icon: Building2,
-      title: 'Established in 2001',
-      desc: 'Approved by AICTE New Delhi and affiliated to Anna University, Chennai. Offering B.E. CSE and M.E. CSE programmes.',
-      color: 'border-cyan-500/40 text-cyan-400',
-    },
-    {
-      icon: Cpu,
-      title: 'State-of-the-Art Computing Labs',
-      desc: 'Full-fledged computer laboratories supported by high-speed fiber internet, wireless networks, and AI computing hardware.',
-      color: 'border-amber-500/40 text-amber-400',
-    },
-    {
-      icon: BookOpen,
-      title: 'IIT Bombay & Professional Societies',
-      desc: 'Active student chapters of IEI and ISTE regularly conducting workshops, seminars, and IIT Bombay Spoken Tutorial certifications.',
-      color: 'border-purple-500/40 text-purple-400',
-    },
-    {
-      icon: GraduationCap,
-      title: 'Global Career & Research Placements',
-      desc: 'Our CSE graduates occupy top technology leadership positions in premier IT corporate companies and research institutions globally.',
-      color: 'border-emerald-500/40 text-emerald-400',
-    },
-  ];
-
   return (
     <section id="about" className="py-20 relative overflow-hidden bg-slate-950 border-t border-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -239,35 +209,6 @@ export const AboutSection: React.FC = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* 4 CORE DEPARTMENT PILLARS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {departmentPillars.map((pillar, idx) => {
-            const Icon = pillar.icon;
-            return (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className={`p-6 rounded-3xl bg-slate-900/80 border ${pillar.color} backdrop-blur-xl flex flex-col justify-between hover:border-cyan-400 transition-all shadow-xl group`}
-              >
-                <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 w-fit mb-4 group-hover:scale-110 transition-transform">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-base font-extrabold font-orbitron text-white mb-2 leading-snug">
-                    {pillar.title}
-                  </h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                    {pillar.desc}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
         </div>
 
       </div>
