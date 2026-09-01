@@ -9,7 +9,6 @@ interface ContactSectionProps {
 }
 
 export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick }) => {
-  const primaryPhone = STUDENT_COORDINATORS[0].phone;
 
   return (
     <section id="contact" className="py-24 relative bg-slate-950 border-t border-slate-900">
@@ -49,16 +48,60 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
 
         {/* QUICK CONTACT ACTION BUTTONS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-16">
-          <a
-            href={`tel:${primaryPhone.replace(/\s+/g, '')}`}
-            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex flex-col items-center text-center group transition-all"
-          >
-            <div className="p-3.5 rounded-2xl bg-cyan-500/10 text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-              <Phone className="w-6 h-6" />
+          <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex flex-col items-start text-left group transition-all col-span-1 sm:col-span-2 lg:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
+                <Phone className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Student Coordinators</h3>
             </div>
-            <h3 className="text-sm font-bold text-white uppercase mb-1">CALL COORDINATOR</h3>
-            <p className="text-xs text-slate-400 font-mono">{primaryPhone}</p>
-          </a>
+
+            {/* Chairpersons */}
+            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2">Chairperson</p>
+            <div className="w-full space-y-2 mb-4">
+              {[
+                { name: 'M. Mubashir', phone: '9514359887' },
+                { name: 'C. Vignesh', phone: '7871630097' },
+              ].map((c) => (
+                <a key={c.name} href={`tel:${c.phone}`}
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-cyan-500/40 hover:bg-cyan-950/20 transition-all group/item">
+                  <span className="text-xs font-semibold text-white">{c.name}</span>
+                  <span className="text-xs font-mono text-cyan-300 flex items-center gap-1">
+                    <Phone className="w-3 h-3" />{c.phone}
+                  </span>
+                </a>
+              ))}
+            </div>
+
+            {/* Vice Chairpersons */}
+            <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2">Vice Chair</p>
+            <div className="w-full space-y-2 mb-4">
+              {['M. Abhirami', 'B.S. Subasri'].map((name) => (
+                <div key={name}
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-slate-950/70 border border-slate-800">
+                  <span className="text-xs font-semibold text-white">{name}</span>
+                  <span className="text-[10px] font-mono text-slate-500">—</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Finance */}
+            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Finance</p>
+            <div className="w-full space-y-2">
+              {[
+                { name: 'K. Karan', phone: '9025970697' },
+                { name: 'N. Subair', phone: '6385228553' },
+              ].map((c) => (
+                <a key={c.name} href={`tel:${c.phone}`}
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-amber-500/40 hover:bg-amber-950/20 transition-all group/item">
+                  <span className="text-xs font-semibold text-white">{c.name}</span>
+                  <span className="text-xs font-mono text-amber-300 flex items-center gap-1">
+                    <Phone className="w-3 h-3" />{c.phone}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
 
           <button
             onClick={onRegisterClick}
