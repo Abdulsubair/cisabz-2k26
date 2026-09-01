@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { EventItem } from '../types';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
-import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight, BookOpen } from 'lucide-react';
+import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight } from 'lucide-react';
 
 interface EventGuidelineModalProps {
   event: EventItem | null;
