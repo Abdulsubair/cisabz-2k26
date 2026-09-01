@@ -34,7 +34,7 @@ export const SYMPOSIUM_CONFIG = {
 };
 
 export const ASSET_IMAGES = {
-  logo: '/assets/cisabz-logo.jpg',
+  logo: '/assets/cisabz-logo.png',
   drive: '/assets/campus-drive.jpg',
   walkway: '/assets/campus-walkway.jpg',
   aerial: '/assets/college-aerial.jpg',

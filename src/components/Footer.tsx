@@ -24,11 +24,12 @@ export const Footer: React.FC<FooterProps> = ({ onReplayIntro }) => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-12">
           <div className="md:col-span-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl overflow-hidden bg-black border border-amber-500/50 p-0.5 shadow-[0_0_20px_rgba(212,175,55,0.5)]">
+              <div className="w-12 h-12 relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-md" />
                 <img
                   src={ASSET_IMAGES.logo}
                   alt="CISABZ'26 Gold Shield Emblem Logo"
-                  className="w-full h-full object-contain rounded-lg"
+                  className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_15px_rgba(212,175,55,0.7)]"
                 />
               </div>
               <span className="text-2xl font-extrabold tracking-tight text-white">

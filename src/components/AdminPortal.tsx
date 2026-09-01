@@ -16,7 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { SYMPOSIUM_CONFIG, ALL_EVENTS, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
-import cisabzLogo from '../assets/cisabz-logo.jpg';
+import cisabzLogo from '../assets/cisabz-logo.png';
 import kingsLogo from '../assets/kings-logo.jpg';
 
 export interface RegistrationRecord {

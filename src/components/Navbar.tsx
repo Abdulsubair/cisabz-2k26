@@ -69,11 +69,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* LOGO */}
         <a href="#home" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-xl overflow-hidden bg-black border border-amber-500/50 p-0.5 shadow-[0_0_20px_rgba(212,175,55,0.5)] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.8)] group-hover:scale-105 transition-all">
+          <div className="w-11 h-11 relative flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-md group-hover:bg-amber-400/50 transition-all" />
             <img
               src={ASSET_IMAGES.logo}
               alt="CISABZ'26 Gold Shield Emblem Logo"
-              className="w-full h-full object-contain rounded-lg"
+              className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_12px_rgba(212,175,55,0.8)]"
             />
           </div>
           <div className="whitespace-nowrap shrink-0">

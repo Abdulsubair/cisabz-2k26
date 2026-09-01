@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
 import { Calendar, Clock, ChevronRight, Trophy, Cpu, Terminal } from 'lucide-react';
-import cisabzLogo from '../assets/cisabz-logo.jpg';
+import cisabzLogo from '../assets/cisabz-logo.png';
 
 interface HeroSectionProps {
   onRegisterClick: () => void;
@@ -125,14 +125,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRegisterClick, onExp
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.08 }}
           transition={{ duration: 0.8 }}
-          className="relative w-28 h-28 sm:w-36 sm:h-36 mb-4 flex items-center justify-center"
+          className="relative w-32 h-32 sm:w-44 sm:h-44 mb-4 flex items-center justify-center cursor-pointer group"
         >
-          <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute inset-0 bg-amber-500/25 rounded-full blur-3xl animate-pulse group-hover:bg-amber-400/40 transition-all" />
           <img
             src={cisabzLogo}
             alt="CISABZ'26 Gold Shield Emblem Logo"
-            className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_25px_rgba(212,175,55,0.8)]"
+            className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_30px_rgba(212,175,55,0.85)] group-hover:drop-shadow-[0_0_45px_rgba(255,215,0,0.95)] transition-all duration-300"
           />
         </motion.div>
 

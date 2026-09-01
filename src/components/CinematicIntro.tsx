@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, ASSET_IMAGES } from '../data/symposiumData';
 import { ArrowRight, ShieldCheck, Zap, Landmark, Sparkles } from 'lucide-react';
-import cisabzLogo from '../assets/cisabz-logo.jpg';
+import cisabzLogo from '../assets/cisabz-logo.png';
 
 interface CinematicIntroProps {
   onComplete: () => void;
