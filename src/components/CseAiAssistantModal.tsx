@@ -1,366 +1,659 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SYMPOSIUM_CONFIG, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
-import { Bot, X, Send, CheckCircle2, User, Phone, ArrowRight, ArrowLeft, Edit3 } from 'lucide-react';
+import { SYMPOSIUM_CONFIG, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
+import type { EventItem } from '../types';
+import { Bot, X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
 
-interface Message {
-  id: number;
-  sender: 'bot' | 'user';
-  text: string;
-  isEmailSent?: boolean;
+interface CseAiAssistantModalProps {
+  onOpenRegistration?: (eventId?: string) => void;
 }
 
-export const CseAiAssistantModal: React.FC = () => {
+type ViewState = 'main' | 'technical_list' | 'non_tech_list' | 'event_detail' | 'rules' | 'contact' | 'custom_help';
+
+export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpenRegistration }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  
-  // User Profile Flow States
-  const [userName, setUserName] = useState<string>('');
-  const [userPhone, setUserPhone] = useState<string>('');
-  const [step, setStep] = useState<number>(1); // 1: Name, 2: Phone, 3: Chat/Help Space
+  const [currentView, setCurrentView] = useState<ViewState>('main');
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [activeTabFilter, setActiveTabFilter] = useState<'overview' | 'rules' | 'team' | 'eligibility' | 'evaluation'>('overview');
+  const [userQuery, setUserQuery] = useState<string>('');
+  const [customReply, setCustomReply] = useState<string | null>(null);
 
-  const [inputMsg, setInputMsg] = useState<string>('');
-  const [sendingEmail, setSendingEmail] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  // Load cached user details if available
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('cisabz_user_help_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.userName && parsed.userPhone) {
-          setUserName(parsed.userName);
-          setUserPhone(parsed.userPhone);
-          setStep(3);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
-  // Initialize initial welcome message once step 3 is reached
-  useEffect(() => {
-    if (step === 3 && messages.length === 0) {
-      setMessages([
-        {
-          id: 1,
-          sender: 'bot',
-          text: `Welcome ${userName || 'Participant'}! I am the CISABZ AI & Help Assistant. Write your issue or question below. Every query is forwarded directly to coordinator email (${SYMPOSIUM_CONFIG.coordinatorEmail}) along with your contact number (${userPhone}) so we can assist or call you promptly!`,
-        },
-      ]);
-    }
-  }, [step, userName, userPhone, messages.length]);
-
-  useEffect(() => {
-    if (isOpen && step === 3) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isOpen, step]);
-
-  // Helper function to dispatch email to coordinator
-  const sendEmailToCoordinator = async (messageText: string) => {
-    try {
-      setSendingEmail(true);
-      await fetch(`https://formsubmit.co/ajax/${SYMPOSIUM_CONFIG.coordinatorEmail}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          _subject: `🚨 URGENT CISABZ-2K26 HELP ISSUE: ${userName} (${userPhone})`,
-          _template: 'table',
-          _captcha: 'false',
-          source: 'CISABZ-2K26 AI Assistant & Help Center',
-          participantName: userName.trim(),
-          participantPhone: userPhone.trim(),
-          helpQueryOrIssue: messageText,
-          timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-        }),
-      });
-      return true;
-    } catch (err) {
-      console.warn('FormSubmit AJAX dispatch attempt completed:', err);
-      return true;
-    } finally {
-      setSendingEmail(false);
-    }
+  const handleSelectEvent = (event: EventItem) => {
+    setSelectedEvent(event);
+    setActiveTabFilter('overview');
+    setCurrentView('event_detail');
   };
 
-  const handleNameNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (userName.trim().length >= 2) {
-      setStep(2);
-    }
+  const handleReset = () => {
+    setCurrentView('main');
+    setSelectedEvent(null);
+    setActiveTabFilter('overview');
+    setUserQuery('');
+    setCustomReply(null);
   };
 
-  const handlePhoneNext = (e: React.FormEvent) => {
+  const handleCustomQuerySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (userPhone.trim().length >= 7) {
-      // Save profile
-      try {
-        localStorage.setItem(
-          'cisabz_user_help_profile',
-          JSON.stringify({ userName: userName.trim(), userPhone: userPhone.trim() })
-        );
-      } catch (err) {
-        console.error(err);
-      }
-      setStep(3);
+    if (!userQuery.trim()) return;
+
+    const lower = userQuery.toLowerCase();
+    let reply = `Thank you for your query about ${SYMPOSIUM_CONFIG.name}! `;
+
+    if (lower.includes('fee') || lower.includes('cost') || lower.includes('pay') || lower.includes('price')) {
+      reply += `Base registration fee is ₹${SYMPOSIUM_CONFIG.registrationFee} which includes up to 2 events (1 Technical + 1 Non-Technical), complimentary lunch & certificate. Any additional event costs ₹${SYMPOSIUM_CONFIG.additionalEventFee}.`;
+    } else if (lower.includes('date') || lower.includes('when') || lower.includes('timing')) {
+      reply += `The symposium takes place on ${SYMPOSIUM_CONFIG.eventDate}. Registration closes on ${SYMPOSIUM_CONFIG.registrationEndDate}.`;
+    } else if (lower.includes('venue') || lower.includes('location') || lower.includes('where')) {
+      reply += `The venue is ${SYMPOSIUM_CONFIG.venueName} at ${SYMPOSIUM_CONFIG.collegeName}, ${SYMPOSIUM_CONFIG.collegeAddress}.`;
+    } else if (lower.includes('food') || lower.includes('lunch') || lower.includes('certificate')) {
+      reply += `Complimentary lunch, tea/refreshments, and official participation certificates will be provided to all registered attendees!`;
+    } else {
+      reply += `For specific queries, feel free to contact our student coordinators: C. Vignesh (${STUDENT_COORDINATORS[0].phone}) or M. Mubashir (${STUDENT_COORDINATORS[1].phone}).`;
     }
+
+    setCustomReply(reply);
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMsg.trim()) return;
-
-    const userText = inputMsg.trim();
-    const userMsg: Message = { id: Date.now(), sender: 'user', text: userText };
-    setMessages((prev) => [...prev, userMsg]);
-    setInputMsg('');
-
-    // Trigger email dispatch to coordinator
-    sendEmailToCoordinator(userText);
-
-    setTimeout(() => {
-      let botReply = '';
-      const lower = userText.toLowerCase();
-
-      if (lower.includes('event') || lower.includes('technical') || lower.includes('non')) {
-        botReply = `CISABZ-2K26 features 4 Technical Events (TechVerse, Tech Brainiac, Prompt Fusion, Bug Bash) and 4 Non-Technical Events (Pinpoint, Brand Spot, Hammer Hit, Connection). Each participant can register for up to 2 events included in base registration!`;
-      } else if (lower.includes('date') || lower.includes('when') || lower.includes('deadline')) {
-        botReply = `The symposium takes place on ${SYMPOSIUM_CONFIG.eventDate}. Online registration ends on ${SYMPOSIUM_CONFIG.registrationEndDate}.`;
-      } else if (lower.includes('fee') || lower.includes('price') || lower.includes('cost') || lower.includes('money')) {
-        botReply = `Base registration allows participation in 2 events (1 Technical + 1 Non-Technical). Any additional event costs ₹${SYMPOSIUM_CONFIG.additionalEventFee} per extra event!`;
-      } else if (lower.includes('food') || lower.includes('lunch') || lower.includes('certificate')) {
-        botReply = `Complimentary lunch and refreshments are provided for all registered participants. Certificates will be awarded to all attendees!`;
-      } else if (lower.includes('patron') || lower.includes('dignitary') || lower.includes('principal') || lower.includes('secretary') || lower.includes('sivakumar') || lower.includes('rajendran') || lower.includes('selvi') || lower.includes('uma')) {
-        botReply = `Our Distinguished Leadership & Dignitaries:\n1. Dr. R. Rajendran (Secretary, Raj Educational Trust)\n2. Dr. J. Arputha Vijaya Selvi (Principal, Kings College of Engineering)\n3. Dr. S. Sivakumar (Vice Principal, Kings College of Engineering)\n4. Dr. S. M. Uma (HOD & Assoc. Prof, CSE Dept)`;
-      } else if (lower.includes('coordinator') || lower.includes('phone') || lower.includes('contact') || lower.includes('vignesh') || lower.includes('mubashir')) {
-        botReply = `Faculty Coordinators:\n• Ms. B. BAVITHRA: ${FACULTY_COORDINATORS[0].phone}\n• Ms. S. ABIKAYIL AARTHI: ${FACULTY_COORDINATORS[1].phone}\n\nStudent Coordinators:\n• C VIGNESH: ${STUDENT_COORDINATORS[0].phone}\n• M MUBASHIR: ${STUDENT_COORDINATORS[1].phone}`;
-      } else if (lower.includes('bonafide') || lower.includes('id') || lower.includes('card') || lower.includes('rule')) {
-        botReply = `Mandatory requirements: College ID card and Bonafide Certificate are required for on-campus entry. Formal dress code is mandatory.`;
-      } else {
-        botReply = `Thank you for reporting this to us, ${userName}! CISABZ-2K26 team is here to support you.`;
-      }
-
-      botReply += `\n\n✉️ Note: Your issue details along with your contact (${userPhone}) have been emailed directly to ${SYMPOSIUM_CONFIG.coordinatorEmail}. We will review and call you if needed!`;
-
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, sender: 'bot', text: botReply, isEmailSent: true },
-      ]);
-    }, 600);
+  // Helper to retrieve coordinator contact per event
+  const getEventOrganiser = (eventId?: string) => {
+    if (eventId === 'techverse' || eventId === 'pinpoint') {
+      return { name: 'C. Vignesh', phone: '7871630097' };
+    } else if (eventId === 'tech-brainiac' || eventId === 'brand-spot') {
+      return { name: 'M. Mubashir', phone: '95143 59887' };
+    } else if (eventId === 'prompt-fusion' || eventId === 'hammer-hit') {
+      return { name: 'Ms. B. Bavithra', phone: '78452 86608' };
+    } else {
+      return { name: 'Ms. S. Abikayil Aarthi', phone: '80128 15838' };
+    }
   };
 
   return (
-    <>
+    <div className="fixed bottom-5 right-5 z-50 select-none font-sans">
+      {/* FLOATING MASCOT TRIGGER BUTTON */}
       {!isOpen && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          className="relative flex items-center cursor-pointer group"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 left-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-slate-900/90 border border-purple-500/50 text-purple-300 font-mono text-xs font-bold tracking-wider shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.7)] backdrop-blur-xl group cursor-pointer"
         >
-          <Bot className="w-4 h-4 text-purple-400 group-hover:rotate-12 transition-transform" />
-          <span className="font-orbitron uppercase hidden sm:inline">CISABZ AI & HELP ASSISTANT</span>
-        </motion.button>
+          {/* FLOATING NEED HELP SPEECH BUBBLE */}
+          <div className="absolute -top-10 -left-6 bg-gradient-to-r from-rose-600 to-purple-600 text-white font-mono text-xs font-bold px-3.5 py-1.5 rounded-full shadow-[0_0_20px_rgba(225,29,72,0.6)] flex items-center gap-1.5 border border-rose-400/40 animate-bounce">
+            <span>Need help?</span>
+            <div className="w-2 h-2 bg-rose-500 rotate-45 border-r border-b border-rose-400 absolute -bottom-1 left-6" />
+          </div>
+
+          {/* SPIDERMAN/SYMBOT CHARACTER MASCOT SVG CONTAINER */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 relative flex items-center justify-center filter drop-shadow-[0_10px_25px_rgba(225,29,72,0.5)]">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              {/* Glow backdrop */}
+              <circle cx="50" cy="50" r="42" fill="url(#botGlow)" opacity="0.3" />
+              <defs>
+                <radialGradient id="botGlow">
+                  <stop offset="0%" stopColor="#f43f5e" />
+                  <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="suitGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#e11d48" />
+                  <stop offset="100%" stopColor="#9f1239" />
+                </linearGradient>
+                <linearGradient id="eyeGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#e0f2fe" />
+                </linearGradient>
+              </defs>
+
+              {/* Character Body / Shoulders */}
+              <path d="M 25 88 C 25 65, 75 65, 75 88 Z" fill="#1e293b" stroke="#e11d48" strokeWidth="2.5" />
+              {/* Red Suit Chest Detail */}
+              <path d="M 36 70 L 50 85 L 64 70 Z" fill="url(#suitGrad)" />
+              <circle cx="50" cy="74" r="3" fill="#38bdf8" />
+
+              {/* Spider / Web Icon Symbol on Chest */}
+              <path d="M 50 71 L 46 76 M 50 71 L 54 76 M 50 77 L 45 82 M 50 77 L 55 82" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" />
+
+              {/* Head Base */}
+              <ellipse cx="50" cy="42" rx="28" ry="26" fill="url(#suitGrad)" stroke="#881337" strokeWidth="2" />
+              
+              {/* Web lines on head */}
+              <path d="M 50 16 L 50 68 M 22 42 L 78 42 M 30 26 L 70 58 M 30 58 L 70 26" stroke="#9f1239" strokeWidth="1.2" opacity="0.6" />
+
+              {/* Left Eye */}
+              <path d="M 28 36 C 28 26, 46 32, 45 44 C 45 48, 30 46, 28 36 Z" fill="url(#eyeGrad)" stroke="#090d16" strokeWidth="3" />
+              {/* Right Eye */}
+              <path d="M 72 36 C 72 26, 54 32, 55 44 C 55 48, 70 46, 72 36 Z" fill="url(#eyeGrad)" stroke="#090d16" strokeWidth="3" />
+
+              {/* Waving Hand */}
+              <g className="animate-pulse">
+                <circle cx="80" cy="62" r="7" fill="url(#suitGrad)" stroke="#090d16" strokeWidth="2" />
+                <path d="M 75 58 L 72 52 M 80 55 L 80 48 M 85 57 L 88 51" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+              </g>
+            </svg>
+          </div>
+        </motion.div>
       )}
 
+      {/* SYMBOT CHATBOT MODAL WINDOW */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-6 left-6 z-50 w-full max-w-sm sm:max-w-md h-[520px] px-4 sm:px-0"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            transition={{ duration: 0.3 }}
+            className="w-[92vw] sm:w-[390px] h-[580px] max-h-[85vh] rounded-3xl overflow-hidden bg-slate-950/95 border border-rose-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col justify-between relative"
           >
-            <div className="w-full h-full bg-slate-950/95 border border-purple-500/40 rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden backdrop-blur-2xl cyber-card">
-              {/* HEADER */}
-              <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-orbitron font-bold text-white">CISABZ AI & HELP ASSISTANT</h3>
-                    <p className="text-[10px] font-mono text-purple-400">Direct Support Email: {SYMPOSIUM_CONFIG.coordinatorEmail}</p>
+            {/* BACKGROUND DIAGONAL GRID PATTERN */}
+            <div className="absolute inset-0 bg-[radial-gradient(#e11d48_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* HEADER BAR */}
+            <div className="relative z-10 px-5 py-3.5 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-950 border-b border-rose-500/20 flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-600 to-purple-600 p-0.5 shadow-[0_0_15px_rgba(225,29,72,0.5)] flex items-center justify-center">
+                  <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-rose-400" />
                   </div>
                 </div>
+                <div>
+                  <h3 className="text-base font-bold font-orbitron text-white tracking-wide leading-tight flex items-center gap-1.5">
+                    <span>SymBot Assistant</span>
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="text-emerald-400 font-semibold">Online</span>
+                    <span>— {SYMPOSIUM_CONFIG.name}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS (RESET & CLOSE) */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleReset}
+                  title="Reset to main menu"
+                  className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Close Assistant"
+                  className="p-2 rounded-xl bg-slate-900/80 hover:bg-rose-950 text-slate-300 hover:text-rose-400 border border-slate-700/60 hover:border-rose-500/40 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
+            </div>
 
-              {/* WIZARD STEP 1: NAME INPUT */}
-              {step === 1 && (
-                <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
-                  <div className="p-3.5 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/30 mb-4 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                    <User className="w-8 h-8" />
+            {/* CHATBOT CONTENT BODY */}
+            <div className="relative z-10 flex-1 overflow-y-auto p-4 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-slate-800">
+              
+              {/* VIEW 1: MAIN WELCOME SCREEN */}
+              {currentView === 'main' && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4">
+                  {/* WELCOME CARD */}
+                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/20 backdrop-blur-md shadow-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">🤖</div>
+                      <div>
+                        <p className="text-sm font-semibold text-white leading-relaxed">
+                          Hi! 👋 I&apos;m the <strong className="text-cyan-300 font-orbitron">{SYMPOSIUM_CONFIG.name} Assistant</strong>.
+                        </p>
+                        <p className="text-xs text-slate-300 mt-1">How can I help you today?</p>
+                      </div>
+                    </div>
                   </div>
-                  <h4 className="text-base font-extrabold font-orbitron text-white mb-1">WELCOME TO CISABZ HELP</h4>
-                  <p className="text-xs text-slate-400 font-light mb-6 max-w-xs">
-                    Please enter your Full Name to connect with our support & coordinator team.
-                  </p>
 
-                  <form onSubmit={handleNameNext} className="w-full max-w-xs space-y-4">
-                    <div className="relative">
+                  {/* QUICK INFO PROMPT CARD */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800 text-xs text-slate-300 flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2 font-mono text-cyan-400 font-bold uppercase tracking-wider text-[10px]">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>QUICK NAVIGATION</span>
+                    </div>
+                    <p>Select a topic below to view event lists, guidelines, rules, or contact coordinators!</p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* VIEW 2: TECHNICAL EVENTS LIST */}
+              {currentView === 'technical_list' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/80 to-slate-900/90 border border-cyan-500/30">
+                    <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider mb-1">
+                      <Globe className="w-4 h-4" />
+                      <span>TECHNICAL EVENTS</span>
+                    </div>
+                    <p className="text-xs text-slate-300">Click any event to view guidelines, venue & organiser contact:</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {TECHNICAL_EVENTS.map((evt) => (
+                      <button
+                        key={evt.id}
+                        onClick={() => handleSelectEvent(evt)}
+                        className="p-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/20 hover:border-cyan-400 text-left transition-all flex items-center justify-between group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-400 text-xs font-mono font-bold flex items-center justify-center border border-cyan-500/30">
+                            {evt.code}
+                          </span>
+                          <div>
+                            <div className="text-xs font-bold font-orbitron text-white group-hover:text-cyan-300 transition-colors">
+                              {evt.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono">{evt.subtitle}</div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentView('main')}
+                    className="mt-2 py-2 px-4 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 text-xs font-mono flex items-center justify-center gap-2 border border-slate-800"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Main Menu</span>
+                  </button>
+                </motion.div>
+              )}
+
+              {/* VIEW 3: NON-TECHNICAL EVENTS LIST */}
+              {currentView === 'non_tech_list' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/80 to-slate-900/90 border border-purple-500/30">
+                    <div className="flex items-center gap-2 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider mb-1">
+                      <Trophy className="w-4 h-4" />
+                      <span>NON-TECHNICAL EVENTS</span>
+                    </div>
+                    <p className="text-xs text-slate-300">Click any event to view guidelines, venue & organiser contact:</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {NON_TECHNICAL_EVENTS.map((evt) => (
+                      <button
+                        key={evt.id}
+                        onClick={() => handleSelectEvent(evt)}
+                        className="p-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/20 hover:border-purple-400 text-left transition-all flex items-center justify-between group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 text-xs font-mono font-bold flex items-center justify-center border border-purple-500/30">
+                            {evt.code}
+                          </span>
+                          <div>
+                            <div className="text-xs font-bold font-orbitron text-white group-hover:text-purple-300 transition-colors">
+                              {evt.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono">{evt.subtitle}</div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentView('main')}
+                    className="mt-2 py-2 px-4 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 text-xs font-mono flex items-center justify-center gap-2 border border-slate-800"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Main Menu</span>
+                  </button>
+                </motion.div>
+              )}
+
+              {/* VIEW 4: DETAILED EVENT CARD (MATCHES SCREENSHOT IMAGE 1 EXACTLY!) */}
+              {currentView === 'event_detail' && selectedEvent && (
+                <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col gap-3">
+                  
+                  {/* TITLE CARD */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-cyan-500/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="w-5 h-5 text-cyan-400" />
+                      <div>
+                        <h4 className="text-sm font-black font-orbitron text-white leading-tight">
+                          {selectedEvent.name}
+                        </h4>
+                        <span className="text-[11px] font-mono text-cyan-300">{selectedEvent.subtitle}</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 text-[10px] font-mono font-bold uppercase border border-cyan-500/30">
+                      {selectedEvent.category}
+                    </span>
+                  </div>
+
+                  {/* EVENT METADATA CARD (MODE, TEAM SIZE, VENUE, RULES) */}
+                  <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 text-xs text-slate-200 flex flex-col gap-2">
+                    {activeTabFilter === 'overview' && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <span><strong>Mode:</strong> Offline, on-campus</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span><strong>Team size:</strong> {selectedEvent.teamSize}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                          <span><strong>Time & Venue:</strong> {selectedEvent.time} ({selectedEvent.venue})</span>
+                        </div>
+                        <div className="mt-1 pt-2 border-t border-slate-800/80 text-slate-300">
+                          <p className="italic text-[11px]">{selectedEvent.shortDescription}</p>
+                        </div>
+                      </>
+                    )}
+
+                    {activeTabFilter === 'rules' && (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="font-bold text-cyan-300 text-[11px] uppercase font-mono">Event Guidelines & Rules:</span>
+                        <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300">
+                          {selectedEvent.guidelines.map((g, i) => (
+                            <li key={i}>{g}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {activeTabFilter === 'team' && (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold text-amber-300 text-[11px] uppercase font-mono">Team & Format Structure:</span>
+                        <p className="text-[11px]">{selectedEvent.rounds}</p>
+                        <p className="text-[11px]">Maximum Team Size: <strong>{selectedEvent.teamSize}</strong></p>
+                      </div>
+                    )}
+
+                    {activeTabFilter === 'eligibility' && (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold text-rose-300 text-[11px] uppercase font-mono">Eligibility Requirements:</span>
+                        <p className="text-[11px]">Open to all BE / B.Tech / MCA / CS & allied engineering students. College ID card and Bonafide certificate are mandatory.</p>
+                      </div>
+                    )}
+
+                    {activeTabFilter === 'evaluation' && (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold text-purple-300 text-[11px] uppercase font-mono">Evaluation Criteria:</span>
+                        <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300">
+                          {selectedEvent.evaluationCriteria ? (
+                            selectedEvent.evaluationCriteria.map((c, i) => <li key={i}>{c}</li>)
+                          ) : (
+                            <li>Evaluated on speed, accuracy, technical depth, and presentation clarity.</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ORGANISER CONTACT CARD (PHONE NUMBER) */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-cyan-500/30 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-slate-200">
+                      <Phone className="w-4 h-4 text-cyan-400" />
+                      <span>
+                        <strong>Organiser:</strong> {getEventOrganiser(selectedEvent.id).name}
+                      </span>
+                    </div>
+                    <a
+                      href={`tel:${getEventOrganiser(selectedEvent.id).phone.replace(/\s+/g, '')}`}
+                      className="px-3 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono font-bold text-[11px] border border-cyan-500/40 transition-colors"
+                    >
+                      {getEventOrganiser(selectedEvent.id).phone}
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* VIEW 5: SYMPOSIUM GENERAL RULES */}
+              {currentView === 'rules' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+                  <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-amber-500/30">
+                    <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold uppercase tracking-wider mb-1">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>GENERAL SYMPOSIUM RULES</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-300">
+                      <li>Participation cap: Maximum 2 events (1 Tech + 1 Non-Tech).</li>
+                      <li>Additional event fee: ₹50 per extra event.</li>
+                      <li>College ID card & Bonafide certificate mandatory.</li>
+                      <li>Formal dress code required on campus grounds.</li>
+                      <li>Complimentary lunch & certificate provided.</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentView('main')}
+                    className="py-2 px-4 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 text-xs font-mono flex items-center justify-center gap-2 border border-slate-800"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Main Menu</span>
+                  </button>
+                </motion.div>
+              )}
+
+              {/* VIEW 6: COORDINATOR CONTACT LIST */}
+              {currentView === 'contact' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+                  <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-rose-500/30">
+                    <div className="flex items-center gap-2 text-rose-400 text-xs font-mono font-bold uppercase tracking-wider mb-2">
+                      <Phone className="w-4 h-4" />
+                      <span>COORDINATOR CONTACTS</span>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <div className="text-[11px] font-mono text-cyan-400 font-bold uppercase">Student Coordinators:</div>
+                      {STUDENT_COORDINATORS.map((sc, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                          <span className="text-white font-semibold">{sc.name}</span>
+                          <a href={`tel:${sc.phone.replace(/\s+/g, '')}`} className="text-cyan-300 font-mono text-[11px] underline">
+                            {sc.phone}
+                          </a>
+                        </div>
+                      ))}
+
+                      <div className="text-[11px] font-mono text-purple-400 font-bold uppercase mt-1">Faculty Coordinators:</div>
+                      {FACULTY_COORDINATORS.map((fc, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                          <span className="text-white font-semibold">{fc.name}</span>
+                          <a href={`tel:${fc.phone.replace(/\s+/g, '')}`} className="text-purple-300 font-mono text-[11px] underline">
+                            {fc.phone}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentView('main')}
+                    className="py-2 px-4 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 text-xs font-mono flex items-center justify-center gap-2 border border-slate-800"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Main Menu</span>
+                  </button>
+                </motion.div>
+              )}
+
+              {/* VIEW 7: CUSTOM HELP / QUERY SCREEN */}
+              {currentView === 'custom_help' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+                  <form onSubmit={handleCustomQuerySubmit} className="flex flex-col gap-2">
+                    <label className="text-xs font-mono text-cyan-300 font-bold uppercase">Ask any question or issue:</label>
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        required
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        placeholder="Enter your Full Name..."
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
-                        autoFocus
+                        value={userQuery}
+                        onChange={(e) => setUserQuery(e.target.value)}
+                        placeholder="Type your question here..."
+                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-cyan-400"
                       />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={userName.trim().length < 2}
-                      className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer shadow-lg transition-all"
-                    >
-                      <span>Next</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </form>
-                </div>
-              )}
-
-              {/* WIZARD STEP 2: PHONE NUMBER INPUT */}
-              {step === 2 && (
-                <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
-                  <div className="p-3.5 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-4 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                    <Phone className="w-8 h-8" />
-                  </div>
-                  <h4 className="text-base font-extrabold font-orbitron text-white mb-1">
-                    HI {userName.toUpperCase()}!
-                  </h4>
-                  <p className="text-xs text-slate-400 font-light mb-6 max-w-xs">
-                    Please enter your Mobile / Phone Number so our head coordinator can call you if needed.
-                  </p>
-
-                  <form onSubmit={handlePhoneNext} className="w-full max-w-xs space-y-4">
-                    <div className="relative">
-                      <input
-                        type="tel"
-                        required
-                        value={userPhone}
-                        onChange={(e) => setUserPhone(e.target.value)}
-                        placeholder="Enter 10-digit Phone Number..."
-                        className="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-xl px-4 py-3 text-xs text-white font-mono placeholder-slate-500 focus:outline-none transition-colors"
-                        autoFocus
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setStep(1)}
-                        className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-mono flex items-center gap-1 cursor-pointer"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Back</span>
-                      </button>
-
                       <button
                         type="submit"
-                        disabled={userPhone.trim().length < 7}
-                        className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer shadow-lg transition-all"
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-purple-600 text-white text-xs font-bold font-mono hover:brightness-110 transition-all"
                       >
-                        <span>Continue</span>
-                        <ArrowRight className="w-4 h-4" />
+                        Ask
                       </button>
                     </div>
                   </form>
-                </div>
-              )}
 
-              {/* STEP 3: CHAT & HELP REQUEST WRITING SPACE */}
-              {step === 3 && (
-                <>
-                  {/* USER INFO BAR */}
-                  <div className="bg-purple-950/50 px-3 py-2 border-b border-purple-500/20 flex items-center justify-between text-[11px] text-purple-300 font-mono">
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="font-bold text-white truncate">👤 {userName}</span>
-                      <span className="text-slate-400">|</span>
-                      <span className="text-cyan-300 shrink-0">📞 {userPhone}</span>
+                  {customReply && (
+                    <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 text-xs text-slate-200 flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">{customReply}</p>
                     </div>
-                    <button
-                      onClick={() => setStep(1)}
-                      title="Edit Name/Phone"
-                      className="text-[10px] underline text-slate-400 hover:text-white shrink-0 ml-2 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                      <span>Edit</span>
-                    </button>
-                  </div>
+                  )}
 
-                  {/* CHAT MESSAGES CONTAINER */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs leading-relaxed">
-                    {messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex items-start gap-2.5 ${
-                          msg.sender === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        {msg.sender === 'bot' && (
-                          <div className="w-7 h-7 rounded-lg bg-purple-950 border border-purple-500/40 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
-                            <Bot className="w-3.5 h-3.5" />
-                          </div>
-                        )}
-                        <div
-                          className={`p-3 rounded-2xl max-w-[85%] whitespace-pre-wrap ${
-                            msg.sender === 'user'
-                              ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-tr-none shadow-md'
-                              : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
-                          }`}
-                        >
-                          {msg.text}
-                          {msg.isEmailSent && (
-                            <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 text-[10px] text-cyan-400 font-mono">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                              <span>Emailed to {SYMPOSIUM_CONFIG.coordinatorEmail}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-
-                  {/* INPUT FORM FOR HELPLINE / ISSUE WRITING */}
-                  <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={inputMsg}
-                      onChange={(e) => setInputMsg(e.target.value)}
-                      placeholder="Write the helpline message or problem faced..."
-                      className="flex-1 bg-slate-950 px-3 py-2.5 rounded-xl text-xs text-white border border-slate-800 focus:outline-none focus:border-purple-500"
-                    />
-                    <button
-                      type="submit"
-                      disabled={sendingEmail || !inputMsg.trim()}
-                      className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer disabled:opacity-40 flex items-center justify-center shrink-0"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
-                </>
+                  <button
+                    onClick={() => setCurrentView('main')}
+                    className="py-2 px-4 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 text-xs font-mono flex items-center justify-center gap-2 border border-slate-800"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Main Menu</span>
+                  </button>
+                </motion.div>
               )}
+
+            </div>
+
+            {/* BOTTOM QUICK ACTION PILL BUTTONS (MATCHES SCREENSHOT IMAGE 1 & 2 EXACTLY!) */}
+            <div className="relative z-10 p-3.5 bg-slate-950 border-t border-rose-500/20 flex flex-col gap-2">
+              {/* PRIMARY ACTION PILLS ROW 1 */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {currentView === 'event_detail' ? (
+                  <>
+                    <button
+                      onClick={() => setActiveTabFilter('rules')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        activeTabFilter === 'rules'
+                          ? 'bg-rose-600 text-white shadow-[0_0_12px_rgba(225,29,72,0.6)]'
+                          : 'bg-slate-900 text-slate-200 border border-rose-500/40 hover:bg-slate-800'
+                      }`}
+                    >
+                      Rules
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTabFilter('team')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        activeTabFilter === 'team'
+                          ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.6)]'
+                          : 'bg-slate-900 text-slate-200 border border-purple-500/40 hover:bg-slate-800'
+                      }`}
+                    >
+                      Team Size
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTabFilter('eligibility')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        activeTabFilter === 'eligibility'
+                          ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(79,70,229,0.6)]'
+                          : 'bg-slate-900 text-slate-200 border border-indigo-500/40 hover:bg-slate-800'
+                      }`}
+                    >
+                      Eligibility
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTabFilter('evaluation')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        activeTabFilter === 'evaluation'
+                          ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.6)]'
+                          : 'bg-slate-900 text-slate-200 border border-blue-500/40 hover:bg-slate-800'
+                      }`}
+                    >
+                      Evaluation
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (onOpenRegistration && selectedEvent) {
+                          onOpenRegistration(selectedEvent.id);
+                          setIsOpen(false);
+                        }
+                      }}
+                      className="px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all cursor-pointer"
+                    >
+                      Register
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (selectedEvent?.category === 'technical') {
+                          setCurrentView('technical_list');
+                        } else {
+                          setCurrentView('non_tech_list');
+                        }
+                      }}
+                      className="px-3.5 py-1.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700 text-xs hover:bg-slate-800 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setCurrentView('technical_list')}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        currentView === 'technical_list'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.6)]'
+                          : 'bg-gradient-to-r from-blue-900/60 to-indigo-900/60 text-slate-200 border border-blue-500/40 hover:brightness-125'
+                      }`}
+                    >
+                      Technical
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentView('non_tech_list')}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                        currentView === 'non_tech_list'
+                          ? 'bg-gradient-to-r from-purple-600 to-rose-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.6)]'
+                          : 'bg-gradient-to-r from-purple-900/60 to-rose-900/60 text-slate-200 border border-purple-500/40 hover:brightness-125'
+                      }`}
+                    >
+                      Non-Tech
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (onOpenRegistration) {
+                          onOpenRegistration();
+                          setIsOpen(false);
+                        }
+                      }}
+                      className="px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all cursor-pointer"
+                    >
+                      Register
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentView('rules')}
+                      className="px-4 py-1.5 rounded-full bg-indigo-900/60 text-slate-200 border border-indigo-500/40 text-xs font-semibold hover:bg-indigo-800 transition-all cursor-pointer"
+                    >
+                      Rules
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentView('contact')}
+                      className="px-4 py-1.5 rounded-full bg-slate-900 text-slate-200 border border-cyan-500/40 text-xs font-semibold hover:bg-slate-800 transition-all cursor-pointer"
+                    >
+                      Contact
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setCurrentView('custom_help')}
+                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 text-white text-xs font-bold shadow-[0_0_15px_rgba(225,29,72,0.5)] hover:scale-105 transition-all cursor-pointer ml-auto"
+                >
+                  Need help?
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };

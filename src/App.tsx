@@ -194,7 +194,7 @@ export function App() {
       />
 
       {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT */}
-      <CseAiAssistantModal />
+      <CseAiAssistantModal onOpenRegistration={(eventId) => handleOpenRegistration(eventId)} />
     </div>
   );
 }
