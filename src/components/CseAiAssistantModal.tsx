@@ -57,14 +57,25 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
 
   // Helper to retrieve coordinator contact per event
   const getEventOrganiser = (eventId?: string) => {
-    if (eventId === 'techverse' || eventId === 'pinpoint') {
-      return { name: 'C. Vignesh', phone: '7871630097' };
-    } else if (eventId === 'tech-brainiac' || eventId === 'brand-spot') {
-      return { name: 'M. Mubashir', phone: '95143 59887' };
-    } else if (eventId === 'prompt-fusion' || eventId === 'hammer-hit') {
-      return { name: 'Ms. B. Bavithra', phone: '78452 86608' };
-    } else {
-      return { name: 'Ms. S. Abikayil Aarthi', phone: '80128 15838' };
+    switch (eventId) {
+      case 'techverse':
+        return { name: 'Karan K', phone: '9025970697' };
+      case 'tech-brainiac':
+        return { name: 'Sanjay B', phone: '9791388374' };
+      case 'prompt-fusion':
+        return { name: 'Akash K', phone: '8525913433' };
+      case 'bug-bash':
+        return { name: 'Prasanna B', phone: '9159584312' };
+      case 'pinpoint':
+        return { name: 'Vengateshwaran G', phone: '8778336169' };
+      case 'brand-spot':
+        return { name: 'Prakash K', phone: '8110984259' };
+      case 'hammer-hit':
+        return { name: 'Naveen Kumar G', phone: '9363615102' };
+      case 'connection':
+        return { name: 'Ajay V', phone: '6384148418' };
+      default:
+        return { name: 'C. Vignesh', phone: '7871630097' };
     }
   };
 
