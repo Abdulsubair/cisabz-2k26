@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { EventItem } from '../types';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
-import { EventSimulationPlayer } from './EventSimulationPlayer';
-import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight, Play, BookOpen } from 'lucide-react';
+import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight, BookOpen } from 'lucide-react';
 
 interface EventGuidelineModalProps {
   event: EventItem | null;
@@ -16,8 +15,6 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
   onClose,
   onRegister,
 }) => {
-  const [activeTab, setActiveTab] = useState<'demo' | 'guidelines'>('demo');
-
   if (!event) return null;
 
   return (
@@ -64,33 +61,6 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
             </div>
           </div>
 
-          {/* TAB SWITCHER: LIVE SIMULATION DEMO VS OFFICIAL GUIDELINES */}
-          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 mb-6">
-            <button
-              onClick={() => setActiveTab('demo')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
-                activeTab === 'demo'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>1. ANIMATED DEMO & FLOW</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('guidelines')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
-                activeTab === 'guidelines'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>2. RULES & EVALUATION</span>
-            </button>
-          </div>
-
           {/* QUICK EVENT ROUNDS & FORMAT BAR */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
             <div className="flex items-center gap-3">
@@ -114,64 +84,53 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
             </div>
           </div>
 
-          {/* TAB CONTENT 1: INTERACTIVE ANIMATED SIMULATION */}
-          {activeTab === 'demo' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              <EventSimulationPlayer event={event} />
+          {/* OFFICIAL GUIDELINES */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <div>
+              <h4 className="flex items-center gap-2 text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">
+                <FileText className="w-4 h-4 text-cyan-400" />
+                <span>Official Event Guidelines</span>
+              </h4>
+              <div className="space-y-2.5">
+                {event.guidelines.map((rule, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs sm:text-sm text-slate-300">
+                    <CheckCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                    <span>{rule}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
+            {event.evaluationCriteria && event.evaluationCriteria.length > 0 && (
+              <div>
+                <h4 className="flex items-center gap-2 text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">
+                  <Award className="w-4 h-4 text-amber-400" />
+                  <span>Evaluation Criteria</span>
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {event.evaluationCriteria.map((criterion, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-medium"
+                    >
+                      &bull; {criterion}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {event.shortDescription && (
               <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 text-xs text-slate-300 leading-relaxed">
                 <strong className="text-cyan-400 block mb-1 font-mono uppercase">Event Concept Summary:</strong>
                 {event.shortDescription}
               </div>
-            </motion.div>
-          )}
-
-          {/* TAB CONTENT 2: OFFICIAL GUIDELINES & EVALUATION */}
-          {activeTab === 'guidelines' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div>
-                <h4 className="flex items-center gap-2 text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                  <span>Official Event Guidelines</span>
-                </h4>
-                <div className="space-y-2.5">
-                  {event.guidelines.map((rule, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs sm:text-sm text-slate-300">
-                      <CheckCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span>{rule}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {event.evaluationCriteria && event.evaluationCriteria.length > 0 && (
-                <div>
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span>Evaluation Criteria</span>
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {event.evaluationCriteria.map((criterion, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-medium"
-                      >
-                        &bull; {criterion}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
+            )}
+          </motion.div>
 
           {/* MODAL FOOTER */}
           <div className="pt-6 mt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
