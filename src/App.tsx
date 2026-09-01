@@ -10,7 +10,6 @@ import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
 
 import { ScheduleSection } from './components/ScheduleSection';
-import { CampusSection } from './components/CampusSection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -149,9 +148,6 @@ export function App() {
 
         {/* SCHEDULE / EVENT TIMELINE */}
         <ScheduleSection />
-
-        {/* COLLEGE / CAMPUS SECTION */}
-        <CampusSection />
 
         {/* CHIEF PATRONS & DIGNITARIES */}
         <DignitariesSection />

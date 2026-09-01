@@ -211,7 +211,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRegisterClick, onExp
           <div className="p-6 rounded-3xl bg-slate-900/80 border border-cyan-500/30 backdrop-blur-2xl shadow-[0_0_35px_rgba(0,229,255,0.2)]">
             <div className="text-xs font-code tracking-widest text-cyan-400 uppercase mb-4 text-center flex items-center justify-center gap-2">
               <Terminal className="w-4 h-4" />
-              <span>LIVE EVENT COUNTDOWN MATRIX</span>
+              <span>MISSION LAUNCH CHRONOMETER & TIME SYNC</span>
             </div>
             <div className="grid grid-cols-4 gap-3 sm:gap-6">
               {[

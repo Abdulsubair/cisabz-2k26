@@ -23,8 +23,8 @@ export const QuickOverview: React.FC = () => {
       textColor: 'text-purple-400',
     },
     {
-      number: '2',
-      label: 'DAYS / EVENT EXPERIENCE',
+      number: '1',
+      label: 'DAY GRAND SYMPOSIUM',
       subtext: 'Grand Symposium & Innovation Festival',
       icon: Calendar,
       gradient: 'from-amber-500/20 to-yellow-500/20',
