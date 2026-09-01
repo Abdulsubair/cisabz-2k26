@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
 import type { EventItem } from '../types';
-import { Bot, X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
+import { X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
+import symbotClockBadge from '../assets/symbot-clock-badge.png';
 
 interface CseAiAssistantModalProps {
   onOpenRegistration?: (eventId?: string) => void;
@@ -74,62 +75,24 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.08 }}
           className="relative flex items-center cursor-pointer group"
           onClick={() => setIsOpen(true)}
         >
           {/* FLOATING NEED HELP SPEECH BUBBLE */}
-          <div className="absolute -top-10 -left-6 bg-gradient-to-r from-rose-600 to-purple-600 text-white font-mono text-xs font-bold px-3.5 py-1.5 rounded-full shadow-[0_0_20px_rgba(225,29,72,0.6)] flex items-center gap-1.5 border border-rose-400/40 animate-bounce">
+          <div className="absolute -top-10 -left-6 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-white font-mono text-xs font-bold px-3.5 py-1.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.6)] flex items-center gap-1.5 border border-amber-300/50 animate-bounce">
             <span>Need help?</span>
-            <div className="w-2 h-2 bg-rose-500 rotate-45 border-r border-b border-rose-400 absolute -bottom-1 left-6" />
+            <div className="w-2 h-2 bg-orange-500 rotate-45 border-r border-b border-amber-300 absolute -bottom-1 left-6" />
           </div>
 
-          {/* SPIDERMAN/SYMBOT CHARACTER MASCOT SVG CONTAINER */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 relative flex items-center justify-center filter drop-shadow-[0_10px_25px_rgba(225,29,72,0.5)]">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              {/* Glow backdrop */}
-              <circle cx="50" cy="50" r="42" fill="url(#botGlow)" opacity="0.3" />
-              <defs>
-                <radialGradient id="botGlow">
-                  <stop offset="0%" stopColor="#f43f5e" />
-                  <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0" />
-                </radialGradient>
-                <linearGradient id="suitGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#e11d48" />
-                  <stop offset="100%" stopColor="#9f1239" />
-                </linearGradient>
-                <linearGradient id="eyeGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="100%" stopColor="#e0f2fe" />
-                </linearGradient>
-              </defs>
-
-              {/* Character Body / Shoulders */}
-              <path d="M 25 88 C 25 65, 75 65, 75 88 Z" fill="#1e293b" stroke="#e11d48" strokeWidth="2.5" />
-              {/* Red Suit Chest Detail */}
-              <path d="M 36 70 L 50 85 L 64 70 Z" fill="url(#suitGrad)" />
-              <circle cx="50" cy="74" r="3" fill="#38bdf8" />
-
-              {/* Spider / Web Icon Symbol on Chest */}
-              <path d="M 50 71 L 46 76 M 50 71 L 54 76 M 50 77 L 45 82 M 50 77 L 55 82" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" />
-
-              {/* Head Base */}
-              <ellipse cx="50" cy="42" rx="28" ry="26" fill="url(#suitGrad)" stroke="#881337" strokeWidth="2" />
-              
-              {/* Web lines on head */}
-              <path d="M 50 16 L 50 68 M 22 42 L 78 42 M 30 26 L 70 58 M 30 58 L 70 26" stroke="#9f1239" strokeWidth="1.2" opacity="0.6" />
-
-              {/* Left Eye */}
-              <path d="M 28 36 C 28 26, 46 32, 45 44 C 45 48, 30 46, 28 36 Z" fill="url(#eyeGrad)" stroke="#090d16" strokeWidth="3" />
-              {/* Right Eye */}
-              <path d="M 72 36 C 72 26, 54 32, 55 44 C 55 48, 70 46, 72 36 Z" fill="url(#eyeGrad)" stroke="#090d16" strokeWidth="3" />
-
-              {/* Waving Hand */}
-              <g className="animate-pulse">
-                <circle cx="80" cy="62" r="7" fill="url(#suitGrad)" stroke="#090d16" strokeWidth="2" />
-                <path d="M 75 58 L 72 52 M 80 55 L 80 48 M 85 57 L 88 51" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-              </g>
-            </svg>
+          {/* ORANGE CLOCK MASCOT CHARACTER CONTAINER */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 relative flex items-center justify-center filter drop-shadow-[0_10px_25px_rgba(245,158,11,0.6)] group-hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-xl animate-pulse" />
+            <img
+              src={symbotClockBadge}
+              alt="SymBot Orange Clock Mascot"
+              className="w-full h-full object-contain relative z-10 rounded-full border-2 border-amber-400/80 shadow-[0_0_25px_rgba(245,158,11,0.8)]"
+            />
           </div>
         </motion.div>
       )}
@@ -142,19 +105,17 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ duration: 0.3 }}
-            className="w-[92vw] sm:w-[390px] h-[580px] max-h-[85vh] rounded-3xl overflow-hidden bg-slate-950/95 border border-rose-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col justify-between relative"
+            className="w-[92vw] sm:w-[390px] h-[580px] max-h-[85vh] rounded-3xl overflow-hidden bg-slate-950/95 border border-amber-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col justify-between relative"
           >
             {/* BACKGROUND DIAGONAL GRID PATTERN */}
-            <div className="absolute inset-0 bg-[radial-gradient(#e11d48_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* HEADER BAR */}
-            <div className="relative z-10 px-5 py-3.5 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-950 border-b border-rose-500/20 flex items-center justify-between shadow-md">
+            <div className="relative z-10 px-5 py-3.5 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-950 border-b border-amber-500/20 flex items-center justify-between shadow-md">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-600 to-purple-600 p-0.5 shadow-[0_0_15px_rgba(225,29,72,0.5)] flex items-center justify-center">
-                  <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-rose-400" />
-                  </div>
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 p-0.5 shadow-[0_0_15px_rgba(245,158,11,0.6)] flex items-center justify-center overflow-hidden shrink-0">
+                  <img src={symbotClockBadge} alt="SymBot Clock Mascot" className="w-full h-full object-cover rounded-xl" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold font-orbitron text-white tracking-wide leading-tight flex items-center gap-1.5">
@@ -195,12 +156,12 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
               {currentView === 'main' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4">
                   {/* WELCOME CARD */}
-                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/20 backdrop-blur-md shadow-lg">
+                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 backdrop-blur-md shadow-lg">
                     <div className="flex items-start gap-3">
-                      <div className="text-2xl">🤖</div>
+                      <img src={symbotClockBadge} alt="SymBot Mascot" className="w-10 h-10 rounded-full border border-amber-400/60 object-cover shrink-0" />
                       <div>
                         <p className="text-sm font-semibold text-white leading-relaxed">
-                          Hi! 👋 I&apos;m the <strong className="text-cyan-300 font-orbitron">{SYMPOSIUM_CONFIG.name} Assistant</strong>.
+                          Hi! 👋 I&apos;m the <strong className="text-amber-300 font-orbitron">{SYMPOSIUM_CONFIG.name} Assistant</strong>.
                         </p>
                         <p className="text-xs text-slate-300 mt-1">How can I help you today?</p>
                       </div>
