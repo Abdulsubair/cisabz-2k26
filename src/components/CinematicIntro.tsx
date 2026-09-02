@@ -247,40 +247,37 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, forc
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.05, transition: { duration: 0.5 } }}
           >
-            {/* CAMPUS PHOTO BACKGROUND - UNIFIED VIGNETTE */}
+            {/* CAMPUS PHOTO BACKGROUND */}
             <motion.div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${campusReels[step - 1].url})` }}
               animate={{ scale: [1, 1.15] }}
               transition={{ duration: 3, ease: 'easeOut' }}
             >
-              {/* SOFT UNIFIED OVERLAY BLENDING PHOTO AND TEXT */}
-              <div className="absolute inset-0 bg-slate-950/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-slate-950/40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/20 to-slate-950/60" />
             </motion.div>
 
-            {/* SEAMLESS OVERLAY TEXT CARD ON BACKGROUND */}
-            <div className="absolute inset-0 z-30 flex items-center justify-center px-4 pb-20">
+            {/* PURE FLOATING TOP-CENTER TYPOGRAPHY */}
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 w-full max-w-3xl px-4 text-center">
               <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.15, duration: 0.6 }}
-                className="max-w-3xl w-full text-center p-6 sm:p-10 rounded-3xl bg-slate-950/60 border border-cyan-500/40 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(0,229,255,0.25)] flex flex-col items-center"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/80 border border-cyan-500/50 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(0,229,255,0.3)] backdrop-blur-md">
-                  {React.createElement(campusReels[step - 1].icon, { className: 'w-4 h-4 text-cyan-400' })}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase mb-3 shadow-[0_0_20px_rgba(0,229,255,0.4)] backdrop-blur-xl">
+                  {React.createElement(campusReels[step - 1].icon, { className: 'w-3.5 h-3.5 text-cyan-400' })}
                   <span>{campusReels[step - 1].tag}</span>
                 </div>
 
-                <h2 className="text-xs sm:text-sm md:text-base font-extrabold font-orbitron text-amber-400 tracking-[0.35em] uppercase mb-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-                  WELCOME TO KINGS COLLEGE OF ENGINEERING
+                <h2 className="text-xs sm:text-base font-bold font-orbitron text-slate-200 tracking-[0.3em] uppercase mb-1 drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
+                  WELCOME TO
                 </h2>
 
-                <h1 className="text-3xl sm:text-6xl md:text-7xl font-black font-cinzel-deco tracking-tight text-white mb-3 text-gradient-cyan-luxury drop-shadow-[0_0_40px_rgba(0,229,255,0.8)]">
+                <h1 className="text-4xl sm:text-7xl font-black font-cinzel-deco tracking-tight text-white mb-2 text-gradient-cyan-luxury drop-shadow-[0_0_45px_rgba(0,229,255,0.8)]">
                   {campusReels[step - 1].title}
                 </h1>
 
-                <p className="text-xs sm:text-base md:text-lg text-cyan-300 font-mono font-bold tracking-wider uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+                <p className="text-xs sm:text-base text-cyan-300 font-mono font-bold tracking-widest uppercase drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
                   {campusReels[step - 1].sub}
                 </p>
               </motion.div>
