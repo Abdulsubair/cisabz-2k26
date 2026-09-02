@@ -61,12 +61,12 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     tagline: 'Present your groundbreaking tech vision.',
     shortDescription: 'Participants present an innovative idea via PPT with optional working models/demos.',
     rounds: 'Single Round Event',
-    teamSize: 'Up to 3 or maximum 4 members',
+    teamSize: 'Team size 2 or maximum 3 members',
     time: '11:15 AM to 12:15 PM',
     venue: 'Smart Class / Seminar Hall II A, B',
     guidelines: [
       'Single round event.',
-      'Team size: Up to 3 or maximum 4 members per team.',
+      'Team size: 2 or maximum 3 members per team.',
       'Participants present an innovative idea via PPT.',
       'Demo or working models are appreciated but not mandatory.',
       'Time allotted: up to 5 minutes per team.',
@@ -267,7 +267,7 @@ export const GENERAL_RULES: GeneralRule[] = [
   {
     id: 1,
     title: 'Open Entry Format',
-    description: 'Participation is open for single or team entries (up to 2 members for most events; up to 3 or maximum 4 members for PPT presentation).',
+    description: 'Participation is open for single or team entries (up to 2 members for most events; team size 2 or maximum 3 members for PPT presentation).',
     iconName: 'Users',
   },
   {

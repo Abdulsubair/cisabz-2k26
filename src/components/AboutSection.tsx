@@ -173,11 +173,6 @@ export const AboutSection: React.FC = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: item.id * 0.08 }}
                   onClick={() => setActivePopupEvent(item)}
-                  onTouchStart={() => setActivePopupEvent(item)}
-                  onTouchEnd={() => setActivePopupEvent(null)}
-                  onMouseDown={() => setActivePopupEvent(item)}
-                  onMouseUp={() => setActivePopupEvent(null)}
-                  onMouseLeave={() => setActivePopupEvent(null)}
                   className={`p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group cursor-pointer active:scale-98`}
                 >
                   <div className="space-y-2 sm:space-y-4">
@@ -212,7 +207,7 @@ export const AboutSection: React.FC = () => {
                   <div className="mt-3 pt-2 sm:pt-4 border-t border-slate-800/80 flex items-center justify-between text-[9px] sm:text-xs font-mono text-cyan-400">
                     <span className="flex items-center gap-1.5 text-amber-300 font-bold">
                       <Info className="w-3.5 h-3.5 animate-pulse text-amber-400 shrink-0" />
-                      <span>Click / Hold for info 👆</span>
+                      <span>Click to view details 👆</span>
                     </span>
                     <span className="hidden sm:inline-block text-[10px] text-cyan-400 font-mono">
                       Full Details &rarr;
@@ -224,7 +219,7 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* LONG-PRESS POPUP MODAL FOR MOBILE & DESKTOP PREVIEW */}
+        {/* POPUP MODAL FOR MOBILE & DESKTOP PREVIEW */}
         <AnimatePresence>
           {activePopupEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
@@ -260,7 +255,7 @@ export const AboutSection: React.FC = () => {
 
                   <button
                     onClick={() => setActivePopupEvent(null)}
-                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-cyan-500/50 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -284,7 +279,7 @@ export const AboutSection: React.FC = () => {
                 </div>
 
                 <p className="text-[10px] text-center text-slate-500 font-mono uppercase tracking-wider">
-                  Release press to close details
+                  Click backdrop or press ✖ to close details
                 </p>
               </motion.div>
             </div>
