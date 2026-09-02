@@ -75,35 +75,35 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
     }
 
     if (q.includes('ipl') || q.includes('auction') || q.includes('hammer') || q.includes('bidding')) {
-      return `🏏 **IPL Auction (Hammer Hit):**\n• Category: Non-Technical Event\n• Team Size: 3 or max 4 members\n• Venue: Computer Lab 2 / Auditorium\n• Organiser: Naveen Kumar G (📞 9363346175)\n• Rules: Virtual purse system, mock player bidding & squad strategy!`;
+      return `🏏 **IPL Auction (Hammer Hit):**\n• Category: Non-Technical Event\n• Team Size: Team participation (up to 4 members)\n• Venue: Seminar Hall\n• Organiser: Naveen Kumar G (📞 9363346175)\n• Rules: Virtual purse system, mock player bidding & squad strategy!`;
     }
 
-    if (q.includes('paper') || q.includes('ppt') || q.includes('brainiac') || q.includes('presentation')) {
-      return `📄 **Paper Presentation (Tech Brainiac):**\n• Category: Technical Event\n• Team Size: 2 or max 3 members\n• Venue: CSE Seminar Hall\n• Organiser: Sanjay B (📞 9791388374)\n• Rules: Submit slides on AI, Cloud, Cybersecurity, IoT, or Web3. 8 mins presentation + 2 mins Q&A.`;
+    if (q.includes('paper') || q.includes('ppt') || q.includes('presentation') || q.includes('techverse')) {
+      return `📄 **Paper Presentation (TechVerse):**\n• Category: Technical Event\n• Team Size: Individual or up to 3 members\n• Venue: Smart Class / Seminar Hall II A, B\n• Organiser: Karan K (📞 9025970697)\n• Rules: Submit & present slides on AI, Cloud, Cybersecurity, IoT, or Web3. 5 mins presentation + Q&A. Demo/working models appreciated!`;
+    }
+
+    if (q.includes('quiz') || q.includes('brainiac') || q.includes('tech brainiac')) {
+      return `🧠 **Technical Quiz (Tech Brainiac):**\n• Category: Technical Event\n• Team Size: Individual or up to 3 members\n• Venue: Seminar Hall\n• Organiser: Sanjay B (📞 9791388374)\n• Rules: 2–3 level rounds (Prelims → Rapid Fire → Final) covering emerging tech, CS fundamentals, and rapid-fire questions!`;
     }
 
     if (q.includes('bug') || q.includes('debug') || q.includes('code') || q.includes('bash')) {
-      return `🐛 **Bug Bash (Debugging):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Venue: Computer Lab 1\n• Organiser: Prasanna B (📞 9159584312)\n• Rules: Spot & fix syntax/logical bugs in C++, Java, and Python code!`;
+      return `🐛 **Bug Bash (Debugging):**\n• Category: Technical Event\n• Team Size: Individual or up to 2 members\n• Venue: Lab 3\n• Organiser: Prasanna B (📞 9159584312)\n• Rules: Spot & fix syntax/logical bugs in C++, Java, and Python code!`;
     }
 
     if (q.includes('prompt') || q.includes('ai') || q.includes('fusion')) {
-      return `🤖 **Prompt Fusion (AI Prompt Engineering):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Akash K (📞 8525913433)\n• Rules: Craft precise LLM prompts to generate target code/images under time limits.`;
+      return `🤖 **Prompt Fusion (AI Prompt Challenge):**\n• Category: Technical Event\n• Team Size: Individual or up to 2 members\n• Venue: CSE Lab 1\n• Organiser: Akash K (📞 8525913433)\n• Rules: Craft precise LLM prompts to generate target code/images under time limits.`;
     }
 
-    if (q.includes('web') || q.includes('techverse') || q.includes('design')) {
-      return `🌐 **TechVerse (Web & Mobile Design):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Karan K (📞 9025970697)\n• Rules: Build high-impact UI/UX mockups using modern frontend frameworks within 2 hours.`;
-    }
-
-    if (q.includes('pinpoint') || q.includes('treasure') || q.includes('hunt')) {
-      return `📍 **PinPoint (Tech Treasure Hunt):**\n• Category: Technical Event\n• Team Size: 2 - 3 members\n• Organiser: Vengateshwaran G (📞 8778336169)\n• Rules: Solve QR code puzzles & technical clues across campus grounds!`;
+    if (q.includes('pinpoint') || q.includes('treasure') || q.includes('hunt') || q.includes('guess')) {
+      return `📍 **PinPoint (Category / Word Guessing):**\n• Category: Non-Technical Event\n• Team Size: Individual or up to 2 members\n• Venue: Lab 1\n• Organiser: Vengateshwaran G (📞 8778336169)\n• Rules: Guess hidden category/word from 5 clue words revealed one at a time.`;
     }
 
     if (q.includes('brand') || q.includes('spot') || q.includes('logo')) {
-      return `🏷️ **Brand Spot (Logo & Ad Identification):**\n• Category: Non-Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Prakash K (📞 8110984259)\n• Rules: Identify famous brand logos, taglines, audio jingles & ad campaigns.`;
+      return `🏷️ **Brand Spot (Logo Finding):**\n• Category: Non-Technical Event\n• Team Size: Individual or up to 2 members\n• Venue: Smart Class\n• Organiser: Prakash K (📞 8110984259)\n• Rules: Identify famous brand logos under time pressure across 2-3 rounds.`;
     }
 
-    if (q.includes('connect') || q.includes('connection')) {
-      return `🔗 **Connection (Picture Puzzle):**\n• Category: Non-Technical Event\n• Team Size: 2 members\n• Organiser: Ajay V (📞 6384148418)\n• Rules: Connect related visual clues to decipher hidden technical terms and movie titles!`;
+    if (q.includes('connect') || q.includes('connection') || q.includes('link')) {
+      return `🔗 **Connection (Link & Think):**\n• Category: Non-Technical Event\n• Team Size: Individual or up to 2 members\n• Venue: Lab 3\n• Organiser: Ajay V (📞 6384148418)\n• Rules: Discover the common link connecting sets of disparate images.`;
     }
 
     if (q.includes('contact') || q.includes('phone') || q.includes('call') || q.includes('coordinator') || q.includes('number') || q.includes('help')) {
