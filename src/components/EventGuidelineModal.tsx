@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { EventItem } from '../types';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
-import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight } from 'lucide-react';
+import { X, CheckCircle, Users, Layers, Award, FileText, ArrowRight, Phone, User } from 'lucide-react';
 
 interface EventGuidelineModalProps {
   event: EventItem | null;
@@ -61,8 +61,8 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
             </div>
           </div>
 
-          {/* QUICK EVENT ROUNDS & FORMAT BAR */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+          {/* QUICK EVENT ROUNDS, FORMAT & ORGANISER BAR */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-slate-900 text-cyan-400 border border-cyan-500/20">
                 <Layers className="w-5 h-5" />
@@ -82,6 +82,24 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
                 <div className="text-xs font-semibold text-slate-200">{event.teamSize}</div>
               </div>
             </div>
+
+            {event.organiser && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-slate-900 text-amber-400 border border-amber-500/20">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Event Organiser</div>
+                  <a
+                    href={`tel:${event.organiser.phone.replace(/\s+/g, '')}`}
+                    className="text-xs font-semibold text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>{event.organiser.name}</span>
+                    <Phone className="w-3 h-3 inline" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* OFFICIAL GUIDELINES */}

@@ -64,6 +64,7 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or up to 3 members',
     time: '11:15 AM to 12:15 PM',
     venue: 'Smart Class / Seminar Hall II A, B',
+    organiser: { name: 'Karan K', phone: '9025970697' },
     guidelines: [
       'Single round event.',
       'Team size: individual or up to 3 members.',
@@ -94,6 +95,7 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 3 members)',
     time: '12:15 PM to 1:15 PM',
     venue: 'Seminar Hall',
+    organiser: { name: 'Sanjay B', phone: '9791388374' },
     guidelines: [
       'Conducted in 2–3 level rounds (e.g., Prelims → Rapid Fire → Final).',
       'Individual or team participation (up to 3 members).',
@@ -122,6 +124,7 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 2 members)',
     time: '11:15 AM to 12:15 PM',
     venue: 'CSE Lab 1',
+    organiser: { name: 'Akash K', phone: '8525913433' },
     guidelines: [
       'Conducted in 2–3 level rounds (e.g., Prelims → Rapid Fire → Final).',
       'Individual or team participation (up to 2 members).',
@@ -150,6 +153,7 @@ export const TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 2 members)',
     time: '12:15 PM to 1:15 PM',
     venue: 'Lab 3',
+    organiser: { name: 'Prasanna B', phone: '9159584312' },
     guidelines: [
       'Conducted in 2–3 level rounds (e.g., Prelims → Rapid Fire → Final).',
       'Individual or team participation (up to 2 members).',
@@ -181,6 +185,7 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 2 members)',
     time: '2:00 PM to 2:45 PM',
     venue: 'Lab 1',
+    organiser: { name: 'Vengateshwaran G', phone: '8778336169' },
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation (up to 2 members).',
@@ -207,6 +212,7 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 2 members)',
     time: '2:45 PM to 3:30 PM',
     venue: 'Smart Class',
+    organiser: { name: 'Prakash K', phone: '8110984259' },
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation (up to 2 members).',
@@ -234,6 +240,7 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Team participation (up to 4 members per team)',
     time: '2:00 PM to 3:00 PM',
     venue: 'Seminar Hall',
+    organiser: { name: 'Naveen Kumar G', phone: '9363346175' },
     guidelines: [
       'Single round event.',
       'Team participation (up to 4 members per team).',
@@ -261,6 +268,7 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     teamSize: 'Individual or team participation (up to 2 members)',
     time: '2:45 PM to 3:30 PM',
     venue: 'Lab 3',
+    organiser: { name: 'Ajay V', phone: '6384148418' },
     guidelines: [
       'Conducted in 2–3 level rounds.',
       'Individual or team participation (up to 2 members).',

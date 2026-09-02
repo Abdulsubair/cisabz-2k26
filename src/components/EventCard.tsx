@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Play,
   Zap,
+  Phone,
+  User,
 } from 'lucide-react';
 
 interface EventCardProps {
@@ -190,6 +192,24 @@ export const EventCard: React.FC<EventCardProps> = ({
             <Users className="w-4 h-4 text-purple-400 shrink-0" />
             <span className="truncate">{event.teamSize}</span>
           </div>
+
+          {event.organiser && (
+            <div className="flex items-center justify-between text-xs text-slate-300 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
+              <div className="flex items-center gap-1.5 truncate">
+                <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">Org:</span>
+                <span className="truncate text-slate-200 font-medium">{event.organiser.name}</span>
+              </div>
+              <a
+                href={`tel:${event.organiser.phone.replace(/\s+/g, '')}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-[11px] font-mono text-cyan-400 font-semibold hover:text-cyan-300 transition-colors shrink-0 ml-1"
+              >
+                <Phone className="w-3 h-3" />
+                <span>{event.organiser.phone}</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

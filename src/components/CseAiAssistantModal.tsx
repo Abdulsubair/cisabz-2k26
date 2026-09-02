@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SYMPOSIUM_CONFIG, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
+import { SYMPOSIUM_CONFIG, ALL_EVENTS, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
 import type { EventItem } from '../types';
 import { X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy, Send, Bot, User, MessageSquare } from 'lucide-react';
 import symbotClockBadge from '../assets/symbot-clock-badge.png';
@@ -159,6 +159,10 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
 
   // Helper to retrieve coordinator contact per event
   const getEventOrganiser = (eventId?: string) => {
+    const found = ALL_EVENTS.find((e) => e.id === eventId);
+    if (found && found.organiser) {
+      return found.organiser;
+    }
     switch (eventId) {
       case 'techverse':
         return { name: 'Karan K', phone: '9025970697' };

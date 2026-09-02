@@ -18,6 +18,10 @@ export interface EventItem {
   registrationLink?: string;
   time?: string;
   venue?: string;
+  organiser?: {
+    name: string;
+    phone: string;
+  };
 }
 
 export interface Coordinator {
