@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SYMPOSIUM_CONFIG, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS, STUDENT_COORDINATORS, FACULTY_COORDINATORS } from '../data/symposiumData';
 import type { EventItem } from '../types';
-import { X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
+import { X, RotateCcw, Globe, Phone, ChevronRight, ArrowLeft, Sparkles, CheckCircle2, ShieldCheck, Trophy, Send, Bot, User, MessageSquare } from 'lucide-react';
 import symbotClockBadge from '../assets/symbot-clock-badge.png';
 
 interface CseAiAssistantModalProps {
   onOpenRegistration?: (eventId?: string) => void;
 }
 
-type ViewState = 'main' | 'technical_list' | 'non_tech_list' | 'event_detail' | 'rules' | 'contact' | 'custom_help';
+type ViewState = 'main' | 'chat' | 'technical_list' | 'non_tech_list' | 'event_detail' | 'rules' | 'contact' | 'custom_help';
+
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'bot';
+  text: string;
+  timestamp: string;
+}
 
 export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpenRegistration }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -18,6 +25,25 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
   const [activeTabFilter, setActiveTabFilter] = useState<'overview' | 'rules' | 'team' | 'eligibility' | 'evaluation'>('overview');
   const [userQuery, setUserQuery] = useState<string>('');
   const [customReply, setCustomReply] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState<string>('');
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      sender: 'bot',
+      text: `Hello! 👋 I'm your AI Assistant for ${SYMPOSIUM_CONFIG.name}. Ask me anything about registration fees, event rules, timings, or coordinator contacts!`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+
+  useEffect(() => {
+    if (currentView === 'chat' && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping, currentView]);
 
   const handleSelectEvent = (event: EventItem) => {
     setSelectedEvent(event);
@@ -33,25 +59,101 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
     setCustomReply(null);
   };
 
+  const getBotResponseText = (input: string): string => {
+    const q = input.toLowerCase().trim();
+
+    if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('greetings')) {
+      return `Hello! 👋 How can I assist you with ${SYMPOSIUM_CONFIG.name}? You can ask me about registration fees, event rules, timings, or coordinator contacts!`;
+    }
+
+    if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('amount') || q.includes('money')) {
+      return `💰 **Registration Fees:**\n• Base Fee: ₹${SYMPOSIUM_CONFIG.registrationFee} (includes 1 Tech + 1 Non-Tech event, complimentary lunch & certificate)\n• Extra Event Fee: ₹${SYMPOSIUM_CONFIG.additionalEventFee} per additional event.\n• Registration Deadline: ${SYMPOSIUM_CONFIG.registrationEndDate}`;
+    }
+
+    if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('timing') || q.includes('schedule') || q.includes('deadline')) {
+      return `📅 **Symposium Timings & Dates:**\n• Event Date: ${SYMPOSIUM_CONFIG.eventDate}\n• Time: 9:00 AM - 4:30 PM IST\n• Registration Closes: ${SYMPOSIUM_CONFIG.registrationEndDate}\n• Venue: ${SYMPOSIUM_CONFIG.venueName}, ${SYMPOSIUM_CONFIG.collegeName}`;
+    }
+
+    if (q.includes('ipl') || q.includes('auction') || q.includes('hammer') || q.includes('bidding')) {
+      return `🏏 **IPL Auction (Hammer Hit):**\n• Category: Non-Technical Event\n• Team Size: 3 or max 4 members\n• Venue: Computer Lab 2 / Auditorium\n• Organiser: Naveen Kumar G (📞 9363346175)\n• Rules: Virtual purse system, mock player bidding & squad strategy!`;
+    }
+
+    if (q.includes('paper') || q.includes('ppt') || q.includes('brainiac') || q.includes('presentation')) {
+      return `📄 **Paper Presentation (Tech Brainiac):**\n• Category: Technical Event\n• Team Size: 2 or max 3 members\n• Venue: CSE Seminar Hall\n• Organiser: Sanjay B (📞 9791388374)\n• Rules: Submit slides on AI, Cloud, Cybersecurity, IoT, or Web3. 8 mins presentation + 2 mins Q&A.`;
+    }
+
+    if (q.includes('bug') || q.includes('debug') || q.includes('code') || q.includes('bash')) {
+      return `🐛 **Bug Bash (Debugging):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Venue: Computer Lab 1\n• Organiser: Prasanna B (📞 9159584312)\n• Rules: Spot & fix syntax/logical bugs in C++, Java, and Python code!`;
+    }
+
+    if (q.includes('prompt') || q.includes('ai') || q.includes('fusion')) {
+      return `🤖 **Prompt Fusion (AI Prompt Engineering):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Akash K (📞 8525913433)\n• Rules: Craft precise LLM prompts to generate target code/images under time limits.`;
+    }
+
+    if (q.includes('web') || q.includes('techverse') || q.includes('design')) {
+      return `🌐 **TechVerse (Web & Mobile Design):**\n• Category: Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Karan K (📞 9025970697)\n• Rules: Build high-impact UI/UX mockups using modern frontend frameworks within 2 hours.`;
+    }
+
+    if (q.includes('pinpoint') || q.includes('treasure') || q.includes('hunt')) {
+      return `📍 **PinPoint (Tech Treasure Hunt):**\n• Category: Technical Event\n• Team Size: 2 - 3 members\n• Organiser: Vengateshwaran G (📞 8778336169)\n• Rules: Solve QR code puzzles & technical clues across campus grounds!`;
+    }
+
+    if (q.includes('brand') || q.includes('spot') || q.includes('logo')) {
+      return `🏷️ **Brand Spot (Logo & Ad Identification):**\n• Category: Non-Technical Event\n• Team Size: 1 - 2 members\n• Organiser: Prakash K (📞 8110984259)\n• Rules: Identify famous brand logos, taglines, audio jingles & ad campaigns.`;
+    }
+
+    if (q.includes('connect') || q.includes('connection')) {
+      return `🔗 **Connection (Picture Puzzle):**\n• Category: Non-Technical Event\n• Team Size: 2 members\n• Organiser: Ajay V (📞 6384148418)\n• Rules: Connect related visual clues to decipher hidden technical terms and movie titles!`;
+    }
+
+    if (q.includes('contact') || q.includes('phone') || q.includes('call') || q.includes('coordinator') || q.includes('number') || q.includes('help')) {
+      return `📞 **Coordinator Help Desk:**\n• C. Vignesh (Chairperson): 7871630097\n• M. Mubashir (Vice Chair): 8925438848\n• Email: cisabz26@gmail.com\n\nFaculty Coordinators:\n• Ms. B. Bavithra: 9655655767\n• Mr. S. Sivakumar: 9942738925`;
+    }
+
+    if (q.includes('rule') || q.includes('guideline') || q.includes('id') || q.includes('dress') || q.includes('food') || q.includes('lunch') || q.includes('certif')) {
+      return `📋 **General Rules & Perks:**\n• College ID card & Bonafide certificate are mandatory.\n• Formal dress code required.\n• Complimentary lunch, tea/snacks & official participation certificate included for all participants!`;
+    }
+
+    if (q.includes('register') || q.includes('form') || q.includes('apply') || q.includes('sign up')) {
+      return `📝 **How to Register:**\nClick the green "Register" button below or at the top of the website to fill out the official Google Form!`;
+    }
+
+    return `I understand you are asking about "${input}". For immediate assistance, you can call student coordinator C. Vignesh at 7871630097 or email cisabz26@gmail.com. Feel free to ask another question!`;
+  };
+
+  const handleSendMessage = (textToSend?: string) => {
+    const query = textToSend || chatInput;
+    if (!query.trim()) return;
+
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: query.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    if (!textToSend) setChatInput('');
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const replyText = getBotResponseText(query);
+      const botMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: replyText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsTyping(false);
+    }, 450);
+  };
+
   const handleCustomQuerySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userQuery.trim()) return;
 
-    const lower = userQuery.toLowerCase();
-    let reply = `Thank you for your query about ${SYMPOSIUM_CONFIG.name}! `;
-
-    if (lower.includes('fee') || lower.includes('cost') || lower.includes('pay') || lower.includes('price')) {
-      reply += `Base registration fee is ₹${SYMPOSIUM_CONFIG.registrationFee} which includes up to 2 events (1 Technical + 1 Non-Technical), complimentary lunch & certificate. Any additional event costs ₹${SYMPOSIUM_CONFIG.additionalEventFee}.`;
-    } else if (lower.includes('date') || lower.includes('when') || lower.includes('timing')) {
-      reply += `The symposium takes place on ${SYMPOSIUM_CONFIG.eventDate}. Registration closes on ${SYMPOSIUM_CONFIG.registrationEndDate}.`;
-    } else if (lower.includes('venue') || lower.includes('location') || lower.includes('where')) {
-      reply += `The venue is ${SYMPOSIUM_CONFIG.venueName} at ${SYMPOSIUM_CONFIG.collegeName}, ${SYMPOSIUM_CONFIG.collegeAddress}.`;
-    } else if (lower.includes('food') || lower.includes('lunch') || lower.includes('certificate')) {
-      reply += `Complimentary lunch, tea/refreshments, and official participation certificates will be provided to all registered attendees!`;
-    } else {
-      reply += `For specific queries, feel free to contact our student coordinators: C. Vignesh (${STUDENT_COORDINATORS[0].phone}) or M. Mubashir (${STUDENT_COORDINATORS[1].phone}).`;
-    }
-
+    const reply = getBotResponseText(userQuery);
     setCustomReply(reply);
   };
 
@@ -116,7 +218,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ duration: 0.3 }}
-            className="w-[92vw] sm:w-[390px] h-[580px] max-h-[85vh] rounded-3xl overflow-hidden bg-slate-950/95 border border-amber-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col justify-between relative"
+            className="w-[92vw] sm:w-[410px] h-[600px] max-h-[88vh] rounded-3xl overflow-hidden bg-slate-950/95 border border-amber-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col justify-between relative"
           >
             {/* BACKGROUND DIAGONAL GRID PATTERN */}
             <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
@@ -179,6 +281,26 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                     </div>
                   </div>
 
+                  {/* FEATURED LIVE CHAT PROMPT CARD */}
+                  <button
+                    onClick={() => setCurrentView('chat')}
+                    className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/80 via-orange-950/70 to-slate-900 border border-amber-500/50 hover:border-amber-400 text-left transition-all group cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.2)] flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white shadow-md shrink-0">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold font-orbitron text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>AI Live Chat & Help</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40">NEW</span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 mt-0.5">Ask any question & get instant answers!</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                  </button>
+
                   {/* QUICK INFO PROMPT CARD */}
                   <div className="p-3.5 rounded-2xl bg-slate-900/50 border border-slate-800 text-xs text-slate-300 flex flex-col gap-1.5">
                     <div className="flex items-center gap-2 font-mono text-cyan-400 font-bold uppercase tracking-wider text-[10px]">
@@ -190,7 +312,110 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 2: TECHNICAL EVENTS LIST */}
+              {/* VIEW 2: INTERACTIVE AI LIVE CHAT */}
+              {currentView === 'chat' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3 h-full">
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/80 border border-amber-500/30 text-xs font-mono text-amber-300">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-amber-400" />
+                      <span className="font-bold">Live AI Chat Mode</span>
+                    </div>
+                    <button
+                      onClick={() => setCurrentView('main')}
+                      className="text-slate-400 hover:text-white underline text-[11px]"
+                    >
+                      Menu
+                    </button>
+                  </div>
+
+                  {/* CHAT MESSAGES SCROLL CONTAINER */}
+                  <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1 text-[10px] font-mono text-slate-400">
+                          {msg.sender === 'bot' ? (
+                            <>
+                              <Bot className="w-3 h-3 text-amber-400" />
+                              <span className="text-amber-300 font-semibold">SymBot</span>
+                            </>
+                          ) : (
+                            <>
+                              <User className="w-3 h-3 text-cyan-400" />
+                              <span className="text-cyan-300 font-semibold">You</span>
+                            </>
+                          )}
+                          <span>• {msg.timestamp}</span>
+                        </div>
+
+                        <div
+                          className={`max-w-[88%] p-3 rounded-2xl text-xs leading-relaxed ${
+                            msg.sender === 'user'
+                              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none shadow-md'
+                              : 'bg-slate-900 border border-amber-500/30 text-slate-200 rounded-bl-none shadow-md whitespace-pre-line'
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      </div>
+                    ))}
+
+                    {isTyping && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-slate-900 border border-amber-500/20 text-xs text-amber-300 w-fit">
+                        <Bot className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                        <span className="italic font-mono text-[11px]">SymBot is typing...</span>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* SUGGESTED CHIPS */}
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800">
+                    {[
+                      'Registration Fee?',
+                      'IPL Auction rules',
+                      'Paper Presentation',
+                      'Coordinators contact'
+                    ].map((chip, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendMessage(chip)}
+                        className="px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono hover:text-amber-300 transition-colors"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* CHAT INPUT FORM */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }}
+                    className="flex items-center gap-2 pt-1"
+                  >
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!chatInput.trim()}
+                      className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:brightness-110 disabled:opacity-40 transition-all shadow-md"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </motion.div>
+              )}
+
+              {/* VIEW 3: TECHNICAL EVENTS LIST */}
               {currentView === 'technical_list' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
                   <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/80 to-slate-900/90 border border-cyan-500/30">
@@ -234,7 +459,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 3: NON-TECHNICAL EVENTS LIST */}
+              {/* VIEW 4: NON-TECHNICAL EVENTS LIST */}
               {currentView === 'non_tech_list' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
                   <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/80 to-slate-900/90 border border-purple-500/30">
@@ -278,7 +503,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 4: DETAILED EVENT CARD (MATCHES SCREENSHOT IMAGE 1 EXACTLY!) */}
+              {/* VIEW 5: DETAILED EVENT CARD */}
               {currentView === 'event_detail' && selectedEvent && (
                 <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col gap-3">
                   
@@ -378,7 +603,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 5: SYMPOSIUM GENERAL RULES */}
+              {/* VIEW 6: SYMPOSIUM GENERAL RULES */}
               {currentView === 'rules' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
                   <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-amber-500/30">
@@ -405,7 +630,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 6: COORDINATOR CONTACT LIST */}
+              {/* VIEW 7: COORDINATOR CONTACT LIST */}
               {currentView === 'contact' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
                   <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-rose-500/30">
@@ -447,7 +672,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 </motion.div>
               )}
 
-              {/* VIEW 7: CUSTOM HELP / QUERY SCREEN */}
+              {/* VIEW 8: CUSTOM HELP / QUERY SCREEN */}
               {currentView === 'custom_help' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
                   <form onSubmit={handleCustomQuerySubmit} className="flex flex-col gap-2">
@@ -472,7 +697,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                   {customReply && (
                     <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 text-xs text-slate-200 flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <p className="leading-relaxed">{customReply}</p>
+                      <p className="leading-relaxed whitespace-pre-line">{customReply}</p>
                     </div>
                   )}
 
@@ -488,7 +713,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
 
             </div>
 
-            {/* BOTTOM QUICK ACTION PILL BUTTONS (MATCHES SCREENSHOT IMAGE 1 & 2 EXACTLY!) */}
+            {/* BOTTOM QUICK ACTION PILL BUTTONS */}
             <div className="relative z-10 p-3.5 bg-slate-950 border-t border-rose-500/20 flex flex-col gap-2">
               {/* PRIMARY ACTION PILLS ROW 1 */}
               <div className="flex flex-wrap items-center gap-1.5">
@@ -616,10 +841,11 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                 )}
 
                 <button
-                  onClick={() => setCurrentView('custom_help')}
-                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 text-white text-xs font-bold shadow-[0_0_15px_rgba(225,29,72,0.5)] hover:scale-105 transition-all cursor-pointer ml-auto"
+                  onClick={() => setCurrentView('chat')}
+                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-white text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.5)] hover:scale-105 transition-all cursor-pointer ml-auto flex items-center gap-1.5"
                 >
-                  Need help?
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>AI Chat</span>
                 </button>
               </div>
             </div>
