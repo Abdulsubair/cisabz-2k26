@@ -22,6 +22,10 @@
     margin: 0;
     padding: 0;
   }
+
+  *, *::before, *::after {
+    cursor: none !important;
+  }
 }
 
 /* High-Tech & Majestic Custom Fonts */

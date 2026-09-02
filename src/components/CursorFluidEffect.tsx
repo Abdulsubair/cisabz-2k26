@@ -33,7 +33,6 @@ export const CursorFluidEffect: React.FC = () => {
       'rgba(214, 175, 55, 0.4)',
     ];
 
-    // Start off-screen so ring doesn't flash at 0,0
     let mouseX = -300;
     let mouseY = -300;
     let ringX = -300;
@@ -41,6 +40,8 @@ export const CursorFluidEffect: React.FC = () => {
     let lastX = -300;
     let lastY = -300;
     let isVisible = false;
+    let isHovering = false;
+    let ringRadius = 14;
 
     // Keep canvas pixel dims in sync with viewport
     const syncSize = () => {
@@ -55,6 +56,9 @@ export const CursorFluidEffect: React.FC = () => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       isVisible = true;
+
+      const target = e.target as HTMLElement | null;
+      isHovering = target ? !!target.closest('button, a, input, select, textarea, [role="button"], .cursor-pointer, [onclick]') : false;
 
       const dist = Math.hypot(mouseX - lastX, mouseY - lastY);
       if (dist > 10) {
@@ -94,24 +98,27 @@ export const CursorFluidEffect: React.FC = () => {
       ringX += (mouseX - ringX) * 0.18;
       ringY += (mouseY - ringY) * 0.18;
 
+      const targetRadius = isHovering ? 22 : 14;
+      ringRadius += (targetRadius - ringRadius) * 0.2;
+
       if (isVisible) {
         ctx.save();
         ctx.globalAlpha = 1;
 
         // Outer glowing ring (lerp trailing effect)
         ctx.beginPath();
-        ctx.arc(ringX, ringY, 14, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
-        ctx.lineWidth = 1.2;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = 'rgba(0, 229, 255, 0.5)';
+        ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = isHovering ? 'rgba(0, 229, 255, 0.85)' : 'rgba(0, 229, 255, 0.4)';
+        ctx.lineWidth = isHovering ? 1.8 : 1.2;
+        ctx.shadowBlur = isHovering ? 14 : 8;
+        ctx.shadowColor = isHovering ? 'rgba(0, 229, 255, 0.8)' : 'rgba(0, 229, 255, 0.5)';
         ctx.stroke();
 
         // Inner solid dot (snaps exactly to real cursor)
         ctx.shadowBlur = 0;
         ctx.beginPath();
-        ctx.arc(mouseX, mouseY, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 229, 255, 0.75)';
+        ctx.arc(mouseX, mouseY, isHovering ? 3.5 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = isHovering ? '#00e5ff' : 'rgba(0, 229, 255, 0.75)';
         ctx.fill();
 
         ctx.restore();
