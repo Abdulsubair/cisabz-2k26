@@ -92,13 +92,16 @@ export function App() {
   // IF ACCESSED VIA /admin ROUTE OR #admin HASH
   if (isAdminRoute) {
     return (
-      <AdminPortal
-        onBackToWebsite={() => {
-          window.history.pushState({}, '', '/');
-          window.location.hash = '';
-          setIsAdminRoute(false);
-        }}
-      />
+      <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-black">
+        <CursorFluidEffect />
+        <AdminPortal
+          onBackToWebsite={() => {
+            window.history.pushState({}, '', '/');
+            window.location.hash = '';
+            setIsAdminRoute(false);
+          }}
+        />
+      </div>
     );
   }
 
