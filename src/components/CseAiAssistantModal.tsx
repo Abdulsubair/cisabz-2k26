@@ -71,7 +71,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
       case 'brand-spot':
         return { name: 'Prakash K', phone: '8110984259' };
       case 'hammer-hit':
-        return { name: 'Naveen Kumar G', phone: '9363615102' };
+        return { name: 'Naveen Kumar G', phone: '9363346175' };
       case 'connection':
         return { name: 'Ajay V', phone: '6384148418' };
       default:
