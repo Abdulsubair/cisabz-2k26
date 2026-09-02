@@ -107,18 +107,18 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
     }
 
     if (q.includes('contact') || q.includes('phone') || q.includes('call') || q.includes('coordinator') || q.includes('number') || q.includes('help')) {
-      return `📞 **Coordinator Help Desk:**\n• C. Vignesh (Chairperson): 7871630097\n• M. Mubashir (Vice Chair): 8925438848\n• Email: cisabz26@gmail.com\n\nFaculty Coordinators:\n• Ms. B. Bavithra: 9655655767\n• Mr. S. Sivakumar: 9942738925`;
+      return `📞 **Coordinator Help Desk:**\n\nStudent Coordinators:\n• M. Mubashir: 95143 59887\n• C. Vignesh: 7871630097\n\nStaff Coordinators:\n• Ms. B. Bavithra (Asst. Prof., CSE): 78452 86608\n• Ms. S. Abikayil Aarthi (Asst. Prof., CSE): 80128 15838\n\nEmail: cisabz26@gmail.com`;
     }
 
     if (q.includes('rule') || q.includes('guideline') || q.includes('id') || q.includes('dress') || q.includes('food') || q.includes('lunch') || q.includes('certif')) {
-      return `📋 **General Rules & Perks:**\n• College ID card & Bonafide certificate are mandatory.\n• Formal dress code required.\n• Complimentary lunch, tea/snacks & official participation certificate included for all participants!`;
+      return `📋 **General Rules & Instructions:**\n• Participation is open for single or team entries (up to 2 members per team for most events).\n• Max 2 events per participant (1 Technical + 1 Non-Technical).\n• Additional event fee: ₹50 per extra event (ONLY ON THE SPOT).\n• College ID card & Bonafide certificate are mandatory.\n• Formal dress code required.\n• Decision of Judges will be final.\n• Complimentary lunch, refreshments & certificates provided to all participants!`;
     }
 
     if (q.includes('register') || q.includes('form') || q.includes('apply') || q.includes('sign up')) {
-      return `📝 **How to Register:**\nClick the green "Register" button below or at the top of the website to fill out the official Google Form!`;
+      return `📝 **How to Register:**\nClick the green "Register" button to fill out the official Google Form before ${SYMPOSIUM_CONFIG.registrationEndDate}!`;
     }
 
-    return `I understand you are asking about "${input}". For immediate assistance, you can call student coordinator C. Vignesh at 7871630097 or email cisabz26@gmail.com. Feel free to ask another question!`;
+    return `I understand you are asking about "${input}". For immediate assistance, you can call student coordinator M. Mubashir at 95143 59887 or C. Vignesh at 7871630097. Feel free to ask another question!`;
   };
 
   const handleSendMessage = (textToSend?: string) => {
