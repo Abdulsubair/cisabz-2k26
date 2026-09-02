@@ -14,6 +14,9 @@ import {
   ArrowLeft,
   Layers,
   Trash2,
+  Plus,
+  FileUp,
+  X,
 } from 'lucide-react';
 import { SYMPOSIUM_CONFIG, ALL_EVENTS, TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
 import cisabzLogo from '../assets/cisabz-logo.png';
@@ -60,10 +63,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   // Master Filters
   const [selectedCollege, setSelectedCollege] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Event specific filter
+  // Event specific filter in Tab 2
   const [selectedEventId, setSelectedEventId] = useState<string>('techverse');
+
+  // Modals for Add & Import Google Form Responses
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [importText, setImportText] = useState<string>('');
+  const [importSuccessMsg, setImportSuccessMsg] = useState<string>('');
+
+  // Manual Add Form State
+  const [newFullName, setNewFullName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newCollege, setNewCollege] = useState('');
+  const [newDepartment, setNewDepartment] = useState('');
+  const [newYear, setNewYear] = useState('2nd Year');
+  const [newTechEvents, setNewTechEvents] = useState<string[]>([]);
+  const [newNonTechEvents, setNewNonTechEvents] = useState<string[]>([]);
+  const [newPaymentStatus, setNewPaymentStatus] = useState<'PAID' | 'PENDING'>('PAID');
 
   const loadRecords = () => {
     try {
@@ -93,11 +114,121 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     loadRecords();
   }, []);
 
+  const saveRecordsToStorage = (updated: RegistrationRecord[]) => {
+    setRecords(updated);
+    localStorage.setItem('cisabz_registrations', JSON.stringify(updated));
+  };
+
   const handleDeleteSingleRecord = (idToDelete: string, name: string) => {
     if (window.confirm(`Delete registration for "${name}" (${idToDelete})?`)) {
       const updated = records.filter((r) => r.id !== idToDelete);
-      setRecords(updated);
-      localStorage.setItem('cisabz_registrations', JSON.stringify(updated));
+      saveRecordsToStorage(updated);
+    }
+  };
+
+  const handleManualAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFullName.trim() || !newEmail.trim() || !newPhone.trim()) return;
+
+    const eventCount = newTechEvents.length + newNonTechEvents.length;
+    const baseFee = SYMPOSIUM_CONFIG.registrationFee;
+    const extraFee = Math.max(0, eventCount - 2) * SYMPOSIUM_CONFIG.additionalEventFee;
+    const totalAmount = eventCount > 0 ? baseFee + extraFee : baseFee;
+
+    const newRecordObj: RegistrationRecord = {
+      id: `REG-${Date.now().toString().slice(-5)}`,
+      fullName: newFullName.trim(),
+      email: newEmail.trim(),
+      phone: newPhone.trim(),
+      college: newCollege.trim() || SYMPOSIUM_CONFIG.collegeName,
+      department: newDepartment.trim() || 'Computer Science and Engineering',
+      yearOfStudy: newYear,
+      techEvents: newTechEvents,
+      nonTechEvents: newNonTechEvents,
+      totalAmount,
+      paymentStatus: newPaymentStatus,
+      timestamp: new Date().toLocaleString(),
+      emailSentStatus: true,
+    };
+
+    const updated = [newRecordObj, ...records];
+    saveRecordsToStorage(updated);
+
+    // Reset form
+    setNewFullName('');
+    setNewEmail('');
+    setNewPhone('');
+    setNewCollege('');
+    setNewDepartment('');
+    setNewTechEvents([]);
+    setNewNonTechEvents([]);
+    setShowAddModal(false);
+  };
+
+  const handleImportGoogleFormText = () => {
+    if (!importText.trim()) return;
+
+    const lines = importText.split('\n').filter((l) => l.trim().length > 0);
+    const parsedRecords: RegistrationRecord[] = [];
+    let count = 0;
+
+    lines.forEach((line, index) => {
+      // Split by tab or comma (support pasting from Excel / Sheets or CSV)
+      const cols = line.includes('\t') ? line.split('\t') : line.split(',');
+      if (cols.length >= 3) {
+        // Ignore header line if present
+        if (index === 0 && (line.toLowerCase().includes('email') || line.toLowerCase().includes('timestamp') || line.toLowerCase().includes('full name'))) {
+          return;
+        }
+
+        const name = cols[1] ? cols[1].replace(/"/g, '').trim() : `Participant ${index}`;
+        const email = cols[2] ? cols[2].replace(/"/g, '').trim() : `student${index}@gmail.com`;
+        const phone = cols[3] ? cols[3].replace(/"/g, '').trim() : '9876543210';
+        const college = cols[4] ? cols[4].replace(/"/g, '').trim() : 'Kings College of Engineering';
+        const dept = cols[5] ? cols[5].replace(/"/g, '').trim() : 'CSE';
+        const year = cols[6] ? cols[6].replace(/"/g, '').trim() : '3rd Year';
+
+        const rawTech = cols[7] ? cols[7].replace(/"/g, '').toLowerCase() : '';
+        const rawNonTech = cols[8] ? cols[8].replace(/"/g, '').toLowerCase() : '';
+
+        const techEvts: string[] = [];
+        if (rawTech.includes('verse') || rawTech.includes('web') || rawTech.includes('cs-01')) techEvts.push('techverse');
+        if (rawTech.includes('paper') || rawTech.includes('brainiac') || rawTech.includes('ppt') || rawTech.includes('cs-02')) techEvts.push('tech-brainiac');
+        if (rawTech.includes('prompt') || rawTech.includes('fusion') || rawTech.includes('ai') || rawTech.includes('cs-03')) techEvts.push('prompt-fusion');
+        if (rawTech.includes('bug') || rawTech.includes('bash') || rawTech.includes('cs-04')) techEvts.push('bug-bash');
+        if (rawTech.includes('pinpoint') || rawTech.includes('hunt') || rawTech.includes('cs-05')) techEvts.push('pinpoint');
+
+        const nonTechEvts: string[] = [];
+        if (rawNonTech.includes('brand') || rawNonTech.includes('nc-01')) nonTechEvts.push('brand-spot');
+        if (rawNonTech.includes('ipl') || rawNonTech.includes('auction') || rawNonTech.includes('hammer') || rawNonTech.includes('nc-02')) nonTechEvts.push('hammer-hit');
+        if (rawNonTech.includes('connect') || rawNonTech.includes('nc-03')) nonTechEvts.push('connection');
+
+        parsedRecords.push({
+          id: `GF-${(1000 + index).toString()}`,
+          fullName: name,
+          email: email,
+          phone: phone,
+          college: college,
+          department: dept,
+          yearOfStudy: year,
+          techEvents: techEvts.length > 0 ? techEvts : ['techverse'],
+          nonTechEvents: nonTechEvts.length > 0 ? nonTechEvts : ['hammer-hit'],
+          totalAmount: 200,
+          paymentStatus: 'PAID',
+          timestamp: new Date().toLocaleString(),
+          emailSentStatus: true,
+        });
+        count++;
+      }
+    });
+
+    if (parsedRecords.length > 0) {
+      const updated = [...parsedRecords, ...records];
+      saveRecordsToStorage(updated);
+      setImportSuccessMsg(`Successfully imported ${count} Google Form registrations!`);
+      setImportText('');
+      setTimeout(() => setImportSuccessMsg(''), 4000);
+      setShowImportModal(false);
     }
   };
 
@@ -134,6 +265,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const filteredMasterRecords = records.filter((r) => {
     const matchesCollege = selectedCollege === 'ALL' || r.college === selectedCollege;
     const matchesYear = selectedYear === 'ALL' || r.yearOfStudy === selectedYear;
+    const matchesEvent =
+      selectedEventFilter === 'ALL' ||
+      r.techEvents.includes(selectedEventFilter) ||
+      r.nonTechEvents.includes(selectedEventFilter);
+
     const matchesSearch =
       searchQuery === '' ||
       r.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,7 +277,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.college.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesCollege && matchesYear && matchesSearch;
+    return matchesCollege && matchesYear && matchesEvent && matchesSearch;
   });
 
   // Filter event-specific records
@@ -315,6 +451,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
         <div className="flex flex-wrap items-center gap-3">
           <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-md"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ ADD REGISTRATION</span>
+          </button>
+
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-md"
+          >
+            <FileUp className="w-4 h-4" />
+            <span>📥 IMPORT GOOGLE FORM</span>
+          </button>
+
+          <button
             onClick={handleResetDatabase}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 text-xs font-mono font-bold transition-all cursor-pointer"
             title="Clear all saved data and start fresh"
@@ -340,6 +492,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           </button>
         </div>
       </header>
+
+      {importSuccessMsg && (
+        <div className="max-w-7xl mx-auto mb-4 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs font-mono flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            <span>{importSuccessMsg}</span>
+          </div>
+          <button onClick={() => setImportSuccessMsg('')} className="text-slate-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto">
         {/* NO-PRINT TAB NAVIGATION BUTTONS */}
@@ -404,8 +568,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         {/* TAB 1: MASTER EXCEL SHEET */}
         {activeTab === 'master' && (
           <div className="print:hidden space-y-6">
-            {/* MASTER FILTERS BAR */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 font-mono text-xs">
+            {/* MASTER FILTERS BAR WITH PER-EVENT FILTER */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 font-mono text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] text-amber-400 uppercase font-bold flex items-center gap-1">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Filter By Event Separately:</span>
+                </label>
+                <select
+                  value={selectedEventFilter}
+                  onChange={(e) => setSelectedEventFilter(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:border-amber-400 outline-none"
+                >
+                  <option value="ALL">All Events ({records.length} total)</option>
+                  <optgroup label="TECHNICAL EVENTS">
+                    {TECHNICAL_EVENTS.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name} ({e.subtitle})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="NON-TECHNICAL EVENTS">
+                    {NON_TECHNICAL_EVENTS.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name} ({e.subtitle})
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[10px] text-cyan-400 uppercase font-bold flex items-center gap-1">
                   <Building2 className="w-3.5 h-3.5" />
@@ -445,16 +637,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-amber-400 uppercase font-bold flex items-center gap-1">
+                <label className="text-[10px] text-cyan-400 uppercase font-bold flex items-center gap-1">
                   <Search className="w-3.5 h-3.5" />
-                  <span>Search Delegate Name / Email:</span>
+                  <span>Search Name / Phone / Email:</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Search name, email, reg id..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 focus:border-amber-500 outline-none"
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 focus:border-cyan-500 outline-none"
                 />
               </div>
             </div>
@@ -705,6 +897,222 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 <div className="text-right">
                   <div className="text-slate-400 print:text-black mb-8">Head of the Department Signature:</div>
                   <div className="font-bold border-b-2 border-slate-600 print:border-black w-56 ml-auto" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 1: MANUAL ADD REGISTRATION */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-xl bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold font-orbitron text-emerald-400 flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  <span>Add New Registration Entry</span>
+                </h3>
+                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleManualAddSubmit} className="space-y-3 font-mono text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-slate-300">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Student Name"
+                      value={newFullName}
+                      onChange={(e) => setNewFullName(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="student@example.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="10-digit mobile"
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">College Name</label>
+                    <input
+                      type="text"
+                      placeholder="Kings College of Eng..."
+                      value={newCollege}
+                      onChange={(e) => setNewCollege(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">Department</label>
+                    <input
+                      type="text"
+                      placeholder="CSE / IT / ECE"
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">Year of Study</label>
+                    <select
+                      value={newYear}
+                      onChange={(e) => setNewYear(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    >
+                      <option value="1st Year (Freshman)">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year (Final)">4th Year</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300">Payment Status</label>
+                    <select
+                      value={newPaymentStatus}
+                      onChange={(e) => setNewPaymentStatus(e.target.value as 'PAID' | 'PENDING')}
+                      className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-400"
+                    >
+                      <option value="PAID">PAID (Confirmed)</option>
+                      <option value="PENDING">PENDING (Unpaid)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-cyan-400 font-bold">Select Technical Events:</label>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    {TECHNICAL_EVENTS.map((e) => (
+                      <label key={e.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newTechEvents.includes(e.id)}
+                          onChange={(chk) => {
+                            if (chk.target.checked) setNewTechEvents([...newTechEvents, e.id]);
+                            else setNewTechEvents(newTechEvents.filter((id) => id !== e.id));
+                          }}
+                        />
+                        <span className="text-[11px] text-slate-200">{e.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-purple-400 font-bold">Select Non-Technical Events:</label>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    {NON_TECHNICAL_EVENTS.map((e) => (
+                      <label key={e.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newNonTechEvents.includes(e.id)}
+                          onChange={(chk) => {
+                            if (chk.target.checked) setNewNonTechEvents([...newNonTechEvents, e.id]);
+                            else setNewNonTechEvents(newNonTechEvents.filter((id) => id !== e.id));
+                          }}
+                        />
+                        <span className="text-[11px] text-slate-200">{e.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold"
+                  >
+                    Save Registration
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 2: IMPORT GOOGLE FORM RESPONSES */}
+        {showImportModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-slate-900 border border-amber-500/40 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold font-orbitron text-amber-400 flex items-center gap-2">
+                  <FileUp className="w-5 h-5" />
+                  <span>Import Google Form Responses (CSV / Excel Text)</span>
+                </h3>
+                <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3 font-mono text-xs text-slate-300">
+                <p>
+                  Copy & paste your Google Form response rows directly from Google Sheets / Excel or upload a CSV file!
+                </p>
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+                  <strong>Expected Order:</strong> Timestamp, Full Name, Email, Phone, College, Dept, Year, Tech Events, Non-Tech Events
+                </div>
+
+                <textarea
+                  rows={8}
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder="Paste response lines here (1 per line)...&#10;e.g. 2026-09-02, John Doe, john@gmail.com, 9876543210, Kings College, CSE, 3rd Year, TechVerse, IPL Auction"
+                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-400 outline-none font-mono text-xs"
+                />
+
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400">
+                    {importText.split('\n').filter((l) => l.trim()).length} lines detected
+                  </span>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowImportModal(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleImportGoogleFormText}
+                      disabled={!importText.trim()}
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold disabled:opacity-40"
+                    >
+                      Import All Records
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
