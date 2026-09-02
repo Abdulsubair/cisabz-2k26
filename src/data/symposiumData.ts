@@ -219,12 +219,12 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
     tagline: 'Build the ultimate dream squad within budget.',
     shortDescription: 'Tactical mock cricket auction where teams bid on players to maximize total squad value.',
     rounds: 'Single Round Event',
-    teamSize: 'Team participation, up to 2 members',
+    teamSize: '3 or maximum 4 members',
     time: '2:00 PM to 3:00 PM',
     venue: 'Seminar Hall',
     guidelines: [
       'Single round event.',
-      'Team participation, up to 2 members per team.',
+      'Team participation, 3 or maximum 4 members per team.',
       'Each team receives a fixed virtual budget.',
       'Teams bid on players in a mock IPL-style auction.',
       'Teams take turns bidding.',
@@ -267,7 +267,7 @@ export const GENERAL_RULES: GeneralRule[] = [
   {
     id: 1,
     title: 'Open Entry Format',
-    description: 'Participation is open for single or team entries (up to 2 members for most events; team size 2 or maximum 3 members for PPT presentation).',
+    description: 'Participation is open for single or team entries (up to 2 members for most events; 2 or max 3 for PPT, and 3 or max 4 members for IPL Auction).',
     iconName: 'Users',
   },
   {
