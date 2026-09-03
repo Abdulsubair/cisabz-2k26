@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   getDocs,
   updateDoc,
   onSnapshot,
@@ -249,20 +250,31 @@ export async function submitRegistration(
     createdAt: timestampStr,
   };
 
-  // 4. Save to Firestore
+  // 4. Save to Firestore & verify document creation
+  const docRef = doc(db, 'registrations', registrationId);
+  const firestoreRecord = {
+    ...registrationRecord,
+    emailNormalized: normalizeCredential(formData.email),
+    mobileNormalized: normalizeCredential(formData.mobile),
+    createdAtServer: serverTimestamp(),
+  };
+
   try {
-    const docRef = doc(db, 'registrations', registrationId);
-    await setDoc(docRef, {
-      ...registrationRecord,
-      emailNormalized: normalizeCredential(formData.email),
-      mobileNormalized: normalizeCredential(formData.mobile),
-      createdAtServer: serverTimestamp(),
-    });
-  } catch (err) {
-    console.warn('Firestore write fallback to local storage:', err);
+    await setDoc(docRef, firestoreRecord);
+
+    // Verify document was successfully created in Firestore
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new Error('Firestore document creation verification failed. Record was not created.');
+    }
+  } catch (err: any) {
+    console.error('Firestore Database Save Error:', err);
+    throw new Error(
+      err.message || 'Failed to save registration details in Firestore Database. Please check connection and try again.'
+    );
   }
 
-  // Always sync local storage for high availability & instant responsiveness
+  // Cache to local storage for offline resilience
   const currentLocals = getLocalRegistrations();
   saveLocalRegistrations([registrationRecord, ...currentLocals]);
 

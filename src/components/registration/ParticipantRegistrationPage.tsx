@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SYMPOSIUM_CONFIG } from '../../data/symposiumData';
 import {
   submitRegistration,
@@ -198,8 +198,12 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
     return Object.keys(newErrors).length === 0;
   };
 
+  const isSubmittingRef = useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting || isSubmittingRef.current) return;
 
     if (!validateForm() || !paymentProofFile) {
       // Scroll to first error field
@@ -213,11 +217,14 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setErrors({});
 
     try {
-      const result = await submitRegistration(
+      // Show "Registering..." processing state for ~3 seconds while creating Firestore document
+      const timerPromise = new Promise((resolve) => setTimeout(resolve, 3000));
+      const submissionPromise = submitRegistration(
         {
           fullName,
           collegeName,
@@ -235,15 +242,30 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
         paymentProofFile
       );
 
+      const [result] = await Promise.all([submissionPromise, timerPromise]);
+
+      // Successfully saved to Firestore: clear inputs and display success popup
       setSubmittedData(result);
+      setFullName('');
+      setCollegeName('');
+      setDepartment('');
+      setEmail('');
+      setMobile('');
+      setAmbassadorReferralId('');
+      setTransactionId('');
+      setPaymentName('');
+      setPaymentProofFile(null);
+      setPaymentProofPreview(null);
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       console.error('Registration Submission Error:', err);
       setErrors({
-        submit: err.message || 'Something went wrong. Please try again.',
+        submit: err.message || 'Failed to save registration in Firestore database. Please try again.',
       });
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -253,30 +275,34 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
     setTimeout(() => setCopiedId(false), 3000);
   };
 
-  // SUCCESS SCREEN
+  // SUCCESS POPUP MODAL SCREEN
   if (submittedData) {
     return (
-      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center bg-slate-950 text-slate-100">
-        <div className="max-w-xl w-full bg-slate-900/90 border border-emerald-500/40 rounded-3xl p-6 sm:p-10 shadow-[0_0_50px_rgba(16,185,129,0.2)] text-center relative overflow-hidden">
+      <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center bg-slate-950/95 text-slate-100 backdrop-blur-2xl">
+        <div className="max-w-xl w-full bg-slate-900 border border-emerald-500/50 rounded-3xl p-6 sm:p-10 shadow-[0_0_50px_rgba(16,185,129,0.3)] text-center relative overflow-hidden my-8 animate-in fade-in zoom-in duration-300">
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500" />
 
           {/* Success Icon Badge */}
-          <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+          <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(16,185,129,0.5)]">
             <CheckCircle2 className="w-10 h-10 text-emerald-400 animate-bounce" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black font-orbitron text-white tracking-wide mb-3">
-            ✓ Registration Submitted
+          <span className="px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold tracking-widest uppercase mb-3 inline-block">
+            FIRESTORE DOCUMENT CREATED SUCCESSFULLY
+          </span>
+
+          <h2 className="text-2xl sm:text-3xl font-black font-orbitron text-white tracking-wide mb-2">
+            Successfully Registered!
           </h2>
 
-          <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-            Your event registration has been successfully submitted. Your payment is currently being verified by the event administration team. You will receive an email once your registration has been verified.
+          <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+            Your participant registration details have been successfully written to Firebase Firestore. Payment is currently set to <strong className="text-amber-400 font-semibold">PENDING VERIFICATION</strong>.
           </p>
 
           {/* Registration ID Display Card */}
-          <div className="bg-slate-950/80 border border-cyan-500/40 rounded-2xl p-5 mb-8 text-left relative group">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
-              Registration ID
+          <div className="bg-slate-950/90 border border-cyan-500/40 rounded-2xl p-5 mb-6 text-left relative group">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
+              Official Registration ID
             </span>
             <div className="flex items-center justify-between gap-3">
               <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400 tracking-wider">
@@ -302,7 +328,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
           </div>
 
           {/* Summary Breakdown */}
-          <div className="bg-slate-950/50 rounded-2xl p-4 text-left border border-slate-800 mb-8 space-y-2 text-xs font-mono text-slate-300">
+          <div className="bg-slate-950/60 rounded-2xl p-4 text-left border border-slate-800 mb-6 space-y-2 text-xs font-mono text-slate-300">
             <div className="flex justify-between border-b border-slate-800/80 pb-2">
               <span className="text-slate-400">Participant Name:</span>
               <span className="font-bold text-white">{submittedData.fullName}</span>
@@ -319,19 +345,26 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
               <span className="text-slate-400">Non-Technical Event:</span>
               <span className="font-bold text-amber-400">{submittedData.nonTechnicalEvent}</span>
             </div>
+            <div className="flex justify-between border-b border-slate-800/80 pb-2">
+              <span className="text-slate-400">Transaction ID:</span>
+              <span className="font-bold text-slate-200">{submittedData.transactionId}</span>
+            </div>
             <div className="flex justify-between pt-1">
-              <span className="text-slate-400">Status:</span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                PENDING VERIFICATION
+              <span className="text-slate-400">Database Status:</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                SAVED IN FIRESTORE
               </span>
             </div>
           </div>
 
           <button
-            onClick={onBackToHome}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 hover:brightness-110 text-white font-orbitron font-bold text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
+            onClick={() => {
+              setSubmittedData(null);
+              onBackToHome();
+            }}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 hover:brightness-110 text-white font-orbitron font-bold text-xs sm:text-sm tracking-wider uppercase shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
           >
-            Back to Home
+            Done / Back to Home
           </button>
         </div>
       </div>
@@ -341,6 +374,34 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
   // MAIN REGISTRATION FORM
   return (
     <div className="min-h-screen py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 text-slate-100 relative">
+      {/* PROCESSING STATE MODAL OVERLAY (3 SECONDS) */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+          <div className="max-w-md w-full bg-slate-900 border border-cyan-500/50 rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(6,182,212,0.35)] relative overflow-hidden animate-in fade-in duration-200">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 animate-pulse" />
+
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.4)]">
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            </div>
+
+            <h3 className="text-2xl font-black font-orbitron text-white mb-2 tracking-wide">
+              Registering...
+            </h3>
+
+            <p className="text-xs text-slate-300 font-mono mb-6 leading-relaxed">
+              Please wait while your participant registration details and payment proof are being processed and stored into Firebase Firestore...
+            </p>
+
+            <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800 p-0.5">
+              <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full animate-pulse" style={{ width: '100%' }} />
+            </div>
+
+            <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-widest block mt-3">
+              Firebase Firestore &bull; Creating Document (3s)
+            </span>
+          </div>
+        </div>
+      )}
       {/* Top Header Controls */}
       <div className="max-w-4xl mx-auto mb-8 flex items-center justify-between">
         <button
