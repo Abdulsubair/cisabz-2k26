@@ -11,7 +11,6 @@ import {
   Terminal,
   Database,
   Presentation,
-  Info,
   X,
 } from 'lucide-react';
 
@@ -161,8 +160,8 @@ export const AboutSection: React.FC = () => {
             </p>
           </div>
 
-          {/* BOX CARDS GRID: 2 COLUMNS ON MOBILE, 2 ON TABLET, 3 ON DESKTOP */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 select-none">
+          {/* BOX CARDS GRID: 1 COLUMN ON MOBILE, 2 ON TABLET, 3 ON DESKTOP */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 select-none">
             {cseEventBoxes.map((item) => {
               const Icon = item.icon;
               return (
@@ -171,47 +170,31 @@ export const AboutSection: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: item.id * 0.08 }}
+                  transition={{ duration: 0.4, delay: item.id * 0.05 }}
                   onClick={() => setActivePopupEvent(item)}
-                  className={`p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group cursor-pointer active:scale-98`}
+                  className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl ${item.borderColor} transition-all duration-300 shadow-xl flex flex-col justify-between group cursor-pointer active:scale-98 hover:shadow-[0_0_25px_rgba(6,182,212,0.15)]`}
                 >
-                  <div className="space-y-2 sm:space-y-4">
-                    {/* CARD TOP META */}
-                    <div className="flex items-center justify-between gap-1.5">
-                      <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
+                  <div className="space-y-3">
+                    {/* CARD TOP META: ICON & CATEGORY BADGE */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-400 group-hover:scale-110 transition-transform">
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
                       </div>
-                      <span className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-bold uppercase border truncate max-w-[120px] sm:max-w-none ${item.badgeColor}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-mono font-bold uppercase border ${item.badgeColor}`}>
                         {item.category}
                       </span>
                     </div>
 
                     {/* EVENT TITLE */}
-                    <h4 className="text-xs sm:text-lg font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors line-clamp-2 sm:line-clamp-none">
+                    <h4 className="text-sm sm:text-base font-bold font-orbitron text-white leading-snug group-hover:text-cyan-300 transition-colors">
                       {item.title}
                     </h4>
 
                     {/* EVENT DATE */}
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-amber-400 font-bold">
-                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
-                      <span className="truncate">{item.date}</span>
+                    <div className="flex items-center gap-1.5 text-xs font-mono text-amber-400 font-bold pt-1">
+                      <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>{item.date}</span>
                     </div>
-
-                    {/* DESCRIPTION OVERVIEW */}
-                    <p className="text-xs text-slate-300 leading-relaxed font-sans font-normal line-clamp-3 sm:line-clamp-4">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  {/* TAP / CLICK INSTRUCTION TAG */}
-                  <div className="mt-3 pt-2 sm:pt-4 border-t border-slate-800/80 flex items-center justify-between text-[9px] sm:text-xs font-mono text-cyan-400">
-                    <span className="flex items-center gap-1.5 text-amber-300 font-bold">
-                      <Info className="w-3.5 h-3.5 animate-pulse text-amber-400 shrink-0" />
-                      <span>Click to view details 👆</span>
-                    </span>
-                    <span className="hidden sm:inline-block text-[10px] text-cyan-400 font-mono">
-                      Full Details &rarr;
-                    </span>
                   </div>
                 </motion.div>
               );
