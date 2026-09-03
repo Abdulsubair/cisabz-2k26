@@ -8,7 +8,6 @@ import { DignitariesSection } from './components/DignitariesSection';
 import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
 import { ScheduleSection } from './components/ScheduleSection';
-import { GuidelinesSection } from './components/GuidelinesSection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -185,9 +184,6 @@ export function App() {
 
         {/* COORDINATORS */}
         <CoordinatorsSection />
-
-        {/* OFFICIAL EVENT GUIDELINES (MOVED TO END BEFORE CONTACT) */}
-        <GuidelinesSection onRegisterClick={() => handleOpenRegistration()} />
 
         {/* CONTACT SECTION */}
         <ContactSection onRegisterClick={() => handleOpenRegistration()} />

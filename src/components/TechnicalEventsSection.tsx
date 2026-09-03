@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { TECHNICAL_EVENTS } from '../data/symposiumData';
 import { EventCard } from './EventCard';
 import type { EventItem } from '../types';
-import { Cpu, FileText } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 
 interface TechnicalEventsSectionProps {
   onViewGuidelines: (event: EventItem) => void;
@@ -60,43 +60,6 @@ export const TechnicalEventsSection: React.FC<TechnicalEventsSectionProps> = ({
             />
           ))}
         </div>
-
-        {/* UNIQUE-COLORED END-OF-SECTION GUIDELINE PDF CARD */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-12 p-6 rounded-3xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border-2 border-amber-400/60 shadow-[0_0_35px_rgba(245,158,11,0.3)] flex flex-col md:flex-row items-center justify-between gap-6"
-        >
-          <div className="flex items-center gap-4 text-center md:text-left">
-            <div className="p-3.5 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/40 shrink-0">
-              <FileText className="w-7 h-7 text-amber-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 justify-center md:justify-start mb-1">
-                <span className="text-base font-extrabold font-orbitron text-amber-300">
-                  TECHNICAL EVENT GUIDELINES (PDF)
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-mono font-extrabold uppercase animate-pulse">
-                  OFFICIAL PDF
-                </span>
-              </div>
-              <p className="text-xs text-amber-200/90 font-rajdhani">
-                Click to view or download the official PDF brochure containing complete rules, presentation topics, and evaluation criteria.
-              </p>
-            </div>
-          </div>
-
-          <a
-            href="/CISABZ-2K26_Event_Guidelines.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-orbitron font-extrabold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-all cursor-pointer flex items-center gap-2 shrink-0"
-          >
-            <FileText className="w-4 h-4 text-slate-950" />
-            <span>OPEN GUIDELINES PDF</span>
-          </a>
-        </motion.div>
       </div>
     </section>
   );
