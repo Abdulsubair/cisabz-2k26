@@ -18,7 +18,6 @@ import { AdminPortal } from './components/AdminPortal';
 import { ParticipantRegistrationPage } from './components/registration/ParticipantRegistrationPage';
 import { CseAiAssistantModal } from './components/CseAiAssistantModal';
 import { BackgroundBuildingFlythrough } from './components/BackgroundBuildingFlythrough';
-import { CursorFluidEffect } from './components/CursorFluidEffect';
 import type { EventItem } from './types';
 
 export function App() {
@@ -109,7 +108,6 @@ export function App() {
   if (isAdminRoute) {
     return (
       <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-black">
-        <CursorFluidEffect />
         <AdminPortal
           onBackToWebsite={() => {
             window.history.pushState({}, '', '/');
@@ -126,7 +124,6 @@ export function App() {
   if (isRegisterRoute) {
     return (
       <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-black">
-        <CursorFluidEffect />
         <ParticipantRegistrationPage
           onBackToHome={() => {
             window.history.pushState({}, '', '/');
@@ -141,9 +138,6 @@ export function App() {
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-black">
-      {/* INTERACTIVE ELECTRIC PARTICLE FLUID CURSOR TRAIL */}
-      <CursorFluidEffect />
-
       {/* BACKGROUND MOVING CAMPUS BUILDING ANIMATION */}
       <BackgroundBuildingFlythrough />
 
