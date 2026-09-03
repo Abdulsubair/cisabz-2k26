@@ -9,10 +9,24 @@ export const ScheduleSection: React.FC = () => {
 
   const currentItems = SCHEDULE_DATA[selectedDay]?.items || [];
 
+  const renderFormattedTime = (timeStr: string) => {
+    const parts = timeStr.split(/\s+to\s+|\s+–\s+|\s+-\s+/i);
+    if (parts.length === 2) {
+      return (
+        <span className="flex flex-col leading-tight font-mono text-[8.5px] sm:text-xs md:text-sm text-cyan-300 font-semibold">
+          <span>{parts[0]}</span>
+          <span className="text-[7.5px] sm:text-[9px] text-slate-500 font-sans my-0.5">to</span>
+          <span>{parts[1]}</span>
+        </span>
+      );
+    }
+    return <span className="font-mono text-[9px] sm:text-xs text-cyan-300 font-semibold">{timeStr}</span>;
+  };
+
   return (
     <section id="schedule" className="py-24 relative bg-slate-950 border-t border-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-12">
+      <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-12 px-3">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -46,7 +60,7 @@ export const ScheduleSection: React.FC = () => {
         </div>
 
         {/* CONTROLS BAR: DATE & VIEW MODE */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 max-w-5xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 max-w-5xl mx-auto px-2">
           <div className="flex items-center gap-3">
             {SCHEDULE_DATA.map((day, idx) => (
               <button
@@ -96,17 +110,17 @@ export const ScheduleSection: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-xl"
+              className="rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-xl"
             >
               {/* 100% RESPONSIVE TABLE VIEW — ALL 4 COLUMNS (S.NO, TIME, EVENT, VENUE) FIT ON MOBILE WITHOUT SWIPING */}
               <div className="w-full overflow-hidden">
                 <table className="w-full table-fixed text-left border-collapse text-slate-200">
                   <thead>
-                    <tr className="bg-slate-950 border-b border-slate-800 text-cyan-400 font-mono uppercase text-[10px] sm:text-xs tracking-wider">
-                      <th className="p-2 sm:p-4 text-center w-[8%] sm:w-16 border-r border-slate-800 font-bold">S. NO</th>
-                      <th className="p-2 sm:p-4 border-r border-slate-800 font-bold w-[29%] sm:w-64">TIME</th>
-                      <th className="p-2 sm:p-4 border-r border-slate-800 font-bold w-[40%] sm:w-auto">EVENT</th>
-                      <th className="p-2 sm:p-4 font-bold w-[23%] sm:w-56">VENUE</th>
+                    <tr className="bg-slate-950 border-b border-slate-800 text-cyan-400 font-mono uppercase text-[9px] sm:text-xs tracking-wider">
+                      <th className="px-1 py-2 sm:p-4 text-center w-[8%] sm:w-16 border-r border-slate-800 font-bold">S. NO</th>
+                      <th className="px-1 py-2 sm:p-4 border-r border-slate-800 font-bold w-[28%] sm:w-64">TIME</th>
+                      <th className="px-1.5 py-2 sm:p-4 border-r border-slate-800 font-bold w-[42%] sm:w-auto">EVENT</th>
+                      <th className="px-1 py-2 sm:p-4 font-bold w-[22%] sm:w-56">VENUE</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -122,30 +136,30 @@ export const ScheduleSection: React.FC = () => {
                           }`}
                         >
                           {/* S.No */}
-                          <td className="p-2 sm:p-4 text-center font-mono border-r border-slate-800 text-slate-400 font-bold text-[10px] sm:text-sm">
+                          <td className="px-0.5 py-2 sm:p-4 text-center font-mono border-r border-slate-800 text-slate-400 font-bold text-[9px] sm:text-sm">
                             {item.sNo || idx + 1}.
                           </td>
 
                           {/* Time */}
-                          <td className="p-2 sm:p-4 font-mono border-r border-slate-800 text-cyan-300 font-semibold text-[9.5px] sm:text-xs md:text-sm leading-tight break-words">
-                            {item.time}
+                          <td className="px-1 py-2 sm:p-4 border-r border-slate-800 break-words align-middle">
+                            {renderFormattedTime(item.time)}
                           </td>
 
                           {/* Event */}
-                          <td className="p-2 sm:p-4 border-r border-slate-800 font-medium break-words">
+                          <td className="px-1.5 py-2 sm:p-4 border-r border-slate-800 font-medium break-words align-middle">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                               <span
-                                className={`leading-snug ${
+                                className={`leading-tight ${
                                   isHighlightRow
-                                    ? 'font-black text-amber-300 text-xs sm:text-base'
-                                    : 'text-white font-semibold text-[10.5px] sm:text-sm'
+                                    ? 'font-black text-amber-300 text-[10.5px] sm:text-base'
+                                    : 'text-white font-semibold text-[10px] sm:text-sm'
                                 }`}
                               >
                                 {item.event}
                               </span>
                               {item.type && (
                                 <span
-                                  className={`px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-mono uppercase border w-max shrink-0 ${
+                                  className={`px-1 py-0.5 rounded text-[7.5px] sm:text-[10px] font-mono uppercase border w-max shrink-0 ${
                                     item.type === 'Technical'
                                       ? 'bg-blue-950 text-blue-300 border-blue-800'
                                       : item.type === 'Non-Technical'
@@ -162,10 +176,10 @@ export const ScheduleSection: React.FC = () => {
                           </td>
 
                           {/* Venue */}
-                          <td className="p-2 sm:p-4 text-slate-300 font-medium text-[9.5px] sm:text-xs md:text-sm leading-tight break-words">
-                            <div className="flex items-start sm:items-center gap-1 text-[9.5px] sm:text-xs text-slate-300">
-                              <MapPin className="w-3 h-3 text-purple-400 shrink-0 mt-0.5 sm:mt-0" />
-                              <span className="break-words">{item.venue}</span>
+                          <td className="px-1 py-2 sm:p-4 text-slate-300 font-medium text-[8.5px] sm:text-xs md:text-sm leading-tight break-words align-middle">
+                            <div className="flex items-start sm:items-center gap-0.5 sm:gap-1 text-[8.5px] sm:text-xs text-slate-300">
+                              <MapPin className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-purple-400 shrink-0 mt-0.5 sm:mt-0" />
+                              <span className="break-words leading-tight">{item.venue}</span>
                             </div>
                           </td>
                         </tr>
