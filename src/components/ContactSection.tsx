@@ -80,10 +80,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
               ))}
             </div>
 
-            {/* Event Organizers */}
-            <p className="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-1">Event Organizers</p>
+            {/* Finance */}
+            <p className="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-1">Finance</p>
             <div className="w-full space-y-1">
-              {[{ name: 'K. Karan', phone: '9025970697' }, { name: 'S. Sanjay', phone: '9791388374' }].map((c) => (
+              {[{ name: 'K. Karan', phone: '9025970697' }, { name: 'N. Subair', phone: '6385228553' }].map((c) => (
                 <a key={c.name} href={`tel:${c.phone}`}
                   className="flex items-center justify-between w-full px-2 py-1 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-amber-500/40 hover:bg-amber-950/20 transition-all">
                   <span className="text-[10px] font-semibold text-white">{c.name}</span>
