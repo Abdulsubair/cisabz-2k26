@@ -7,6 +7,7 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   onSnapshot,
   query,
   where,
@@ -337,42 +338,38 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
     const unsubscribe = onSnapshot(
       regRef,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const list: RegistrationData[] = [];
-          snapshot.forEach((docSnap) => {
-            const d = docSnap.data();
-            list.push({
-              id: d.id || docSnap.id,
-              fullName: d.fullName || '',
-              collegeName: d.collegeName || '',
-              department: d.department || '',
-              year: d.year || 'I Year',
-              email: d.email || '',
-              mobile: d.mobile || '',
-              ambassadorReferralId: d.ambassadorReferralId || '',
-              foodPreference: d.foodPreference || 'Veg',
-              technicalEvent: d.technicalEvent || '',
-              nonTechnicalEvent: d.nonTechnicalEvent || '',
-              transactionId: d.transactionId || '',
-              paymentName: d.paymentName || '',
-              paymentProofUrl: d.paymentProofUrl || '',
-              paymentProofPath: d.paymentProofPath || '',
-              status: d.status || 'PENDING',
-              createdAt: d.createdAt || new Date().toISOString(),
-              verifiedAt: d.verifiedAt,
-              rejectedAt: d.rejectedAt,
-              verifiedBy: d.verifiedBy,
-              rejectionReason: d.rejectionReason,
-            });
+        const list: RegistrationData[] = [];
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          list.push({
+            id: d.id || docSnap.id,
+            fullName: d.fullName || '',
+            collegeName: d.collegeName || '',
+            department: d.department || '',
+            year: d.year || 'I Year',
+            email: d.email || '',
+            mobile: d.mobile || '',
+            ambassadorReferralId: d.ambassadorReferralId || '',
+            foodPreference: d.foodPreference || 'Veg',
+            technicalEvent: d.technicalEvent || '',
+            nonTechnicalEvent: d.nonTechnicalEvent || '',
+            transactionId: d.transactionId || '',
+            paymentName: d.paymentName || '',
+            paymentProofUrl: d.paymentProofUrl || '',
+            paymentProofPath: d.paymentProofPath || '',
+            status: d.status || 'PENDING',
+            createdAt: d.createdAt || new Date().toISOString(),
+            verifiedAt: d.verifiedAt,
+            rejectedAt: d.rejectedAt,
+            verifiedBy: d.verifiedBy,
+            rejectionReason: d.rejectionReason,
           });
-          callback(list);
-          saveLocalRegistrations(list);
-          return;
-        }
-        callback(getLocalRegistrations());
+        });
+        callback(list);
+        saveLocalRegistrations(list);
       },
       (err) => {
-        console.warn('Firestore snapshot error, loading local data:', err);
+        console.warn('Firestore snapshot error:', err);
         callback(getLocalRegistrations());
       }
     );
@@ -381,6 +378,30 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
     callback(getLocalRegistrations());
     return () => {};
   }
+}
+
+/**
+ * Delete a registration record permanently from Cloud Firestore and localStorage.
+ */
+export async function deleteRegistration(registrationId: string): Promise<boolean> {
+  try {
+    const regRef = doc(db, 'registrations', registrationId);
+    await deleteDoc(regRef);
+    console.log(`[FIRESTORE] Deleted registration ${registrationId} successfully.`);
+  } catch (err) {
+    console.error(`[FIRESTORE] Error deleting registration ${registrationId}:`, err);
+  }
+
+  // Also remove from localStorage if present
+  try {
+    const list = getLocalRegistrations();
+    const filtered = list.filter((r) => r.id !== registrationId);
+    saveLocalRegistrations(filtered);
+  } catch (e) {
+    console.error('Failed to clean localStorage:', e);
+  }
+
+  return true;
 }
 
 /**

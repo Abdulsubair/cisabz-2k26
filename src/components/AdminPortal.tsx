@@ -20,6 +20,7 @@ import {
   Menu,
   ExternalLink,
   FileText,
+  Trash2,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -29,6 +30,7 @@ import {
   updateEventStatus,
   verifyRegistration,
   rejectRegistration,
+  deleteRegistration,
 } from '../lib/firebase';
 import type { RegistrationData } from '../lib/firebase';
 import cisabzLogo from '../assets/cisabz-logo.png';
@@ -495,6 +497,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     } catch (e) {
       console.error('Failed to reject:', e);
       showToast('Failed to reject registration. Firestore update failed.', 'error');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Participant Deletion Handler — Permanent Deletion
+  const handleDeleteParticipant = async (regId: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete registration ${regId} (${name})?`)) {
+      return;
+    }
+    setIsProcessingAction(true);
+    try {
+      await deleteRegistration(regId);
+      if (selectedParticipant && selectedParticipant.id === regId) {
+        setSelectedParticipant(null);
+      }
+      showToast(`Participant ${name} (${regId}) permanently deleted.`, 'success');
+    } catch (e) {
+      console.error('Failed to delete registration:', e);
+      showToast('Failed to delete registration record.', 'error');
     } finally {
       setIsProcessingAction(false);
     }
@@ -1260,16 +1282,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
                           {/* Action */}
                           <td className="py-4 px-4 text-right">
-                            <button
-                              onClick={() => {
-                                setSelectedParticipant(reg);
-                                setShowRejectForm(false);
-                              }}
-                              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white border border-slate-700 text-xs font-mono font-bold transition-all flex items-center gap-1 ml-auto cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View & Verify</span>
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedParticipant(reg);
+                                  setShowRejectForm(false);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-white border border-slate-700 text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View & Verify</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteParticipant(reg.id, reg.fullName)}
+                                className="p-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-800/60 text-xs font-mono transition-all cursor-pointer"
+                                title="Delete Registration Record"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
