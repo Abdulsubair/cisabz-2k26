@@ -26,9 +26,9 @@ export const SYMPOSIUM_CONFIG = {
   coordinatorEmail: 'cisabz26@gmail.com',
   instagramPlaceholder: 'https://instagram.com/cisabz2k26_official',
   registrationFee: 200,
-  upiId: 'aslamulaikum23@oksbi',
-  upiName: 'Abdul Jubair',
-  upiPhone: '9514120172',
+  upiId: 'goodluckpearlfruit@okhdfcbank',
+  upiName: 'Mubashir M',
+  upiPhone: '95143 59887',
   additionalEventFee: 50,
   maxAllowedEventsPerStudent: 2,
 };

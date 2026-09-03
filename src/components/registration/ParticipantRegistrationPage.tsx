@@ -814,8 +814,8 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
             {/* Replaceable QR Code Asset Graphic Container */}
             <div className="w-52 h-52 shrink-0 bg-slate-900 rounded-2xl p-2 border-2 border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.2)] flex flex-col items-center justify-center relative">
               <img
-                src="/assets/payment-qr.svg"
-                alt="CISABZ-2K26 Official Payment QR Code"
+                src="/assets/payment-qr.png"
+                alt="CISABZ-2K26 Official Payment QR Code (Mubashir M)"
                 className="w-full h-full object-contain rounded-xl"
                 onError={(e) => {
                   // Fallback visual if SVG loading is interrupted

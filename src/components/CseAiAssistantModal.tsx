@@ -66,8 +66,8 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
       return `Hello! 👋 How can I assist you with ${SYMPOSIUM_CONFIG.name}? You can ask me about registration fees, event rules, timings, or coordinator contacts!`;
     }
 
-    if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('amount') || q.includes('money')) {
-      return `💰 **Registration Fees:**\n• Base Fee: ₹${SYMPOSIUM_CONFIG.registrationFee} (includes 1 Tech + 1 Non-Tech event, complimentary lunch & certificate)\n• Extra Event Fee: ₹${SYMPOSIUM_CONFIG.additionalEventFee} per additional event.\n• Registration Deadline: ${SYMPOSIUM_CONFIG.registrationEndDate}`;
+    if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('amount') || q.includes('money') || q.includes('upi') || q.includes('qr')) {
+      return `💰 **Registration Fees & Payment Info:**\n• Base Fee: ₹${SYMPOSIUM_CONFIG.registrationFee} (includes 1 Tech + 1 Non-Tech event, complimentary lunch & certificate)\n• Extra Event Fee: ₹${SYMPOSIUM_CONFIG.additionalEventFee} per additional event.\n• UPI ID: ${SYMPOSIUM_CONFIG.upiId} (${SYMPOSIUM_CONFIG.upiName} - ${SYMPOSIUM_CONFIG.upiPhone})\n• Registration Deadline: ${SYMPOSIUM_CONFIG.registrationEndDate}`;
     }
 
     if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('timing') || q.includes('schedule') || q.includes('deadline')) {
