@@ -38,7 +38,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [ambassadorReferralId, setAmbassadorReferralId] = useState('');
-  const [foodPreference, setFoodPreference] = useState<'Veg' | 'Non-Veg'>('Veg');
+  const [foodPreference, setFoodPreference] = useState<'Veg' | 'Non-Veg' | ''>('');
 
   const [technicalEvent, setTechnicalEvent] = useState('');
   const [nonTechnicalEvent, setNonTechnicalEvent] = useState('');
@@ -172,6 +172,10 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
       }
     }
 
+    if (!foodPreference) {
+      newErrors.foodPreference = 'Please select your food preference (Veg or Non-Veg).';
+    }
+
     if (!technicalEvent) {
       newErrors.technicalEvent = 'Please select one technical event.';
     } else if (eventStatuses[technicalEvent] === false) {
@@ -240,7 +244,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
           email,
           mobile,
           ambassadorReferralId,
-          foodPreference,
+          foodPreference: foodPreference as 'Veg' | 'Non-Veg',
           technicalEvent,
           nonTechnicalEvent,
           transactionId,
@@ -621,14 +625,21 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
             </div>
 
             {/* Food Preference */}
-            <div>
+            <div id="field-foodPreference">
               <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-2 font-bold">
                 Food Preference <span className="text-rose-400">*</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFoodPreference('Veg')}
+                  onClick={() => {
+                    setFoodPreference('Veg');
+                    setErrors((prev) => {
+                      const copy = { ...prev };
+                      delete copy.foodPreference;
+                      return copy;
+                    });
+                  }}
                   className={`py-3 px-4 rounded-xl text-xs font-mono font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     foodPreference === 'Veg'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
@@ -636,12 +647,19 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                   }`}
                 >
                   <Utensils className="w-4 h-4 text-emerald-400" />
-                  <span>VEG</span>
+                  <span>VEG 🥗</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setFoodPreference('Non-Veg')}
+                  onClick={() => {
+                    setFoodPreference('Non-Veg');
+                    setErrors((prev) => {
+                      const copy = { ...prev };
+                      delete copy.foodPreference;
+                      return copy;
+                    });
+                  }}
                   className={`py-3 px-4 rounded-xl text-xs font-mono font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     foodPreference === 'Non-Veg'
                       ? 'bg-amber-500/20 text-amber-300 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
@@ -649,9 +667,15 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                   }`}
                 >
                   <Utensils className="w-4 h-4 text-amber-400" />
-                  <span>NON-VEG</span>
+                  <span>NON-VEG 🍗</span>
                 </button>
               </div>
+              {errors.foodPreference && (
+                <p className="text-rose-400 text-xs mt-1.5 font-mono flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{errors.foodPreference}</span>
+                </p>
+              )}
             </div>
           </div>
         </div>
