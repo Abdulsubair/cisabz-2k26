@@ -811,18 +811,16 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
               </div>
             </div>
 
-            {/* Replaceable QR Code Asset Graphic Container */}
-            <div className="w-52 h-52 shrink-0 bg-slate-900 rounded-2xl p-2 border-2 border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.2)] flex flex-col items-center justify-center relative">
-              <img
-                src="/assets/payment-qr.png"
-                alt="CISABZ-2K26 Official Payment QR Code (Mubashir M)"
-                className="w-full h-full object-contain rounded-xl"
-                onError={(e) => {
-                  // Fallback visual if SVG loading is interrupted
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <span className="text-[10px] font-mono text-emerald-400 tracking-wider mt-1 uppercase">
+            {/* Clean Premium QR Code Display Box */}
+            <div className="w-56 shrink-0 bg-slate-900/90 rounded-2xl p-3 border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.25)] flex flex-col items-center justify-center gap-2 relative">
+              <div className="w-full aspect-square bg-white rounded-xl p-3 flex items-center justify-center shadow-inner">
+                <img
+                  src="/assets/payment-qr.png"
+                  alt="CISABZ-2K26 Official Payment QR Code (Mubashir M)"
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              </div>
+              <span className="text-[11px] font-mono text-emerald-400 font-semibold tracking-wider uppercase text-center">
                 Scan to complete payment
               </span>
             </div>
