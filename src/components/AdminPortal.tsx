@@ -97,6 +97,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     };
   }, [isAuthenticated]);
 
+  // Handle browser back button when viewing participant details modal
+  useEffect(() => {
+    if (selectedParticipant) {
+      window.history.pushState({ adminModalOpen: true }, '', window.location.href);
+
+      const handlePopState = () => {
+        setSelectedParticipant(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [selectedParticipant]);
+
   // Admin Login Handler
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1041,35 +1057,80 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
       {/* VERIFICATION DETAIL MODAL */}
       {selectedParticipant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,229,255,0.25)] space-y-6 my-8">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div>
-                <span className="text-xs font-mono text-amber-400 font-bold uppercase tracking-widest block">
-                  {selectedParticipant.id}
-                </span>
-                <h3 className="text-xl font-bold font-orbitron text-white">
-                  {selectedParticipant.fullName}
-                </h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-slate-900 border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,229,255,0.25)] space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            {/* Top Navigation & Back Button */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 gap-4">
               <button
                 onClick={() => setSelectedParticipant(null)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 font-mono text-xs font-bold border border-slate-700 transition-all cursor-pointer shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Admin List</span>
+              </button>
+
+              <div className="text-right">
+                <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-widest block">
+                  REG ID: {selectedParticipant.id}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {selectedParticipant.createdAt ? new Date(selectedParticipant.createdAt).toLocaleString() : ''}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setSelectedParticipant(null)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Participant Details Summary Grid */}
-            <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <div><span className="text-slate-500 block">College:</span> <strong className="text-white">{selectedParticipant.collegeName}</strong></div>
-              <div><span className="text-slate-500 block">Department:</span> <strong className="text-white">{selectedParticipant.department}</strong></div>
-              <div><span className="text-slate-500 block">Year:</span> <strong className="text-white">{selectedParticipant.year}</strong></div>
-              <div><span className="text-slate-500 block">Food Preference:</span> <strong className="text-emerald-400">{selectedParticipant.foodPreference}</strong></div>
-              <div><span className="text-slate-500 block">Email:</span> <strong className="text-cyan-300">{selectedParticipant.email}</strong></div>
-              <div><span className="text-slate-500 block">Mobile:</span> <strong className="text-cyan-300">{selectedParticipant.mobile}</strong></div>
-              <div><span className="text-slate-500 block">Technical Event:</span> <strong className="text-blue-400">{selectedParticipant.technicalEvent}</strong></div>
-              <div><span className="text-slate-500 block">Non-Technical Event:</span> <strong className="text-amber-400">{selectedParticipant.nonTechnicalEvent}</strong></div>
+            {/* Participant Name Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold tracking-wider">Participant Full Name</span>
+                <h3 className="text-xl sm:text-2xl font-black font-orbitron text-white">
+                  {selectedParticipant.fullName}
+                </h3>
+              </div>
+              <div className="shrink-0">
+                <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase border ${
+                  selectedParticipant.status === 'VERIFIED'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : selectedParticipant.status === 'REJECTED'
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                }`}>
+                  {selectedParticipant.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Complete Participant Details Grid */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-mono uppercase text-slate-400 font-bold tracking-wider">Registration Details Submitted By Participant</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div><span className="text-slate-500 block">Full Name:</span> <strong className="text-cyan-300 font-bold text-sm">{selectedParticipant.fullName}</strong></div>
+                <div><span className="text-slate-500 block">Registration ID:</span> <strong className="text-amber-400 font-bold">{selectedParticipant.id}</strong></div>
+                <div><span className="text-slate-500 block">College / Institution:</span> <strong className="text-white">{selectedParticipant.collegeName}</strong></div>
+                <div><span className="text-slate-500 block">Department / Branch:</span> <strong className="text-white">{selectedParticipant.department}</strong></div>
+                <div><span className="text-slate-500 block">Year of Study:</span> <strong className="text-white">{selectedParticipant.year}</strong></div>
+                <div><span className="text-slate-500 block">Food Preference:</span> <strong className="text-emerald-400">{selectedParticipant.foodPreference}</strong></div>
+                <div><span className="text-slate-500 block">Email Address:</span> <strong className="text-cyan-300">{selectedParticipant.email}</strong></div>
+                <div><span className="text-slate-500 block">Mobile Number:</span> <strong className="text-cyan-300">{selectedParticipant.mobile}</strong></div>
+                <div><span className="text-slate-500 block">Technical Event:</span> <strong className="text-blue-400 font-bold">{selectedParticipant.technicalEvent}</strong></div>
+                <div><span className="text-slate-500 block">Non-Technical Event:</span> <strong className="text-amber-400 font-bold">{selectedParticipant.nonTechnicalEvent}</strong></div>
+                {selectedParticipant.ambassadorReferralId && (
+                  <div className="col-span-2"><span className="text-slate-500 block">Campus Ambassador Code:</span> <strong className="text-purple-300">{selectedParticipant.ambassadorReferralId}</strong></div>
+                )}
+                {selectedParticipant.rejectionReason && (
+                  <div className="col-span-2 p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300">
+                    <span className="text-rose-400 block font-bold text-[10px]">Rejection Reason:</span>
+                    {selectedParticipant.rejectionReason}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Payment Info & Proof View */}
