@@ -8,6 +8,7 @@ import { DignitariesSection } from './components/DignitariesSection';
 import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
 import { ScheduleSection } from './components/ScheduleSection';
+import { GuidelinesSection } from './components/GuidelinesSection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -181,6 +182,9 @@ export function App() {
           onViewGuidelines={(event) => setSelectedGuidelineEvent(event)}
           onRegister={(eventId) => handleOpenRegistration(eventId)}
         />
+
+        {/* OFFICIAL EVENT GUIDELINES */}
+        <GuidelinesSection onRegisterClick={() => handleOpenRegistration()} />
 
         {/* SCHEDULE / EVENT TIMELINE */}
         <ScheduleSection />
