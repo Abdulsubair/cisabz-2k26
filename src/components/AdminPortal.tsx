@@ -269,10 +269,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <td>${r.collegeName}<br><small style="color: #64748b;">${r.department}</small></td>
           <td style="text-align: center;">${r.year}</td>
           <td>${r.mobile}</td>
-          <td><small>${r.email}</small></td>
+          <td style="word-break: break-all;"><small>${r.email}</small></td>
           <td><span style="color: #0284c7; font-weight: bold;">${r.technicalEvent}</span></td>
           <td><span style="color: #d97706; font-weight: bold;">${r.nonTechnicalEvent}</span></td>
-          <td style="width: 90px; border-bottom: 1px solid #94a3b8;"></td>
+          <td style="border-bottom: 1px solid #94a3b8;"></td>
         </tr>
       `
       )
@@ -285,53 +285,62 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <title>${documentTitle} - CISABZ 2K26</title>
           <style>
             @page {
-              size: landscape;
-              margin: 10mm;
+              size: A4 landscape;
+              margin: 8mm 8mm 10mm 8mm;
             }
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            * {
+              box-sizing: border-box;
+            }
+            html, body {
+              width: 100%;
               margin: 0;
-              padding: 15px;
+              padding: 0;
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 9.5pt;
               color: #0f172a;
               background: #fff;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             .header-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 12px;
+              margin-bottom: 8px;
               border-bottom: 2px solid #0284c7;
-              padding-bottom: 8px;
+              padding-bottom: 6px;
             }
             .header-title {
               text-align: center;
             }
             .header-title h2 {
               margin: 0;
-              font-size: 18px;
+              font-size: 15pt;
+              font-weight: bold;
               color: #1e3a8a;
               text-transform: uppercase;
               letter-spacing: 0.5px;
             }
             .header-title h3 {
-              margin: 3px 0;
-              font-size: 13px;
+              margin: 2px 0;
+              font-size: 11pt;
+              font-weight: bold;
               color: #0284c7;
             }
             .header-title p {
               margin: 0;
-              font-size: 10px;
-              color: #64748b;
+              font-size: 9pt;
+              color: #475569;
             }
             .doc-info-bar {
               display: flex;
               justify-content: space-between;
               align-items: center;
               background: #f1f5f9;
-              padding: 8px 12px;
-              border-radius: 6px;
-              margin-bottom: 12px;
+              padding: 6px 10px;
+              border-radius: 4px;
+              margin-bottom: 8px;
               border: 1px solid #cbd5e1;
-              font-size: 11px;
+              font-size: 9pt;
             }
             .doc-info-bar strong {
               color: #0f172a;
@@ -339,37 +348,51 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             table.data-table {
               width: 100%;
               border-collapse: collapse;
-              font-size: 10px;
+              font-size: 8.5pt;
+              table-layout: fixed;
+              page-break-inside: auto;
+            }
+            table.data-table thead {
+              display: table-header-group;
+            }
+            table.data-table tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
             }
             table.data-table th {
-              background-color: #0f172a;
-              color: #ffffff;
-              padding: 6px 8px;
+              background-color: #0f172a !important;
+              color: #ffffff !important;
+              padding: 5px 6px;
               border: 1px solid #334155;
               text-transform: uppercase;
-              font-size: 9px;
-              letter-spacing: 0.5px;
+              font-size: 8pt;
+              letter-spacing: 0.3px;
+              text-align: left;
+              word-wrap: break-word;
             }
             table.data-table td {
-              padding: 6px 8px;
+              padding: 5px 6px;
               border: 1px solid #cbd5e1;
               vertical-align: middle;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
             }
             table.data-table tr:nth-child(even) {
-              background-color: #f8fafc;
+              background-color: #f8fafc !important;
             }
             .footer-sig {
-              margin-top: 35px;
+              margin-top: 25px;
               display: flex;
               justify-content: space-between;
-              font-size: 11px;
+              font-size: 9.5pt;
               font-weight: bold;
               color: #334155;
+              page-break-inside: avoid;
             }
             .sig-box {
               text-align: center;
-              width: 200px;
-              border-top: 1px solid #64748b;
+              width: 220px;
+              border-top: 1.5px solid #475569;
               padding-top: 5px;
             }
           </style>
@@ -378,16 +401,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <table class="header-table">
             <tr>
               <td style="width: 15%; text-align: left;">
-                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 60px; object-fit: contain;" onError="this.style.display='none'" />
+                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
               </td>
               <td class="header-title">
-                <img src="/assets/kings-logo.jpg" alt="Kings College Logo" style="height: 55px; object-fit: contain; margin-bottom: 4px;" onError="this.style.display='none'" /><br>
+                <img src="/assets/kings-logo.jpg" alt="Kings College Logo" style="height: 50px; object-fit: contain; margin-bottom: 2px;" onError="this.style.display='none'" /><br>
                 <h2>KINGS COLLEGE OF ENGINEERING</h2>
                 <h3>DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING</h3>
                 <p>CISABZ-2K26 — National Level Technical Symposium | Date: 25-09-2026</p>
               </td>
               <td style="width: 15%; text-align: right;">
-                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 60px; object-fit: contain;" onError="this.style.display='none'" />
+                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
               </td>
             </tr>
           </table>
@@ -402,16 +425,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <table class="data-table">
             <thead>
               <tr>
-                <th>S.No</th>
-                <th>Reg ID</th>
-                <th>Participant Name</th>
-                <th>College & Department</th>
-                <th>Year</th>
-                <th>Mobile</th>
-                <th>Email</th>
-                <th>Tech Event</th>
-                <th>Non-Tech Event</th>
-                <th>Signature</th>
+                <th style="width: 4%;">S.No</th>
+                <th style="width: 9%;">Reg ID</th>
+                <th style="width: 14%;">Participant Name</th>
+                <th style="width: 20%;">College & Dept</th>
+                <th style="width: 6%;">Year</th>
+                <th style="width: 10%;">Mobile</th>
+                <th style="width: 13%;">Email</th>
+                <th style="width: 9%;">Tech Event</th>
+                <th style="width: 9%;">Non-Tech</th>
+                <th style="width: 6%;">Signature</th>
               </tr>
             </thead>
             <tbody>
