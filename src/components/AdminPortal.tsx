@@ -15,7 +15,6 @@ import {
   X,
   Sparkles,
   ToggleRight,
-  ShieldCheck,
   ChevronRight,
   Menu,
   ExternalLink,
@@ -535,6 +534,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     pending: registrations.filter((r) => r.status === 'PENDING').length,
     verified: registrations.filter((r) => r.status === 'VERIFIED').length,
     rejected: registrations.filter((r) => r.status === 'REJECTED').length,
+    veg: registrations.filter((r) => r.status !== 'REJECTED' && r.foodPreference === 'Veg').length,
+    nonVeg: registrations.filter((r) => r.status !== 'REJECTED' && r.foodPreference === 'Non-Veg').length,
   };
 
   // Event-wise Counts (case-insensitive, normalized, excluding REJECTED)
@@ -663,9 +664,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         }`}
       >
         <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-800">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
+          <img src={cisabzLogo} alt="CISABZ Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]" />
           <div>
             <h2 className="font-orbitron font-bold text-white text-sm tracking-wider">
               ADMIN PANEL
@@ -878,40 +877,58 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             </div>
 
             {/* LIVE OVERALL STATS CARDS */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400 font-bold block mb-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 font-bold block mb-1">
                   Total Registrations
                 </span>
-                <span className="text-3xl sm:text-4xl font-black font-orbitron text-white">
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-white">
                   {totalStats.total}
                 </span>
               </div>
 
-              <div className="bg-slate-900/90 border border-amber-500/40 p-5 rounded-2xl">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
+              <div className="bg-slate-900/90 border border-amber-500/40 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
                   Pending Verification
                 </span>
-                <span className="text-3xl sm:text-4xl font-black font-orbitron text-amber-400">
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-amber-400">
                   {totalStats.pending}
                 </span>
               </div>
 
-              <div className="bg-slate-900/90 border border-emerald-500/40 p-5 rounded-2xl">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
+              <div className="bg-slate-900/90 border border-emerald-500/40 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
                   Verified
                 </span>
-                <span className="text-3xl sm:text-4xl font-black font-orbitron text-emerald-400">
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-emerald-400">
                   {totalStats.verified}
                 </span>
               </div>
 
-              <div className="bg-slate-900/90 border border-rose-500/40 p-5 rounded-2xl">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-rose-400 font-bold block mb-1">
+              <div className="bg-slate-900/90 border border-rose-500/40 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-rose-400 font-bold block mb-1">
                   Rejected
                 </span>
-                <span className="text-3xl sm:text-4xl font-black font-orbitron text-rose-400">
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-rose-400">
                   {totalStats.rejected}
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-teal-500/40 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-teal-400 font-bold block mb-1">
+                  Veg Food 🥗
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-teal-400">
+                  {totalStats.veg}
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-orange-500/40 p-4 sm:p-5 rounded-2xl">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-orange-400 font-bold block mb-1">
+                  Non-Veg Food 🍗
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-orange-400">
+                  {totalStats.nonVeg}
                 </span>
               </div>
             </div>
