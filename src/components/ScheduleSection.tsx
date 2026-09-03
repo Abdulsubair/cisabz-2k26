@@ -98,7 +98,8 @@ export const ScheduleSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-xl"
             >
-              <div className="overflow-x-auto">
+              {/* DESKTOP TABLE VIEW (Screens >= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs sm:text-sm text-slate-200">
                   <thead>
                     <tr className="bg-slate-950 border-b border-slate-800 text-cyan-400 font-mono uppercase text-xs tracking-wider">
@@ -159,6 +160,67 @@ export const ScheduleSection: React.FC = () => {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* MOBILE RESPONSIVE CARD VIEW (Screens < 768px) — NO HORIZONTAL SWIPE REQUIRED */}
+              <div className="block md:hidden divide-y divide-slate-800/80">
+                {currentItems.map((item, idx) => {
+                  const isHighlightRow = item.isHighlight || item.type === 'Break';
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 transition-colors ${
+                        isHighlightRow
+                          ? 'bg-amber-500/10 text-amber-300'
+                          : 'hover:bg-slate-800/40'
+                      }`}
+                    >
+                      {/* Top Header: S.No, Time, Type Badge */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-slate-950 text-slate-400 font-mono text-[11px] font-bold border border-slate-800">
+                            #{item.sNo || idx + 1}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-cyan-300 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
+                            {item.time}
+                          </span>
+                        </div>
+
+                        {item.type && (
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border shrink-0 ${
+                              item.type === 'Technical'
+                                ? 'bg-blue-950 text-blue-300 border-blue-800'
+                                : item.type === 'Non-Technical'
+                                ? 'bg-purple-950 text-purple-300 border-purple-800'
+                                : item.type === 'Ceremony'
+                                ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                : 'bg-slate-950 text-amber-400 border-amber-800/40'
+                            }`}
+                          >
+                            {item.type}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Event Title */}
+                      <h3
+                        className={`text-sm font-bold mb-2 leading-snug ${
+                          isHighlightRow ? 'text-amber-300 font-black text-base' : 'text-white'
+                        }`}
+                      >
+                        {item.event}
+                      </h3>
+
+                      {/* Venue */}
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <span>{item.venue}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           ) : (
