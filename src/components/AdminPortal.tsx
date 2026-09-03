@@ -383,19 +383,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               background-color: #f8fafc !important;
             }
             .footer-sig {
-              margin-top: 25px;
+              margin-top: 30px;
+              padding-top: 10px;
               display: flex;
               justify-content: space-between;
               font-size: 9.5pt;
               font-weight: bold;
               color: #334155;
+              page-break-before: auto;
               page-break-inside: avoid;
+              break-inside: avoid;
+              page-break-after: avoid;
+              break-after: avoid;
             }
             .sig-box {
               text-align: center;
               width: 220px;
               border-top: 1.5px solid #475569;
-              padding-top: 5px;
+              padding-top: 6px;
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
           </style>
         </head>
