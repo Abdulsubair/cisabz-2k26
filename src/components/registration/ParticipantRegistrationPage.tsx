@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
+import cisabzLogo from '../../assets/cisabz-logo.png';
 
 interface ParticipantRegistrationPageProps {
   onBackToHome: () => void;
@@ -428,9 +429,19 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
 
       {/* Main Page Title Header */}
       <div className="max-w-4xl mx-auto text-center mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>{SYMPOSIUM_CONFIG.name} REGISTRATION</span>
+        <div className="mb-4 inline-block relative group">
+          <img
+            src={cisabzLogo}
+            alt="CISABZ-2K26 Official Logo"
+            className="w-16 h-16 sm:w-24 sm:h-24 mx-auto object-contain drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform duration-300"
+          />
+        </div>
+
+        <div>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{SYMPOSIUM_CONFIG.name} REGISTRATION</span>
+          </div>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black font-orbitron tracking-tight text-white mb-3">
           Event Registration
