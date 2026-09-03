@@ -377,16 +377,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         <body>
           <table class="header-table">
             <tr>
-              <td style="width: 10%;">
-                <img src="/assets/cisabz-logo.png" alt="Logo" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
+              <td style="width: 15%; text-align: left;">
+                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 60px; object-fit: contain;" onError="this.style.display='none'" />
               </td>
               <td class="header-title">
+                <img src="/assets/kings-logo.jpg" alt="Kings College Logo" style="height: 55px; object-fit: contain; margin-bottom: 4px;" onError="this.style.display='none'" /><br>
                 <h2>KINGS COLLEGE OF ENGINEERING</h2>
                 <h3>DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING</h3>
                 <p>CISABZ-2K26 — National Level Technical Symposium | Date: 25-09-2026</p>
               </td>
-              <td style="width: 10%; text-align: right;">
-                <img src="/assets/cisabz-logo.png" alt="CISABZ" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
+              <td style="width: 15%; text-align: right;">
+                <img src="/assets/cisabz-logo.png" alt="CISABZ Logo" style="height: 60px; object-fit: contain;" onError="this.style.display='none'" />
               </td>
             </tr>
           </table>
@@ -420,7 +421,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
           <div class="footer-sig">
             <div class="sig-box">Staff Coordinator Signature</div>
-            <div class="sig-box">Student Coordinator Signature</div>
             <div class="sig-box">HOD / Convener Signature</div>
           </div>
 
