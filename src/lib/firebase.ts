@@ -132,19 +132,21 @@ export function normalizeCredential(val: string): string {
 }
 
 /**
- * Check if a participant with the email or mobile has already registered.
+ * Check if a participant with the email or mobile has an active (VERIFIED or PENDING) registration.
+ * Rejected registrations are ignored, allowing rejected students to re-register with the same email/mobile.
  * Uses a fast Promise timeout to ensure duplicate checks never hang.
  */
 export async function checkDuplicateRegistration(email: string, mobile: string): Promise<boolean> {
   const normEmail = normalizeCredential(email);
   const normMobile = normalizeCredential(mobile);
 
-  // 1. Check local fallback immediately
+  // 1. Check local fallback immediately (only PENDING or VERIFIED registrations count as duplicates)
   const locals = getLocalRegistrations();
   const isLocalDup = locals.some(
     (r) =>
-      normalizeCredential(r.email) === normEmail ||
-      normalizeCredential(r.mobile) === normMobile
+      r.status !== 'REJECTED' &&
+      (normalizeCredential(r.email) === normEmail ||
+        normalizeCredential(r.mobile) === normMobile)
   );
   if (isLocalDup) return true;
 
@@ -152,13 +154,26 @@ export async function checkDuplicateRegistration(email: string, mobile: string):
   try {
     const firestoreCheck = (async () => {
       const regRef = collection(db, 'registrations');
+      
       const qEmail = query(regRef, where('emailNormalized', '==', normEmail));
       const snapshotEmail = await getDocs(qEmail);
-      if (!snapshotEmail.empty) return true;
+      if (!snapshotEmail.empty) {
+        const activeDocs = snapshotEmail.docs.filter((docSnap) => {
+          const data = docSnap.data();
+          return data.status !== 'REJECTED';
+        });
+        if (activeDocs.length > 0) return true;
+      }
 
       const qMobile = query(regRef, where('mobileNormalized', '==', normMobile));
       const snapshotMobile = await getDocs(qMobile);
-      if (!snapshotMobile.empty) return true;
+      if (!snapshotMobile.empty) {
+        const activeDocs = snapshotMobile.docs.filter((docSnap) => {
+          const data = docSnap.data();
+          return data.status !== 'REJECTED';
+        });
+        if (activeDocs.length > 0) return true;
+      }
 
       return false;
     })();
@@ -534,7 +549,7 @@ export async function sendRejectionEmail(params: {
 
   const rejectionReason = reason || "We didn't get your payment.";
   const subject = `Your registration for CISABZ-2K26 has been Rejected!`;
-  const bodyText = `Dear ${name},\n\nYour registration for CISABZ-2K26 has been Rejected!\n\nRegistration Details:\n- Registration ID: ${regId}\n- Technical Event: ${techEvent}\n- Non-Technical Event: ${nonTechEvent}\n- Status: Rejected\n\n- Reason: ${rejectionReason}\n\nBest regards,\nCISABZ-2K26 Team`;
+  const bodyText = `Dear ${name},\n\nYour registration for CISABZ-2K26 has been Rejected!\n\nRegistration Details:\n- Registration ID: ${regId}\n- Technical Event: ${techEvent}\n- Non-Technical Event: ${nonTechEvent}\n- Status: Rejected\n\nReason for Rejection: ${rejectionReason}\n\nNote: You can re-register anytime with your correct payment details using the same email address and mobile number at: https://cisabz2k26.vercel.app/#register\n\nBest regards,\nCISABZ-2K26 Team`;
 
   try {
     // EmailJS Environment Configuration
