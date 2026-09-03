@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Menu,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -228,6 +229,215 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       : `CISABZ_Registrations_All_${Date.now()}.xlsx`;
 
     XLSX.writeFile(workbook, fileName);
+  };
+
+  // PDF Export Handler (.pdf) with Official Header, Logos, Event Venue & Attendance Signature Column
+  const exportToPDF = (exportFilteredOnly = false) => {
+    const listToExport = exportFilteredOnly ? filteredData : registrations.filter((r) => r.status !== 'REJECTED');
+
+    let documentTitle = 'ALL ACTIVE PARTICIPANTS LIST';
+    let eventVenue = 'Main Auditorium & CSE Labs';
+
+    if (activeView === 'pending') {
+      documentTitle = 'PENDING VERIFICATION REGISTRATIONS';
+    } else if (activeView === 'rejected') {
+      documentTitle = 'REJECTED PARTICIPANTS LIST';
+    } else if (activeView === 'event-specific') {
+      documentTitle = `EVENT PARTICIPANT SHEET — ${selectedEventId}`;
+      const allEvts = [...TECHNICAL_EVENTS, ...NON_TECHNICAL_EVENTS];
+      const match = allEvts.find(
+        (e) => e.name.toLowerCase().replace(/[^a-z0-9]/g, '') === selectedEventId.toLowerCase().replace(/[^a-z0-9]/g, '')
+      );
+      if (match) {
+        eventVenue = match.venue || 'CSE Department Labs';
+      }
+    }
+
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      showToast('Pop-up blocked. Please allow pop-ups to export PDF.', 'error');
+      return;
+    }
+
+    const tableRowsHtml = listToExport
+      .map(
+        (r, idx) => `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td><strong>${r.id}</strong></td>
+          <td><strong>${r.fullName}</strong></td>
+          <td>${r.collegeName}<br><small style="color: #64748b;">${r.department}</small></td>
+          <td style="text-align: center;">${r.year}</td>
+          <td>${r.mobile}</td>
+          <td><small>${r.email}</small></td>
+          <td><span style="color: #0284c7; font-weight: bold;">${r.technicalEvent}</span></td>
+          <td><span style="color: #d97706; font-weight: bold;">${r.nonTechnicalEvent}</span></td>
+          <td style="width: 90px; border-bottom: 1px solid #94a3b8;"></td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${documentTitle} - CISABZ 2K26</title>
+          <style>
+            @page {
+              size: landscape;
+              margin: 10mm;
+            }
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              margin: 0;
+              padding: 15px;
+              color: #0f172a;
+              background: #fff;
+            }
+            .header-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 12px;
+              border-bottom: 2px solid #0284c7;
+              padding-bottom: 8px;
+            }
+            .header-title {
+              text-align: center;
+            }
+            .header-title h2 {
+              margin: 0;
+              font-size: 18px;
+              color: #1e3a8a;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .header-title h3 {
+              margin: 3px 0;
+              font-size: 13px;
+              color: #0284c7;
+            }
+            .header-title p {
+              margin: 0;
+              font-size: 10px;
+              color: #64748b;
+            }
+            .doc-info-bar {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #f1f5f9;
+              padding: 8px 12px;
+              border-radius: 6px;
+              margin-bottom: 12px;
+              border: 1px solid #cbd5e1;
+              font-size: 11px;
+            }
+            .doc-info-bar strong {
+              color: #0f172a;
+            }
+            table.data-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 10px;
+            }
+            table.data-table th {
+              background-color: #0f172a;
+              color: #ffffff;
+              padding: 6px 8px;
+              border: 1px solid #334155;
+              text-transform: uppercase;
+              font-size: 9px;
+              letter-spacing: 0.5px;
+            }
+            table.data-table td {
+              padding: 6px 8px;
+              border: 1px solid #cbd5e1;
+              vertical-align: middle;
+            }
+            table.data-table tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            .footer-sig {
+              margin-top: 35px;
+              display: flex;
+              justify-content: space-between;
+              font-size: 11px;
+              font-weight: bold;
+              color: #334155;
+            }
+            .sig-box {
+              text-align: center;
+              width: 200px;
+              border-top: 1px solid #64748b;
+              padding-top: 5px;
+            }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td style="width: 10%;">
+                <img src="/assets/cisabz-logo.png" alt="Logo" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
+              </td>
+              <td class="header-title">
+                <h2>KINGS COLLEGE OF ENGINEERING</h2>
+                <h3>DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING</h3>
+                <p>CISABZ-2K26 — National Level Technical Symposium | Date: 25-09-2026</p>
+              </td>
+              <td style="width: 10%; text-align: right;">
+                <img src="/assets/cisabz-logo.png" alt="CISABZ" style="height: 55px; object-fit: contain;" onError="this.style.display='none'" />
+              </td>
+            </tr>
+          </table>
+
+          <div class="doc-info-bar">
+            <div><strong>CATEGORY / SHEET:</strong> ${documentTitle}</div>
+            <div><strong>VENUE:</strong> ${eventVenue}</div>
+            <div><strong>TOTAL PARTICIPANTS:</strong> ${listToExport.length}</div>
+            <div><strong>PRINTED AT:</strong> ${new Date().toLocaleString()}</div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Reg ID</th>
+                <th>Participant Name</th>
+                <th>College & Department</th>
+                <th>Year</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Tech Event</th>
+                <th>Non-Tech Event</th>
+                <th>Signature</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml || '<tr><td colspan="10" style="text-align:center;">No participant records found</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="footer-sig">
+            <div class="sig-box">Staff Coordinator Signature</div>
+            <div class="sig-box">Student Coordinator Signature</div>
+            <div class="sig-box">HOD / Convener Signature</div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWin.document.open();
+    printWin.document.write(htmlContent);
+    printWin.document.close();
   };
 
   // Payment Verification Handler — Slot Confirmation
@@ -596,13 +806,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => exportToExcel(false)}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Export All (.xlsx)</span>
+                  <span>Download Excel (.xlsx)</span>
+                </button>
+
+                <button
+                  onClick={() => exportToPDF(false)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Download PDF (.pdf)</span>
                 </button>
               </div>
             </div>
@@ -773,142 +991,152 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => exportToExcel(true)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Export Filtered (.xlsx)</span>
+                  <span>Download Excel (.xlsx)</span>
+                </button>
+
+                <button
+                  onClick={() => exportToPDF(true)}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Download PDF (.pdf)</span>
                 </button>
               </div>
             </div>
 
-            {/* SEARCH AND COMBINABLE FILTER CONTROLS */}
-            <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-4">
-              <div className="flex flex-col md:flex-row items-center gap-4">
-                {/* Search input */}
-                <div className="relative flex-1 w-full">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by Name, Email, Mobile, College, Transaction ID..."
-                    className="w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-400 text-white placeholder-slate-500 text-xs font-mono focus:outline-none"
-                  />
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+            {/* SEARCH AND COMBINABLE FILTER CONTROLS — ONLY VISIBLE IN "ALL PARTICIPANTS" VIEW */}
+            {activeView === 'participants' && (
+              <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  {/* Search input */}
+                  <div className="relative flex-1 w-full">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search by Name, Email, Mobile, College, Transaction ID..."
+                      className="w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-400 text-white placeholder-slate-500 text-xs font-mono focus:outline-none"
+                    />
+                    <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                  </div>
+                </div>
+
+                {/* Combinable Filter Selects */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-800/80">
+                  {/* College Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      College
+                    </label>
+                    <select
+                      value={filterCollege}
+                      onChange={(e) => setFilterCollege(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Colleges</option>
+                      {uniqueColleges.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Tech Event Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      Tech Event
+                    </label>
+                    <select
+                      value={filterTechEvent}
+                      onChange={(e) => setFilterTechEvent(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Tech</option>
+                      <option value="TECHVERSE">TECHVERSE</option>
+                      <option value="TECH BRAINIAC">TECH BRAINIAC</option>
+                      <option value="PROMPT FUSION">PROMPT FUSION</option>
+                      <option value="BUG BASH">BUG BASH</option>
+                    </select>
+                  </div>
+
+                  {/* Non-Tech Event Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      Non-Tech Event
+                    </label>
+                    <select
+                      value={filterNonTechEvent}
+                      onChange={(e) => setFilterNonTechEvent(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Non-Tech</option>
+                      <option value="PINPOINT">PINPOINT</option>
+                      <option value="BRAND SPOT">BRAND SPOT</option>
+                      <option value="HAMMER HIT">HAMMER HIT</option>
+                      <option value="CONNECTION">CONNECTION</option>
+                    </select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Status</option>
+                      <option value="PENDING">PENDING</option>
+                      <option value="VERIFIED">VERIFIED</option>
+                      <option value="REJECTED">REJECTED</option>
+                    </select>
+                  </div>
+
+                  {/* Year Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      Year
+                    </label>
+                    <select
+                      value={filterYear}
+                      onChange={(e) => setFilterYear(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Years</option>
+                      <option value="I Year">I Year</option>
+                      <option value="II Year">II Year</option>
+                      <option value="III Year">III Year</option>
+                      <option value="IV Year">IV Year</option>
+                    </select>
+                  </div>
+
+                  {/* Food Filter */}
+                  <div>
+                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                      Food
+                    </label>
+                    <select
+                      value={filterFood}
+                      onChange={(e) => setFilterFood(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Food</option>
+                      <option value="Veg">Veg</option>
+                      <option value="Non-Veg">Non-Veg</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-
-              {/* Combinable Filter Selects */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-800/80">
-                {/* College Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    College
-                  </label>
-                  <select
-                    value={filterCollege}
-                    onChange={(e) => setFilterCollege(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Colleges</option>
-                    {uniqueColleges.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Tech Event Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    Tech Event
-                  </label>
-                  <select
-                    value={filterTechEvent}
-                    onChange={(e) => setFilterTechEvent(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Tech</option>
-                    <option value="TECHVERSE">TECHVERSE</option>
-                    <option value="TECH BRAINIAC">TECH BRAINIAC</option>
-                    <option value="PROMPT FUSION">PROMPT FUSION</option>
-                    <option value="BUG BASH">BUG BASH</option>
-                  </select>
-                </div>
-
-                {/* Non-Tech Event Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    Non-Tech Event
-                  </label>
-                  <select
-                    value={filterNonTechEvent}
-                    onChange={(e) => setFilterNonTechEvent(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Non-Tech</option>
-                    <option value="PINPOINT">PINPOINT</option>
-                    <option value="BRAND SPOT">BRAND SPOT</option>
-                    <option value="HAMMER HIT">HAMMER HIT</option>
-                    <option value="CONNECTION">CONNECTION</option>
-                  </select>
-                </div>
-
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Status</option>
-                    <option value="PENDING">PENDING</option>
-                    <option value="VERIFIED">VERIFIED</option>
-                    <option value="REJECTED">REJECTED</option>
-                  </select>
-                </div>
-
-                {/* Year Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    Year
-                  </label>
-                  <select
-                    value={filterYear}
-                    onChange={(e) => setFilterYear(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Years</option>
-                    <option value="I Year">I Year</option>
-                    <option value="II Year">II Year</option>
-                    <option value="III Year">III Year</option>
-                    <option value="IV Year">IV Year</option>
-                  </select>
-                </div>
-
-                {/* Food Filter */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                    Food
-                  </label>
-                  <select
-                    value={filterFood}
-                    onChange={(e) => setFilterFood(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="ALL">All Food</option>
-                    <option value="Veg">Veg</option>
-                    <option value="Non-Veg">Non-Veg</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* PARTICIPANTS TABLE VIEW */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
