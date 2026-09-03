@@ -164,10 +164,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
       // 3. View-specific constraints
       let matchesView = true;
-      if (activeView === 'pending') {
+      if (activeView === 'participants') {
+        // "All Participants" tab shows ONLY Active (VERIFIED & PENDING), EXCLUDING REJECTED!
+        matchesView = r.status !== 'REJECTED';
+      } else if (activeView === 'pending') {
         matchesView = r.status === 'PENDING';
+      } else if (activeView === 'rejected') {
+        // "Rejected Participants" tab shows ONLY REJECTED!
+        matchesView = r.status === 'REJECTED';
       } else if (activeView === 'event-specific') {
-        matchesView = r.technicalEvent === selectedEventId || r.nonTechnicalEvent === selectedEventId;
+        // Event-specific view shows ONLY active participants for that event (excluding REJECTED!)
+        const target = selectedEventId.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        matchesView = r.status !== 'REJECTED' && (tech === target || nonTech === target);
       }
 
       return (
@@ -257,19 +267,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     }
   };
 
-  // Overall Statistics
+  // Overall Statistics (Total Registrations = Active Valid Registrations, excluding REJECTED)
   const totalStats = {
-    total: registrations.length,
+    total: registrations.filter((r) => r.status !== 'REJECTED').length,
     pending: registrations.filter((r) => r.status === 'PENDING').length,
     verified: registrations.filter((r) => r.status === 'VERIFIED').length,
     rejected: registrations.filter((r) => r.status === 'REJECTED').length,
   };
 
-  // Event-wise Counts
-  const getEventCount = (eventName: string) => {
-    return registrations.filter(
-      (r) => r.technicalEvent === eventName || r.nonTechnicalEvent === eventName
-    ).length;
+  // Event-wise Counts (case-insensitive, normalized, excluding REJECTED)
+  const getEventCount = (eventNameOrId: string) => {
+    if (!eventNameOrId) return 0;
+    const target = eventNameOrId.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return registrations.filter((r) => {
+      if (r.status === 'REJECTED') return false;
+      const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return tech === target || nonTech === target;
+    }).length;
   };
 
   // LOGIN SCREEN (IF NOT AUTHENTICATED)
@@ -438,7 +453,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               }`}
             >
               <span>All Participants</span>
-              <span className="text-[10px] text-slate-400">{registrations.length}</span>
+              <span className="text-[10px] text-slate-400">{totalStats.total}</span>
             </button>
 
             <button
@@ -456,6 +471,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               {totalStats.pending > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
                   {totalStats.pending}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveView('rejected');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-between cursor-pointer ${
+                activeView === 'rejected'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+              }`}
+            >
+              <span>Rejected Participants</span>
+              {totalStats.rejected > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-rose-500 text-slate-950 text-[10px] font-black">
+                  {totalStats.rejected}
                 </span>
               )}
             </button>
@@ -716,9 +750,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           </div>
         )}
 
-        {/* VIEW 2 & 3: ALL PARTICIPANTS / PENDING VERIFICATION / EVENT-SPECIFIC */}
+        {/* VIEW 2 & 3: ALL PARTICIPANTS / PENDING VERIFICATION / REJECTED / EVENT-SPECIFIC */}
         {(activeView === 'participants' ||
           activeView === 'pending' ||
+          activeView === 'rejected' ||
           activeView === 'event-specific') && (
           <div className="space-y-6 max-w-7xl mx-auto">
             {/* Header Title & Actions */}
@@ -727,12 +762,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 <h1 className="text-2xl font-black font-orbitron text-white">
                   {activeView === 'pending'
                     ? 'Pending Verification'
+                    : activeView === 'rejected'
+                    ? 'Rejected Participants'
                     : activeView === 'event-specific'
                     ? `Event Participants — ${selectedEventId}`
-                    : 'All Participants'}
+                    : 'All Active Participants'}
                 </h1>
                 <p className="text-xs font-mono text-slate-400 mt-1">
-                  Showing {filteredData.length} of {registrations.length} total registrations
+                  Showing {filteredData.length} registrations
                 </p>
               </div>
 
