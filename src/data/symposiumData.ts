@@ -17,7 +17,7 @@ export const SYMPOSIUM_CONFIG = {
   venueName: 'Main Auditorium & CSE Labs',
   eventDate: '25-09-2026',
   eventDateISO: '2026-09-25T09:00:00',
-  registrationEndDate: '23-09-2026',
+  registrationEndDate: '22-09-2026',
   registrationLink: 'https://forms.gle/aPGrPT4jFbLFYPhF9',
   googleMapsUrl: 'https://maps.google.com/?q=Kings+College+of+Engineering+Pudukkottai',
   googleMapsDirectionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Kings+College+of+Engineering+Punalkulam',

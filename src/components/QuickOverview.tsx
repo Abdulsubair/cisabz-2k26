@@ -34,7 +34,7 @@ export const QuickOverview: React.FC = () => {
     {
       number: '₹50',
       label: 'ADDITIONAL EVENT FEE',
-      subtext: 'Max 2 events included in base registration',
+      subtext: '1 event included in base registration (Tech or Non-Tech by choice). Maximum 2 extra events allowed with additional fee (₹50 for 1 extra, ₹100 for 2 extra events).',
       icon: Award,
       gradient: 'from-emerald-500/20 to-teal-500/20',
       border: 'border-emerald-500/30',
