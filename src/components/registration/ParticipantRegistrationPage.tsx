@@ -132,7 +132,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
   };
 
   // Form Validation UX
-  const validateForm = (): boolean => {
+  const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) {
@@ -199,7 +199,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const isSubmittingRef = useRef(false);
@@ -209,13 +209,17 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
 
     if (isSubmitting || isSubmittingRef.current) return;
 
-    if (!validateForm() || !paymentProofFile) {
-      // Scroll to first error field
-      const firstErrorKey = Object.keys(errors)[0];
-      if (firstErrorKey) {
-        const errorEl = document.getElementById(`field-${firstErrorKey}`);
-        if (errorEl) {
-          errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const validationErrors = validateForm();
+    const errorKeys = Object.keys(validationErrors);
+
+    if (errorKeys.length > 0) {
+      const firstErrorKey = errorKeys[0];
+      const errorEl = document.getElementById(`field-${firstErrorKey}`);
+      if (errorEl) {
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const inputEl = errorEl.querySelector('input, select') as HTMLElement | null;
+        if (inputEl) {
+          setTimeout(() => inputEl.focus(), 300);
         }
       }
       return;
@@ -242,7 +246,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
           transactionId,
           paymentName,
         },
-        paymentProofFile
+        paymentProofFile!
       );
 
       // Successfully saved and verified in Firestore: clear inputs and display success popup
@@ -980,7 +984,33 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
         </div>
 
         {/* SUBMISSION BUTTON */}
-        <div className="pt-4">
+        <div className="pt-4 space-y-3">
+          {Object.keys(errors).length > 0 && (
+            <div className="p-4 rounded-2xl bg-rose-950/70 border border-rose-500/50 text-rose-300 text-xs font-mono space-y-1.5 shadow-[0_0_20px_rgba(244,63,94,0.2)]">
+              <div className="flex items-center gap-2 font-bold uppercase text-rose-400">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Please fill in all required fields before submitting:</span>
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-rose-200/90 pl-1">
+                {errors.fullName && <li>Full Name: {errors.fullName}</li>}
+                {errors.collegeName && <li>College Name: {errors.collegeName}</li>}
+                {errors.department && <li>Department: {errors.department}</li>}
+                {errors.year && <li>Year of Study: {errors.year}</li>}
+                {errors.email && <li>Email Address: {errors.email}</li>}
+                {errors.mobile && <li>Mobile Number: {errors.mobile}</li>}
+                {errors.technicalEvent && <li>Technical Event: {errors.technicalEvent}</li>}
+                {errors.nonTechnicalEvent && <li>Non-Technical Event: {errors.nonTechnicalEvent}</li>}
+                {errors.transactionId && <li>Transaction ID: {errors.transactionId}</li>}
+                {errors.paymentName && <li>Payment Name: {errors.paymentName}</li>}
+                {errors.paymentProof && <li>Payment Proof: {errors.paymentProof}</li>}
+                {errors.submit && <li>{errors.submit}</li>}
+              </ul>
+              <p className="text-[11px] text-amber-300 font-bold pt-1 border-t border-rose-900/50">
+                Note: Ambassador Referral ID is OPTIONAL and can be left empty.
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
