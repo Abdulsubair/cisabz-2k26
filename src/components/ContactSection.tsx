@@ -16,9 +16,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-cyan-400 text-xs font-semibold tracking-widest uppercase mb-4"
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -26,10 +27,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-4"
           >
             GET IN <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400">TOUCH</span>
@@ -38,8 +39,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-base sm:text-xl text-slate-400 font-light"
           >
             Have questions about registration, event rules, or transportation? Contact our team.

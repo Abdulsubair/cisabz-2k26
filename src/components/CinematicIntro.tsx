@@ -264,20 +264,20 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, forc
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase mb-3 shadow-[0_0_20px_rgba(0,229,255,0.4)] backdrop-blur-xl">
-                  {React.createElement(campusReels[step - 1].icon, { className: 'w-3.5 h-3.5 text-cyan-400' })}
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-[9px] sm:text-[10px] font-mono font-bold tracking-widest uppercase mb-1.5 shadow-[0_0_15px_rgba(0,229,255,0.3)] backdrop-blur-xl">
+                  {React.createElement(campusReels[step - 1].icon, { className: 'w-2.5 h-2.5 text-cyan-400' })}
                   <span>{campusReels[step - 1].tag}</span>
                 </div>
 
-                <h2 className="text-xs sm:text-base font-bold font-orbitron text-slate-200 tracking-[0.3em] uppercase mb-1 drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
+                <h2 className="text-[9px] sm:text-[10px] font-bold font-orbitron text-slate-300 tracking-[0.2em] uppercase mb-0.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
                   WELCOME TO
                 </h2>
 
-                <h1 className="text-4xl sm:text-7xl font-black font-cinzel-deco tracking-tight text-white mb-2 text-gradient-cyan-luxury drop-shadow-[0_0_45px_rgba(0,229,255,0.8)]">
+                <h1 className="text-base sm:text-2xl md:text-3xl font-black font-cinzel-deco tracking-tight text-white mb-1 text-gradient-cyan-luxury drop-shadow-[0_0_20px_rgba(0,229,255,0.6)]">
                   {campusReels[step - 1].title}
                 </h1>
 
-                <p className="text-xs sm:text-base text-cyan-300 font-mono font-bold tracking-widest uppercase drop-shadow-[0_4px_15px_rgba(0,0,0,0.9)]">
+                <p className="text-[10px] sm:text-[11px] text-cyan-300 font-mono font-bold tracking-wider uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
                   {campusReels[step - 1].sub}
                 </p>
               </motion.div>

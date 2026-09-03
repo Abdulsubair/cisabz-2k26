@@ -71,10 +71,11 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      viewport={{ once: true, margin: '200px' }}
+      transition={{ duration: 0.2 }}
+      whileHover={{ y: -6, transition: { duration: 0.15 } }}
       className="relative flex flex-col justify-between rounded-3xl bg-slate-900/85 border border-slate-800 p-6 sm:p-7 backdrop-blur-2xl transition-all duration-300 hover:border-cyan-500/50 hover:shadow-[0_15px_40px_-10px_rgba(6,182,212,0.25)] group cyber-card overflow-hidden"
     >
       <div className={`absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r ${event.colorTheme} opacity-70 group-hover:opacity-100 transition-opacity`} />
