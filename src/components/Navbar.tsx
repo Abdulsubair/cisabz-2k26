@@ -54,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
     { name: 'About', href: '#about', id: 'about' },
     { name: 'Technical', href: '#technical-events', id: 'technical-events' },
     { name: 'Non-Technical', href: '#non-technical-events', id: 'non-technical-events' },
-    { name: 'Guidelines', href: '#guidelines', id: 'guidelines' },
+    { name: 'Guidelines (PDF)', href: '/CISABZ-2K26_Event_Guidelines.pdf', id: 'guidelines', external: true },
     { name: 'Schedule', href: '#schedule', id: 'schedule' },
     { name: 'Patrons', href: '#patrons', id: 'patrons' },
     { name: 'Contact', href: '#contact', id: 'contact' },
@@ -97,8 +97,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
               <a
                 key={link.id}
                 href={link.href}
+                target={link.external ? '_blank' : undefined}
+                rel={link.external ? 'noopener noreferrer' : undefined}
                 className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold tracking-wide transition-all ${
-                  isActive
+                  link.external
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 hover:border-amber-300'
+                    : isActive
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                 }`}
@@ -156,9 +160,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
               <a
                 key={link.id}
                 href={link.href}
+                target={link.external ? '_blank' : undefined}
+                rel={link.external ? 'noopener noreferrer' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`px-4 py-3 rounded-xl text-xs font-mono font-bold transition-all ${
-                  activeSection === link.id
+                  link.external
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40 font-extrabold'
+                    : activeSection === link.id
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                     : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                 }`}

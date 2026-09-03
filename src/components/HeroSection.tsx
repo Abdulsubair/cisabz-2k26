@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
-import { Calendar, Clock, ChevronRight, Trophy, Cpu } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Trophy, Cpu, FileText } from 'lucide-react';
 import cisabzLogo from '../assets/cisabz-logo.png';
 
 interface HeroSectionProps {
@@ -253,6 +253,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRegisterClick, onExp
             <span>EXPLORE EVENTS</span>
             <Trophy className="w-5 h-5 text-amber-400" />
           </button>
+
+          <a
+            href="/CISABZ-2K26_Event_Guidelines.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-orbitron font-extrabold text-sm tracking-widest uppercase shadow-[0_0_35px_rgba(245,158,11,0.4)] hover:shadow-[0_0_50px_rgba(245,158,11,0.7)] hover:scale-105 transition-all cursor-pointer"
+          >
+            <FileText className="w-5 h-5 text-slate-950" />
+            <span>GUIDELINES (PDF)</span>
+          </a>
         </motion.div>
       </div>
     </section>

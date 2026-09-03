@@ -183,9 +183,6 @@ export function App() {
           onRegister={(eventId) => handleOpenRegistration(eventId)}
         />
 
-        {/* OFFICIAL EVENT GUIDELINES */}
-        <GuidelinesSection onRegisterClick={() => handleOpenRegistration()} />
-
         {/* SCHEDULE / EVENT TIMELINE */}
         <ScheduleSection />
 
@@ -194,6 +191,9 @@ export function App() {
 
         {/* COORDINATORS */}
         <CoordinatorsSection />
+
+        {/* OFFICIAL EVENT GUIDELINES (MOVED TO END BEFORE CONTACT) */}
+        <GuidelinesSection onRegisterClick={() => handleOpenRegistration()} />
 
         {/* CONTACT SECTION */}
         <ContactSection onRegisterClick={() => handleOpenRegistration()} />
