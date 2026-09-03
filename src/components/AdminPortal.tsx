@@ -19,7 +19,6 @@ import {
   ChevronRight,
   Menu,
   ExternalLink,
-  Mail,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -209,17 +208,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const handleVerifyPayment = async (regId: string) => {
     setIsProcessingAction(true);
     try {
-      const emailResult = await verifyRegistration(regId, 'Admin');
+      await verifyRegistration(regId, 'Admin');
       if (selectedParticipant && selectedParticipant.id === regId) {
         setSelectedParticipant((prev) => (prev ? { ...prev, status: 'VERIFIED' } : null));
-        const successMsg = emailResult.success
-          ? `✓ Slot CONFIRMED for ${regId}! Automated confirmation email sent to ${selectedParticipant.email}.`
-          : `✓ Slot CONFIRMED for ${regId}! Click 'Send Email' button to open mail app.`;
-        showToast(successMsg, 'success');
+        showToast(`✓ Registration ${regId} VERIFIED!`, 'success');
       }
     } catch (e) {
       console.error('Failed to verify:', e);
-      showToast('Failed to verify payment. Please check database rules.', 'error');
+      showToast('Failed to verify payment. Firestore update failed.', 'error');
     } finally {
       setIsProcessingAction(false);
     }
@@ -229,19 +225,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const handleRejectPayment = async (regId: string) => {
     setIsProcessingAction(true);
     try {
-      const emailResult = await rejectRegistration(regId, 'Admin', rejectionReasonInput);
+      const reason = rejectionReasonInput.trim() || "We didn't get your payment.";
+      await rejectRegistration(regId, 'Admin', reason);
       if (selectedParticipant && selectedParticipant.id === regId) {
-        setSelectedParticipant((prev) => (prev ? { ...prev, status: 'REJECTED', rejectionReason: rejectionReasonInput } : null));
-        const msg = emailResult.success
-          ? `✕ Registration ${regId} REJECTED. Automated rejection email sent to ${selectedParticipant.email}.`
-          : `✕ Registration ${regId} REJECTED. Rejection notice prepared.`;
-        showToast(msg, 'error');
+        setSelectedParticipant((prev) => (prev ? { ...prev, status: 'REJECTED', rejectionReason: reason } : null));
+        showToast(`✕ Registration ${regId} REJECTED. Rejection email sent to ${selectedParticipant.email}.`, 'error');
       }
       setShowRejectForm(false);
       setRejectionReasonInput('');
     } catch (e) {
       console.error('Failed to reject:', e);
-      showToast('Failed to reject registration. Please check database rules.', 'error');
+      showToast('Failed to reject registration. Firestore update failed.', 'error');
     } finally {
       setIsProcessingAction(false);
     }
@@ -1150,15 +1144,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             {/* Modal Action Buttons */}
             {!showRejectForm && (
               <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-800">
-                <a
-                  href={`mailto:${selectedParticipant.email}?subject=${encodeURIComponent(`Event Registration ${selectedParticipant.status} — ${selectedParticipant.id} [CISABZ-2K26]`)}&body=${encodeURIComponent(`Dear ${selectedParticipant.fullName},\n\nYour registration for CISABZ-2K26 has been ${selectedParticipant.status}!\n\nRegistration Details:\n- Registration ID: ${selectedParticipant.id}\n- Technical Event: ${selectedParticipant.technicalEvent}\n- Non-Technical Event: ${selectedParticipant.nonTechnicalEvent}\n- Status: ${selectedParticipant.status}\n\nVenue: Kings College of Engineering, Punalkulam\nDate: 25th September 2026\n\nBest regards,\nCISABZ-2K26 Team`)}`}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 font-mono font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
-                  title="Open email app with pre-filled confirmation text"
-                >
-                  <Mail className="w-4 h-4 text-cyan-400" />
-                  <span>Send Email</span>
-                </a>
-
                 <button
                   onClick={() => setShowRejectForm(true)}
                   disabled={isProcessingAction || selectedParticipant.status === 'REJECTED'}

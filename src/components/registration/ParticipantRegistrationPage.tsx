@@ -222,9 +222,8 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
     setErrors({});
 
     try {
-      // Show "Registering..." processing state for ~3 seconds while creating Firestore document
-      const timerPromise = new Promise((resolve) => setTimeout(resolve, 3000));
-      const submissionPromise = submitRegistration(
+      // Execute registration submission directly to Cloud Firestore
+      const result = await submitRegistration(
         {
           fullName,
           collegeName,
@@ -242,9 +241,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
         paymentProofFile
       );
 
-      const [result] = await Promise.all([submissionPromise, timerPromise]);
-
-      // Successfully saved to Firestore: clear inputs and display success popup
+      // Successfully saved and verified in Firestore: clear inputs and display success popup
       setSubmittedData(result);
       setFullName('');
       setCollegeName('');

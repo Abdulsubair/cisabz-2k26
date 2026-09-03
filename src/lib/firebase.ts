@@ -133,59 +133,91 @@ export function normalizeCredential(val: string): string {
 
 /**
  * Check if a participant with the email or mobile has already registered.
+ * Uses a fast Promise timeout to ensure duplicate checks never hang.
  */
 export async function checkDuplicateRegistration(email: string, mobile: string): Promise<boolean> {
   const normEmail = normalizeCredential(email);
   const normMobile = normalizeCredential(mobile);
 
-  // Check Firestore first if available
-  try {
-    const regRef = collection(db, 'registrations');
-    const qEmail = query(regRef, where('emailNormalized', '==', normEmail));
-    const snapshotEmail = await getDocs(qEmail);
-    if (!snapshotEmail.empty) return true;
-
-    const qMobile = query(regRef, where('mobileNormalized', '==', normMobile));
-    const snapshotMobile = await getDocs(qMobile);
-    if (!snapshotMobile.empty) return true;
-  } catch (err) {
-    console.warn('Firestore duplicate check offline/fallback:', err);
-  }
-
-  // Check local fallback
+  // 1. Check local fallback immediately
   const locals = getLocalRegistrations();
-  return locals.some(
+  const isLocalDup = locals.some(
     (r) =>
       normalizeCredential(r.email) === normEmail ||
       normalizeCredential(r.mobile) === normMobile
   );
+  if (isLocalDup) return true;
+
+  // 2. Check Firestore with a 2-second timeout race
+  try {
+    const firestoreCheck = (async () => {
+      const regRef = collection(db, 'registrations');
+      const qEmail = query(regRef, where('emailNormalized', '==', normEmail));
+      const snapshotEmail = await getDocs(qEmail);
+      if (!snapshotEmail.empty) return true;
+
+      const qMobile = query(regRef, where('mobileNormalized', '==', normMobile));
+      const snapshotMobile = await getDocs(qMobile);
+      if (!snapshotMobile.empty) return true;
+
+      return false;
+    })();
+
+    const timeoutPromise = new Promise<boolean>((resolve) =>
+      setTimeout(() => resolve(false), 2000)
+    );
+
+    return await Promise.race([firestoreCheck, timeoutPromise]);
+  } catch (err) {
+    console.warn('Firestore duplicate check offline/fallback:', err);
+    return false;
+  }
 }
 
 /**
- * Upload Payment Proof file to Firebase Storage (with Data URL local fallback)
+ * Upload Payment Proof file to Firebase Storage with local Data URL fallback.
+ * Uses a 2-second timeout to prevent Firebase Storage hangs from delaying Firestore document creation.
  */
 export async function uploadPaymentProof(file: File, regId: string): Promise<{ url: string; path: string }> {
   const fileExt = file.name.split('.').pop() || 'png';
   const filePath = `payment-proofs/${regId}/${Date.now()}.${fileExt}`;
 
-  try {
-    const storageRef = ref(storage, filePath);
-    await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(storageRef);
-    return { url: downloadUrl, path: filePath };
-  } catch (err) {
-    console.warn('Firebase storage fallback to local data URL:', err);
-    return new Promise((resolve, reject) => {
+  // Read file to Data URL first (fast, reliable fallback)
+  const readDataUrl = (): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        resolve({
-          url: reader.result as string,
-          path: filePath,
-        });
-      };
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = (e) => reject(e);
       reader.readAsDataURL(file);
     });
+
+  let dataUrl = '';
+  try {
+    dataUrl = await readDataUrl();
+  } catch (e) {
+    console.warn('Failed to read file preview:', e);
+  }
+
+  // Attempt Firebase Storage upload with 2-second timeout
+  try {
+    const storageRef = ref(storage, filePath);
+    const uploadPromise = (async () => {
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+      return { url: downloadUrl, path: filePath };
+    })();
+
+    const timeoutPromise = new Promise<{ url: string; path: string }>((_, reject) =>
+      setTimeout(() => reject(new Error('Storage upload timeout')), 2000)
+    );
+
+    return await Promise.race([uploadPromise, timeoutPromise]);
+  } catch (err) {
+    console.warn('Firebase storage fast fallback to data URL:', err);
+    return {
+      url: dataUrl || `data:image/${fileExt};base64,placeholder`,
+      path: filePath,
+    };
   }
 }
 
@@ -198,7 +230,7 @@ export function generateRegistrationId(): string {
 }
 
 /**
- * Submit New Registration to Firebase Firestore & Storage
+ * Submit New Registration directly to Firebase Firestore & Storage
  */
 export async function submitRegistration(
   formData: {
@@ -217,7 +249,7 @@ export async function submitRegistration(
   },
   proofFile: File
 ): Promise<RegistrationData> {
-  // 1. Check duplicate
+  // 1. Check duplicate credentials
   const isDuplicate = await checkDuplicateRegistration(formData.email, formData.mobile);
   if (isDuplicate) {
     throw new Error('A participant with this email address or mobile number has already registered.');
@@ -226,7 +258,7 @@ export async function submitRegistration(
   // 2. Generate Registration ID
   const registrationId = generateRegistrationId();
 
-  // 3. Upload Payment Proof
+  // 3. Obtain payment proof asset (fast non-blocking upload/dataUrl)
   const proofResult = await uploadPaymentProof(proofFile, registrationId);
 
   const timestampStr = new Date().toISOString();
@@ -250,7 +282,7 @@ export async function submitRegistration(
     createdAt: timestampStr,
   };
 
-  // 4. Save to Firestore & verify document creation
+  // 4. Save to Firestore & verify document creation in Cloud Database
   const docRef = doc(db, 'registrations', registrationId);
   const firestoreRecord = {
     ...registrationRecord,
@@ -394,27 +426,20 @@ export async function updateEventStatus(eventId: string, open: boolean): Promise
 }
 
 /**
- * Verify Participant Registration & Send Confirmation Email
+ * Verify Participant Registration in Firestore (No Email Sent)
  */
-export async function verifyRegistration(registrationId: string, adminUser = 'Admin'): Promise<{ success: boolean; mailtoUrl: string }> {
+export async function verifyRegistration(registrationId: string, adminUser = 'Admin'): Promise<{ success: boolean }> {
   const verifiedTime = new Date().toISOString();
-  let participantEmail = '';
-  let participantName = '';
-  let techEvt = '';
-  let nonTechEvt = '';
 
-  try {
-    const docRef = doc(db, 'registrations', registrationId);
-    await updateDoc(docRef, {
-      status: 'VERIFIED',
-      verifiedAt: verifiedTime,
-      verifiedBy: adminUser,
-    });
-  } catch (err) {
-    console.warn('Firestore verify update fallback:', err);
-  }
+  // Update Firestore document status to VERIFIED
+  const docRef = doc(db, 'registrations', registrationId);
+  await updateDoc(docRef, {
+    status: 'VERIFIED',
+    verifiedAt: verifiedTime,
+    verifiedBy: adminUser,
+  });
 
-  // Update local storage
+  // Update local storage cache
   const list = getLocalRegistrations();
   const index = list.findIndex((r) => r.id === registrationId);
   if (index !== -1) {
@@ -422,131 +447,130 @@ export async function verifyRegistration(registrationId: string, adminUser = 'Ad
     list[index].verifiedAt = verifiedTime;
     list[index].verifiedBy = adminUser;
     saveLocalRegistrations(list);
-
-    participantEmail = list[index].email;
-    participantName = list[index].fullName;
-    techEvt = list[index].technicalEvent;
-    nonTechEvt = list[index].nonTechnicalEvent;
   }
 
-  // Trigger Email Notification Workflow automatically
-  return await sendNotificationEmail({
-    to: participantEmail,
-    name: participantName,
-    status: 'VERIFIED',
-    regId: registrationId,
-    techEvent: techEvt,
-    nonTechEvent: nonTechEvt,
-  });
+  // Verification email completely removed as requested
+  return { success: true };
 }
 
 /**
- * Reject Participant Registration & Send Rejection Email
+ * Reject Participant Registration & Automatically Send Rejection Email
  */
-export async function rejectRegistration(registrationId: string, adminUser = 'Admin', reason?: string): Promise<{ success: boolean; mailtoUrl: string }> {
+export async function rejectRegistration(registrationId: string, adminUser = 'Admin', reason?: string): Promise<{ success: boolean }> {
   const rejectedTime = new Date().toISOString();
+  const rejectionReason = reason?.trim() || "We didn't get your payment.";
+
+  // 1. Update Firestore FIRST. If this fails, function throws and email is NOT sent.
+  const docRef = doc(db, 'registrations', registrationId);
+  await updateDoc(docRef, {
+    status: 'REJECTED',
+    rejectedAt: rejectedTime,
+    rejectedBy: adminUser,
+    rejectionReason: rejectionReason,
+  });
+
+  // Extract participant info for email
   let participantEmail = '';
   let participantName = '';
   let techEvt = '';
   let nonTechEvt = '';
 
   try {
-    const docRef = doc(db, 'registrations', registrationId);
-    await updateDoc(docRef, {
-      status: 'REJECTED',
-      rejectedAt: rejectedTime,
-      rejectedBy: adminUser,
-      rejectionReason: reason || 'Payment transaction verification failed.',
-    });
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const d = docSnap.data();
+      participantEmail = d.email || '';
+      participantName = d.fullName || '';
+      techEvt = d.technicalEvent || '';
+      nonTechEvt = d.nonTechnicalEvent || '';
+    }
   } catch (err) {
-    console.warn('Firestore reject update fallback:', err);
+    console.warn('Doc fetch warning after reject:', err);
   }
 
-  // Update local storage
-  const list = getLocalRegistrations();
-  const index = list.findIndex((r) => r.id === registrationId);
-  if (index !== -1) {
-    list[index].status = 'REJECTED';
-    list[index].rejectedAt = rejectedTime;
-    list[index].verifiedBy = adminUser;
-    list[index].rejectionReason = reason || 'Payment transaction verification failed.';
-    saveLocalRegistrations(list);
+  if (!participantEmail) {
+    const list = getLocalRegistrations();
+    const index = list.findIndex((r) => r.id === registrationId);
+    if (index !== -1) {
+      list[index].status = 'REJECTED';
+      list[index].rejectedAt = rejectedTime;
+      list[index].verifiedBy = adminUser;
+      list[index].rejectionReason = rejectionReason;
+      saveLocalRegistrations(list);
 
-    participantEmail = list[index].email;
-    participantName = list[index].fullName;
-    techEvt = list[index].technicalEvent;
-    nonTechEvt = list[index].nonTechnicalEvent;
+      participantEmail = list[index].email;
+      participantName = list[index].fullName;
+      techEvt = list[index].technicalEvent;
+      nonTechEvt = list[index].nonTechnicalEvent;
+    }
   }
 
-  // Trigger Email Notification Workflow automatically
-  return await sendNotificationEmail({
+  // 2. Automatically send ONLY rejection email AFTER successful Firestore update
+  return await sendRejectionEmail({
     to: participantEmail,
     name: participantName,
-    status: 'REJECTED',
     regId: registrationId,
     techEvent: techEvt,
     nonTechEvent: nonTechEvt,
-    reason: reason || 'Transaction verification unsuccessful.',
+    reason: rejectionReason,
   });
 }
 
 /**
- * Secure Email Notification Workflow Trigger
- * Transmits confirmation/rejection notifications to participants via EmailJS API.
+ * Rejection Email Notification Trigger
+ * Transmits automated rejection notification to participant via EmailJS API.
  */
-export async function sendNotificationEmail(params: {
+export async function sendRejectionEmail(params: {
   to: string;
   name: string;
-  status: 'VERIFIED' | 'REJECTED';
   regId: string;
   techEvent: string;
   nonTechEvent: string;
   reason?: string;
-}): Promise<{ success: boolean; mailtoUrl: string }> {
-  const { to, name, status, regId, techEvent, nonTechEvent, reason } = params;
+}): Promise<{ success: boolean }> {
+  const { to, name, regId, techEvent, nonTechEvent, reason } = params;
 
-  console.log(`[EMAIL SERVICE] Transmitting ${status} notification email to ${to}...`);
+  console.log(`[EMAIL SERVICE] Transmitting REJECTED notification email to ${to}...`);
 
-  const isConfirmed = status === 'VERIFIED';
-  const statusLabel = isConfirmed ? 'CONFIRMED' : 'REJECTED';
-
-  const subject = isConfirmed
-    ? `Slot Confirmed — CISABZ-2K26 Event Registration (${regId})`
-    : `Registration Status Update — CISABZ-2K26 (${regId})`;
-
-  const bodyText = isConfirmed
-    ? `Dear ${name},\n\nGreat news! Your event registration slot for CISABZ-2K26 has been CONFIRMED!\n\nRegistration Details:\n- Registration ID: ${regId}\n- Technical Event: ${techEvent}\n- Non-Technical Event: ${nonTechEvent}\n- Payment Status: Verified / Confirmed\n- Venue: Kings College of Engineering, Punalkulam\n- Date: 25th September 2026\n\nPlease keep this confirmation email for entry verification at the auditorium.\n\nBest regards,\nCISABZ-2K26 Organizing Committee\nKings College of Engineering`
-    : `Dear ${name},\n\nWe regret to inform you that your event registration payment for CISABZ-2K26 could not be verified, and your slot has been REJECTED.\n\nRegistration Details:\n- Registration ID: ${regId}\n- Rejection Reason: ${reason || 'Transaction verification unsuccessful.'}\n\nIf you believe this is an error or wish to re-verify your payment, please reply to this email or contact us at cisabz26@gmail.com.\n\nBest regards,\nCISABZ-2K26 Organizing Committee`;
-
-  // Create mailto fallback URL
-  const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+  const rejectionReason = reason || "We didn't get your payment.";
+  const subject = `Your registration for CISABZ-2K26 has been Rejected!`;
+  const bodyText = `Dear ${name},\n\nYour registration for CISABZ-2K26 has been Rejected!\n\nRegistration Details:\n- Registration ID: ${regId}\n- Technical Event: ${techEvent}\n- Non-Technical Event: ${nonTechEvent}\n- Status: Rejected\n\n- Reason: ${rejectionReason}\n\nBest regards,\nCISABZ-2K26 Team`;
 
   try {
-    // 1. EmailJS Environment Configuration
-    const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const emailjsUserId = import.meta.env.VITE_EMAILJS_USER_ID || import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    // EmailJS Environment Configuration
+    const rawServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_yrhiy7r';
+    const rawTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_kp3rc53';
+    const rawUserId = import.meta.env.VITE_EMAILJS_USER_ID || import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '75tkzr3Sb4Ryc-qxY';
+
+    const emailjsServiceId = rawServiceId.trim();
+    const emailjsTemplateId = rawTemplateId.trim().replace(/^y+/, '');
+    const emailjsUserId = rawUserId.trim();
 
     if (emailjsServiceId && emailjsTemplateId && emailjsUserId) {
-      console.log('[EMAIL SERVICE] Sending via EmailJS API...', { service_id: emailjsServiceId, template_id: emailjsTemplateId });
+      console.log('[EMAIL SERVICE] Sending rejection email via EmailJS API...', { service_id: emailjsServiceId, template_id: emailjsTemplateId });
 
       const payload = {
-        service_id: emailjsServiceId.trim(),
-        template_id: emailjsTemplateId.trim(),
-        user_id: emailjsUserId.trim(),
+        service_id: emailjsServiceId,
+        template_id: emailjsTemplateId,
+        user_id: emailjsUserId,
         template_params: {
           to_email: to,
           email: to,
           to_name: name,
           name: name,
           user_name: name,
+          participant_name: name,
           reg_id: regId,
-          status: statusLabel,
-          slot_status: isConfirmed ? 'Slot Confirmed' : 'Slot Rejected',
+          registration_id: regId,
+          status: 'REJECTED',
+          slot_status: 'Rejected',
           tech_event: techEvent,
+          technical_event: techEvent,
           non_tech_event: nonTechEvent,
-          reason: reason || 'N/A',
+          non_technical_event: nonTechEvent,
+          reason: rejectionReason,
           message: bodyText,
+          body_text: bodyText,
           subject: subject,
           reply_to: 'cisabz26@gmail.com',
         },
@@ -559,31 +583,31 @@ export async function sendNotificationEmail(params: {
       });
 
       if (res.ok) {
-        console.log('[EMAIL SERVICE] ✅ Successfully delivered email via EmailJS!');
-        return { success: true, mailtoUrl };
+        console.log('[EMAIL SERVICE] ✅ Successfully delivered rejection email via EmailJS!');
+        return { success: true };
       } else {
         const errText = await res.text();
         console.error('[EMAIL SERVICE] EmailJS API returned status:', res.status, errText);
       }
     }
 
-    // 2. Custom Webhook Endpoint
+    // Custom Webhook Endpoint Fallback
     const emailEndpoint = import.meta.env.VITE_EMAIL_API_URL;
     if (emailEndpoint) {
       const res = await fetch(emailEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to, subject, name, status: statusLabel, regId, techEvent, nonTechEvent, reason, bodyText }),
+        body: JSON.stringify({ to, subject, name, status: 'REJECTED', regId, techEvent, nonTechEvent, reason: rejectionReason, bodyText }),
       });
       if (res.ok) {
-        return { success: true, mailtoUrl };
+        return { success: true };
       }
     }
 
     console.log(`[EMAIL PREVIEW] Subject: ${subject}\n\n${bodyText}`);
-    return { success: true, mailtoUrl };
+    return { success: true };
   } catch (err) {
     console.error('[EMAIL SERVICE ERROR]', err);
-    return { success: false, mailtoUrl };
+    return { success: false };
   }
 }
