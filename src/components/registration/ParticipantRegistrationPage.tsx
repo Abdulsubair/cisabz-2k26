@@ -34,14 +34,14 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
   const [fullName, setFullName] = useState('');
   const [collegeName, setCollegeName] = useState('');
   const [department, setDepartment] = useState('');
-  const [year, setYear] = useState<'I Year' | 'II Year' | 'III Year' | 'IV Year'>('III Year');
+  const [year, setYear] = useState<'I Year' | 'II Year' | 'III Year' | 'IV Year' | ''>('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [ambassadorReferralId, setAmbassadorReferralId] = useState('');
   const [foodPreference, setFoodPreference] = useState<'Veg' | 'Non-Veg'>('Veg');
 
-  const [technicalEvent, setTechnicalEvent] = useState('TECHVERSE');
-  const [nonTechnicalEvent, setNonTechnicalEvent] = useState('PINPOINT');
+  const [technicalEvent, setTechnicalEvent] = useState('');
+  const [nonTechnicalEvent, setNonTechnicalEvent] = useState('');
 
   const [transactionId, setTransactionId] = useState('');
   const [paymentName, setPaymentName] = useState('');
@@ -149,6 +149,10 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
       newErrors.department = 'Please enter your department name.';
     }
 
+    if (!year) {
+      newErrors.year = 'Please select your year of study.';
+    }
+
     if (!email.trim()) {
       newErrors.email = 'Please enter your email address.';
     } else {
@@ -228,7 +232,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
           fullName,
           collegeName,
           department,
-          year,
+          year: year as 'I Year' | 'II Year' | 'III Year' | 'IV Year',
           email,
           mobile,
           ambassadorReferralId,
@@ -535,13 +539,22 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value as any)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-400 text-white focus:outline-none transition-colors text-sm font-mono cursor-pointer"
+                className={`w-full px-4 py-3 rounded-xl bg-slate-950 border ${
+                  errors.year ? 'border-rose-500' : 'border-slate-800 focus:border-cyan-400'
+                } ${!year ? 'text-slate-500' : 'text-white'} focus:outline-none transition-colors text-sm font-mono cursor-pointer`}
               >
-                <option value="I Year">I Year</option>
-                <option value="II Year">II Year</option>
-                <option value="III Year">III Year</option>
-                <option value="IV Year">IV Year</option>
+                <option value="" disabled className="text-slate-500 bg-slate-950">Select Year of Study</option>
+                <option value="I Year" className="text-white bg-slate-950">I Year</option>
+                <option value="II Year" className="text-white bg-slate-950">II Year</option>
+                <option value="III Year" className="text-white bg-slate-950">III Year</option>
+                <option value="IV Year" className="text-white bg-slate-950">IV Year</option>
               </select>
+              {errors.year && (
+                <p className="text-rose-400 text-xs mt-1.5 font-mono flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{errors.year}</span>
+                </p>
+              )}
             </div>
 
             {/* Email Address */}
@@ -665,12 +678,13 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                 onChange={(e) => setTechnicalEvent(e.target.value)}
                 className={`w-full px-4 py-3.5 rounded-xl bg-slate-950 border ${
                   errors.technicalEvent ? 'border-rose-500' : 'border-slate-800 focus:border-blue-400'
-                } text-white focus:outline-none transition-colors text-sm font-mono cursor-pointer`}
+                } ${!technicalEvent ? 'text-slate-500' : 'text-white'} focus:outline-none transition-colors text-sm font-mono cursor-pointer`}
               >
+                <option value="" disabled className="text-slate-500 bg-slate-950">Select Technical Event</option>
                 {technicalEventsList.map((evt) => {
                   const isOpen = eventStatuses[evt.id] !== false;
                   return (
-                    <option key={evt.id} value={evt.id} disabled={!isOpen}>
+                    <option key={evt.id} value={evt.id} disabled={!isOpen} className="text-white bg-slate-950">
                       {evt.name} {isOpen ? '' : '— [ Registration Closed ]'}
                     </option>
                   );
@@ -733,12 +747,13 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                 onChange={(e) => setNonTechnicalEvent(e.target.value)}
                 className={`w-full px-4 py-3.5 rounded-xl bg-slate-950 border ${
                   errors.nonTechnicalEvent ? 'border-rose-500' : 'border-slate-800 focus:border-amber-400'
-                } text-white focus:outline-none transition-colors text-sm font-mono cursor-pointer`}
+                } ${!nonTechnicalEvent ? 'text-slate-500' : 'text-white'} focus:outline-none transition-colors text-sm font-mono cursor-pointer`}
               >
+                <option value="" disabled className="text-slate-500 bg-slate-950">Select Non-Technical Event</option>
                 {nonTechnicalEventsList.map((evt) => {
                   const isOpen = eventStatuses[evt.id] !== false;
                   return (
-                    <option key={evt.id} value={evt.id} disabled={!isOpen}>
+                    <option key={evt.id} value={evt.id} disabled={!isOpen} className="text-white bg-slate-950">
                       {evt.name} {isOpen ? '' : '— [ Registration Closed ]'}
                     </option>
                   );
