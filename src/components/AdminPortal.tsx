@@ -20,6 +20,7 @@ import {
   ExternalLink,
   FileText,
   Trash2,
+  Award,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -142,10 +143,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     new Set(registrations.map((r) => r.collegeName).filter(Boolean))
   );
 
+  // Ambassador Registrations & Referral Code grouping
+  const ambassadorRegistrations = registrations.filter(
+    (r) => r.ambassadorReferralId && r.ambassadorReferralId.trim() !== '' && r.status !== 'REJECTED'
+  );
+
+  const referralGroups = React.useMemo(() => {
+    const map: Record<string, RegistrationData[]> = {};
+    registrations.forEach((r) => {
+      if (r.ambassadorReferralId && r.ambassadorReferralId.trim() !== '' && r.status !== 'REJECTED') {
+        const code = r.ambassadorReferralId.trim().toUpperCase();
+        if (!map[code]) map[code] = [];
+        map[code].push(r);
+      }
+    });
+    return map;
+  }, [registrations]);
+
   // Filter Logic
   const getFilteredRegistrations = () => {
     return registrations.filter((r) => {
-      // 1. Search Query
+      // 1. Search Query (Matches Name, Email, Mobile, College, UTR, ID, or Ambassador Referral Code)
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -154,7 +172,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         r.mobile.toLowerCase().includes(q) ||
         r.collegeName.toLowerCase().includes(q) ||
         r.transactionId.toLowerCase().includes(q) ||
-        r.id.toLowerCase().includes(q);
+        r.id.toLowerCase().includes(q) ||
+        (r.ambassadorReferralId && r.ambassadorReferralId.toLowerCase().includes(q));
 
       // 2. Filters
       const matchesCollege = filterCollege === 'ALL' || r.collegeName === filterCollege;
@@ -174,6 +193,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       } else if (activeView === 'rejected') {
         // "Rejected Participants" tab shows ONLY REJECTED!
         matchesView = r.status === 'REJECTED';
+      } else if (activeView === 'ambassador') {
+        // "Ambassador" tab shows participants registered with a referral code!
+        const hasReferral = Boolean(r.ambassadorReferralId && r.ambassadorReferralId.trim() !== '');
+        matchesView = hasReferral && r.status !== 'REJECTED';
       } else if (activeView === 'event-specific') {
         // Event-specific view shows ONLY active participants for that event (excluding REJECTED!)
         const target = selectedEventId.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -243,6 +266,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       documentTitle = 'PENDING VERIFICATION REGISTRATIONS';
     } else if (activeView === 'rejected') {
       documentTitle = 'REJECTED PARTICIPANTS LIST';
+    } else if (activeView === 'ambassador') {
+      documentTitle = 'CAMPUS AMBASSADOR REFERRAL SHEET';
     } else if (activeView === 'event-specific') {
       documentTitle = `EVENT PARTICIPANT SHEET — ${selectedEventId}`;
       const allEvts = [...TECHNICAL_EVENTS, ...NON_TECHNICAL_EVENTS];
@@ -260,11 +285,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       return;
     }
 
+    const isAmbassadorView = activeView === 'ambassador';
+
     const tableRowsHtml = listToExport
       .map(
         (r, idx) => `
         <tr>
           <td style="text-align: center;">${idx + 1}</td>
+          ${isAmbassadorView ? `<td><strong style="color: #7e22ce;">${r.ambassadorReferralId || 'N/A'}</strong></td>` : ''}
           <td><strong>${r.id}</strong></td>
           <td><strong>${r.fullName}</strong></td>
           <td>${r.collegeName}<br><small style="color: #64748b;">${r.department}</small></td>
@@ -434,12 +462,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             <thead>
               <tr>
                 <th style="width: 4%;">S.No</th>
-                <th style="width: 9%;">Reg ID</th>
-                <th style="width: 14%;">Participant Name</th>
-                <th style="width: 20%;">College & Dept</th>
+                ${isAmbassadorView ? '<th style="width: 10%;">Ref Code</th>' : ''}
+                <th style="width: ${isAmbassadorView ? '8%' : '9%'};">Reg ID</th>
+                <th style="width: ${isAmbassadorView ? '13%' : '14%'};">Participant Name</th>
+                <th style="width: ${isAmbassadorView ? '18%' : '20%'};">College & Dept</th>
                 <th style="width: 6%;">Year</th>
                 <th style="width: 10%;">Mobile</th>
-                <th style="width: 13%;">Email</th>
+                <th style="width: ${isAmbassadorView ? '12%' : '13%'};">Email</th>
                 <th style="width: 9%;">Tech Event</th>
                 <th style="width: 9%;">Non-Tech</th>
                 <th style="width: 6%;">Signature</th>
@@ -783,6 +812,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </button>
               );
             })}
+
+            {/* AMBASSADOR SECTION BUTTON AFTER CONNECTION */}
+            <button
+              onClick={() => {
+                setActiveView('ambassador');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 mt-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-between cursor-pointer border ${
+                activeView === 'ambassador'
+                  ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                  : 'bg-purple-950/20 text-purple-300 hover:bg-purple-900/40 hover:text-purple-200 border-purple-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-2 truncate">
+                <Award className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="truncate font-bold tracking-wider">AMBASSADOR</span>
+              </div>
+              <span className="text-[10px] font-mono text-purple-200 bg-purple-950/80 px-2 py-0.5 rounded-full border border-purple-500/40 font-black">
+                {ambassadorRegistrations.length}
+              </span>
+            </button>
           </div>
 
           <div className="pt-3">
@@ -1394,6 +1444,295 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 5: AMBASSADOR SECTION */}
+        {activeView === 'ambassador' && (
+          <div className="space-y-6 max-w-7xl mx-auto">
+            {/* Header Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/40 p-6 rounded-3xl backdrop-blur-xl shadow-[0_0_40px_rgba(168,85,247,0.15)]">
+              <div>
+                <div className="flex items-center gap-2 text-purple-400 font-mono text-xs uppercase tracking-widest font-bold mb-1">
+                  <Award className="w-4 h-4 text-purple-400" />
+                  <span>Campus Ambassador Program</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black font-orbitron text-white">
+                  Ambassador Referral Registrations
+                </h1>
+                <p className="text-xs font-mono text-slate-400 mt-1">
+                  Tracking participants registered using Ambassador referral codes • Total Referral Registrations: {ambassadorRegistrations.length}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => exportToExcel(true)}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export Excel (.xlsx)</span>
+                </button>
+
+                <button
+                  onClick={() => exportToPDF(true)}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Export PDF (.pdf)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* AMBASSADOR STATS CARDS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-slate-900/90 border border-purple-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-purple-400 font-bold block mb-1">
+                  Referral Registrations
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-purple-300">
+                  {ambassadorRegistrations.length}
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-emerald-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
+                  Verified Referrals
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-emerald-400">
+                  {ambassadorRegistrations.filter((r) => r.status === 'VERIFIED').length}
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-amber-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
+                  Pending Verification
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-amber-400">
+                  {ambassadorRegistrations.filter((r) => r.status === 'PENDING').length}
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-cyan-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
+                  Active Referral Codes
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-cyan-300">
+                  {Object.keys(referralGroups).length}
+                </span>
+              </div>
+            </div>
+
+            {/* ACTIVE REFERRAL CODES SUMMARY BAR / CARDS */}
+            {Object.keys(referralGroups).length > 0 && (
+              <div className="bg-slate-900/80 border border-purple-500/30 p-5 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-wider text-purple-300 font-bold flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Referral Codes Summary (Click any code to filter)</span>
+                  </span>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="text-[11px] font-mono text-slate-400 hover:text-white underline cursor-pointer"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {Object.entries(referralGroups).map(([code, list]) => {
+                    const isSelected = searchQuery.toLowerCase().trim() === code.toLowerCase();
+                    return (
+                      <button
+                        key={code}
+                        onClick={() => setSearchQuery(code)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+                          isSelected
+                            ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.5)] scale-105'
+                            : 'bg-purple-950/40 text-purple-200 border-purple-500/30 hover:bg-purple-900/60 hover:text-white'
+                        }`}
+                      >
+                        <span>{code}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-950 text-[10px] text-purple-300 border border-purple-500/40">
+                          {list.length} {list.length === 1 ? 'participant' : 'participants'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SEARCH BAR AND FILTER CONTROLS FOR AMBASSADOR PAGE */}
+            <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-4">
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                {/* Search Input */}
+                <div className="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by Referral Code (e.g. AMB-101), Participant Name, Email, College..."
+                    className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-950 border border-purple-500/40 focus:border-purple-400 text-white placeholder-slate-500 text-xs font-mono focus:outline-none shadow-inner"
+                  />
+                  <Search className="w-4 h-4 text-purple-400 absolute left-3.5 top-3.5" />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-3.5 text-slate-500 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {searchQuery && (
+                <div className="text-xs font-mono text-purple-300 flex items-center justify-between bg-purple-950/40 p-3 rounded-xl border border-purple-500/40">
+                  <span>
+                    Filtering Ambassador List for: <strong>"{searchQuery}"</strong> • Total Matching Participants:{' '}
+                    <strong className="text-white bg-purple-600 px-2 py-0.5 rounded-full ml-1 font-orbitron">{filteredData.length}</strong>
+                  </span>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-[11px] text-purple-300 hover:text-white underline cursor-pointer"
+                  >
+                    Clear Search Filter
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* PARTICIPANTS TABLE FOR AMBASSADOR VIEW */}
+            <div className="bg-slate-900/90 border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl">
+              {filteredData.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 space-y-2 font-mono text-xs">
+                  <Award className="w-10 h-10 text-purple-500/40 mx-auto" />
+                  <p className="text-sm font-bold text-white">No Ambassador referral registrations found</p>
+                  <p>
+                    {searchQuery
+                      ? `No participants registered with referral code or search term "${searchQuery}".`
+                      : 'No participants have submitted an Ambassador referral code yet.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-slate-950 border-b border-slate-800 text-purple-300 uppercase tracking-wider text-[11px]">
+                      <tr>
+                        <th className="py-4 px-4">Referral Code</th>
+                        <th className="py-4 px-4">Participant</th>
+                        <th className="py-4 px-4">College & Dept</th>
+                        <th className="py-4 px-4">Contact</th>
+                        <th className="py-4 px-4">Tech Event</th>
+                        <th className="py-4 px-4">Non-Tech Event</th>
+                        <th className="py-4 px-4">Status</th>
+                        <th className="py-4 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredData.map((reg) => (
+                        <tr key={reg.id} className="hover:bg-purple-950/20 transition-colors">
+                          {/* Referral Code */}
+                          <td className="py-4 px-4">
+                            <span className="px-3 py-1 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold font-mono text-xs inline-block shadow-sm">
+                              {reg.ambassadorReferralId || 'N/A'}
+                            </span>
+                          </td>
+
+                          {/* Participant Name & ID */}
+                          <td className="py-4 px-4">
+                            <div className="font-bold text-white text-sm font-rajdhani">
+                              {reg.fullName}
+                            </div>
+                            <span className="text-[10px] text-amber-400 font-mono font-bold block">
+                              {reg.id}
+                            </span>
+                            <span className="text-[10px] text-slate-500 block">
+                              {reg.year} • {reg.foodPreference}
+                            </span>
+                          </td>
+
+                          {/* College & Dept */}
+                          <td className="py-4 px-4 max-w-[180px]">
+                            <div className="truncate font-medium text-slate-200" title={reg.collegeName}>
+                              {reg.collegeName}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate" title={reg.department}>
+                              {reg.department}
+                            </div>
+                          </td>
+
+                          {/* Contact */}
+                          <td className="py-4 px-4">
+                            <div className="text-cyan-300 font-bold">{reg.mobile}</div>
+                            <div className="text-[11px] text-slate-400 truncate max-w-[140px]">
+                              {reg.email}
+                            </div>
+                          </td>
+
+                          {/* Tech Event */}
+                          <td className="py-4 px-4">
+                            <span className="px-2.5 py-1 rounded bg-blue-500/20 text-cyan-300 font-bold border border-blue-500/30">
+                              {reg.technicalEvent}
+                            </span>
+                          </td>
+
+                          {/* Non-Tech Event */}
+                          <td className="py-4 px-4">
+                            <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                              {reg.nonTechnicalEvent}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-4 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                reg.status === 'VERIFIED'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                  : reg.status === 'REJECTED'
+                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                              }`}
+                            >
+                              {reg.status}
+                            </span>
+                          </td>
+
+                          {/* Action */}
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedParticipant(reg);
+                                  setShowRejectForm(false);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 hover:text-white border border-slate-700 text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-purple-400" />
+                                <span>View & Verify</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteParticipant(reg.id, reg.fullName)}
+                                className="p-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-800/60 text-xs font-mono transition-all cursor-pointer"
+                                title="Delete Registration Record"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
