@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { SYMPOSIUM_CONFIG } from './data/symposiumData';
 import { CinematicIntro } from './components/CinematicIntro';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -8,7 +7,6 @@ import { AboutSection } from './components/AboutSection';
 import { DignitariesSection } from './components/DignitariesSection';
 import { TechnicalEventsSection } from './components/TechnicalEventsSection';
 import { NonTechnicalEventsSection } from './components/NonTechnicalEventsSection';
-
 import { ScheduleSection } from './components/ScheduleSection';
 import { CoordinatorsSection } from './components/CoordinatorsSection';
 import { ContactSection } from './components/ContactSection';
@@ -16,6 +14,7 @@ import { Footer } from './components/Footer';
 import { EventGuidelineModal } from './components/EventGuidelineModal';
 import { CinematicEventVideoModal } from './components/CinematicEventVideoModal';
 import { AdminPortal } from './components/AdminPortal';
+import { ParticipantRegistrationPage } from './components/registration/ParticipantRegistrationPage';
 import { CseAiAssistantModal } from './components/CseAiAssistantModal';
 import { BackgroundBuildingFlythrough } from './components/BackgroundBuildingFlythrough';
 import { CursorFluidEffect } from './components/CursorFluidEffect';
@@ -35,14 +34,28 @@ export function App() {
     );
   });
 
+  // Route check for /register or #register
+  const [isRegisterRoute, setIsRegisterRoute] = useState<boolean>(() => {
+    return (
+      window.location.pathname.toLowerCase().includes('/register') ||
+      window.location.hash.toLowerCase().includes('register')
+    );
+  });
+
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
+
       if (path.includes('/admin') || hash.includes('admin')) {
         setIsAdminRoute(true);
+        setIsRegisterRoute(false);
+      } else if (path.includes('/register') || hash.includes('register')) {
+        setIsRegisterRoute(true);
+        setIsAdminRoute(false);
       } else {
         setIsAdminRoute(false);
+        setIsRegisterRoute(false);
       }
     };
 
@@ -56,7 +69,9 @@ export function App() {
   }, []);
 
   const handleOpenRegistration = (_eventId?: string) => {
-    window.open(SYMPOSIUM_CONFIG.registrationLink, '_blank', 'noopener,noreferrer');
+    window.location.hash = 'register';
+    setIsRegisterRoute(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -99,6 +114,24 @@ export function App() {
             window.history.pushState({}, '', '/');
             window.location.hash = '';
             setIsAdminRoute(false);
+            setIsRegisterRoute(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // IF ACCESSED VIA /register ROUTE OR #register HASH
+  if (isRegisterRoute) {
+    return (
+      <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-black">
+        <CursorFluidEffect />
+        <ParticipantRegistrationPage
+          onBackToHome={() => {
+            window.history.pushState({}, '', '/');
+            window.location.hash = '';
+            setIsRegisterRoute(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
       </div>

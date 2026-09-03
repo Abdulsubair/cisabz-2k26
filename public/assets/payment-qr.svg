@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#168bff"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd95a"/>
+      <stop offset="100%" stop-color="#d4af37"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Card Frame Background -->
+  <rect x="0" y="0" width="400" height="400" rx="28" fill="url(#bgGrad)" stroke="#00e5ff" stroke-width="3" stroke-opacity="0.6"/>
+
+  <!-- Glowing Corner Markers -->
+  <rect x="15" y="15" width="40" height="4" rx="2" fill="url(#cyanGrad)"/>
+  <rect x="15" y="15" width="4" height="40" rx="2" fill="url(#cyanGrad)"/>
+  
+  <rect x="345" y="15" width="40" height="4" rx="2" fill="url(#cyanGrad)"/>
+  <rect x="381" y="15" width="4" height="40" rx="2" fill="url(#cyanGrad)"/>
+
+  <rect x="15" y="381" width="40" height="4" rx="2" fill="url(#cyanGrad)"/>
+  <rect x="15" y="345" width="4" height="40" rx="2" fill="url(#cyanGrad)"/>
+
+  <rect x="345" y="381" width="40" height="4" rx="2" fill="url(#cyanGrad)"/>
+  <rect x="381" y="345" width="4" height="40" rx="2" fill="url(#cyanGrad)"/>
+
+  <!-- QR Outer Box -->
+  <rect x="50" y="50" width="300" height="300" rx="16" fill="#ffffff" stroke="#38bdf8" stroke-width="2"/>
+
+  <!-- QR Position Detection Pattern (Top Left) -->
+  <rect x="75" y="75" width="70" height="70" rx="8" fill="#020617"/>
+  <rect x="87" y="87" width="46" height="46" rx="4" fill="#ffffff"/>
+  <rect x="97" y="97" width="26" height="26" rx="2" fill="url(#cyanGrad)"/>
+
+  <!-- QR Position Detection Pattern (Top Right) -->
+  <rect x="255" y="75" width="70" height="70" rx="8" fill="#020617"/>
+  <rect x="267" y="87" width="46" height="46" rx="4" fill="#ffffff"/>
+  <rect x="277" y="97" width="26" height="26" rx="2" fill="url(#cyanGrad)"/>
+
+  <!-- QR Position Detection Pattern (Bottom Left) -->
+  <rect x="75" y="255" width="70" height="70" rx="8" fill="#020617"/>
+  <rect x="87" y="267" width="46" height="46" rx="4" fill="#ffffff"/>
+  <rect x="97" y="277" width="26" height="26" rx="2" fill="url(#cyanGrad)"/>
+
+  <!-- Simulated QR Code Data Blocks -->
+  <!-- Row 1 -->
+  <rect x="160" y="75" width="16" height="16" fill="#020617"/>
+  <rect x="185" y="75" width="16" height="16" fill="#020617"/>
+  <rect x="210" y="75" width="30" height="16" fill="#020617"/>
+  
+  <!-- Row 2 -->
+  <rect x="160" y="100" width="30" height="16" fill="#020617"/>
+  <rect x="200" y="100" width="16" height="16" fill="#020617"/>
+  <rect x="225" y="100" width="15" height="16" fill="#020617"/>
+
+  <!-- Center UPI Badge Area -->
+  <rect x="150" y="150" width="100" height="100" rx="12" fill="#020617" stroke="#ffd95a" stroke-width="2"/>
+  <text x="200" y="185" text-anchor="middle" fill="url(#goldGrad)" font-family="sans-serif" font-weight="900" font-size="16">UPI PAY</text>
+  <text x="200" y="210" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-weight="bold" font-size="16">₹200</text>
+  <text x="200" y="232" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">CISABZ'26</text>
+
+  <!-- Data Matrix Details -->
+  <rect x="75" y="160" width="16" height="30" fill="#020617"/>
+  <rect x="100" y="160" width="35" height="16" fill="#020617"/>
+  <rect x="75" y="200" width="60" height="16" fill="#020617"/>
+  <rect x="120" y="225" width="15" height="16" fill="#020617"/>
+
+  <rect x="265" y="160" width="60" height="16" fill="#020617"/>
+  <rect x="265" y="185" width="20" height="30" fill="#020617"/>
+  <rect x="295" y="195" width="30" height="16" fill="#020617"/>
+
+  <rect x="160" y="265" width="40" height="16" fill="#020617"/>
+  <rect x="210" y="265" width="20" height="35" fill="#020617"/>
+  <rect x="240" y="265" width="85" height="16" fill="#020617"/>
+
+  <rect x="160" y="290" width="20" height="35" fill="#020617"/>
+  <rect x="190" y="300" width="50" height="16" fill="#020617"/>
+  <rect x="250" y="295" width="40" height="30" fill="#020617"/>
+  <rect x="300" y="295" width="25" height="30" fill="#020617"/>
+
+  <!-- Footer text inside SVG -->
+  <text x="200" y="375" text-anchor="middle" fill="#00e5ff" font-family="sans-serif" font-weight="bold" font-size="12" letter-spacing="1">SCAN QR CODE TO PAY REGISTRATION FEE</text>
+</svg>
