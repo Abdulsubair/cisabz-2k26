@@ -7,7 +7,7 @@ export const BackgroundBuildingFlythrough: React.FC = () => {
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-25">
       {/* Background Motion Pan of Official CSE BLOCK & Campus Aerial */}
       <motion.div
-        className="absolute inset-0 bg-cover bg-center filter grayscale contrast-125"
+        className="absolute inset-0 bg-cover bg-center filter grayscale contrast-125 will-change-transform transform-gpu"
         style={{ backgroundImage: `url(${ASSET_IMAGES.cseDepartment})` }}
         animate={{
           scale: [1, 1.15, 1],

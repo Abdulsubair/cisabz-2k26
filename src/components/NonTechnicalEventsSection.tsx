@@ -19,9 +19,10 @@ export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/80 border border-purple-500/30 text-purple-400 text-xs font-semibold tracking-widest uppercase mb-4"
           >
             <Gamepad2 className="w-3.5 h-3.5" />
@@ -29,10 +30,10 @@ export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps>
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-4"
           >
             NON-TECHNICAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-rose-400">EVENTS</span>
@@ -41,8 +42,8 @@ export const NonTechnicalEventsSection: React.FC<NonTechnicalEventsSectionProps>
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-base sm:text-xl text-slate-400 font-light"
           >
             Think differently. Play smart. Have fun.

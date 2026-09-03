@@ -14,9 +14,10 @@ export const CoordinatorsSection: React.FC = () => {
         {/* SECTION HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-purple-400 text-xs font-semibold tracking-widest uppercase mb-4 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
           >
             <UserCheck className="w-3.5 h-3.5" />
@@ -24,10 +25,10 @@ export const CoordinatorsSection: React.FC = () => {
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-4xl sm:text-6xl font-black font-orbitron text-white tracking-tight mb-4"
           >
             EVENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-300 to-cyan-400">COORDINATORS</span>
@@ -36,8 +37,8 @@ export const CoordinatorsSection: React.FC = () => {
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            viewport={{ once: true, margin: '200px' }}
+            transition={{ duration: 0.2 }}
             className="text-base sm:text-xl text-slate-400 font-light"
           >
             Reach out to our faculty and student coordinators for any queries or guidance.

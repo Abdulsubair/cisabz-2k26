@@ -50,11 +50,11 @@ export const QuickOverview: React.FC = () => {
           return (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              viewport={{ once: true, margin: '200px' }}
+              transition={{ duration: 0.2 }}
+              whileHover={{ y: -5, transition: { duration: 0.15 } }}
               className={`p-6 rounded-3xl bg-slate-900/90 border ${stat.border} backdrop-blur-xl shadow-xl flex flex-col justify-between group`}
             >
               <div className="flex items-center justify-between mb-4">
