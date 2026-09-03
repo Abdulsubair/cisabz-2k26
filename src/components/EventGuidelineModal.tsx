@@ -148,6 +148,38 @@ export const EventGuidelineModal: React.FC<EventGuidelineModalProps> = ({
                 {event.shortDescription}
               </div>
             )}
+
+            {/* OFFICIAL PDF GUIDELINE ITEM AT THE END OF SECTION (UNIQUE COLOR & DIRECT LINK) */}
+            <a
+              href="/CISABZ-2K26_Event_Guidelines.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-600/20 border-2 border-amber-400/50 hover:border-amber-300 text-amber-200 hover:text-white transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/40 group-hover:scale-110 transition-transform">
+                  <FileText className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm font-bold text-amber-300 group-hover:text-amber-100 font-orbitron">
+                      Official Symposium PDF Guidelines
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-mono font-extrabold uppercase animate-pulse">
+                      PDF FILE
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-200/80 font-rajdhani mt-0.5">
+                    Click here to open, view, and download the full official rulebook document.
+                  </p>
+                </div>
+              </div>
+
+              <div className="shrink-0 ml-3 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-mono font-bold text-xs flex items-center gap-1.5 group-hover:bg-amber-300 transition-colors shadow-md">
+                <span>View PDF</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </a>
           </motion.div>
 
           {/* MODAL FOOTER */}

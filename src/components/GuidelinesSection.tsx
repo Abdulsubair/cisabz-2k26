@@ -272,6 +272,35 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                   </div>
                 </div>
               ))}
+
+              {/* 9TH ITEM: UNIQUE-COLORED PDF GUIDELINE CARD AT END OF LIST */}
+              <a
+                href="/CISABZ-2K26_Event_Guidelines.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-br from-amber-950/70 via-slate-900/90 to-amber-950/40 border-2 border-amber-400/60 hover:border-amber-300 p-5 rounded-2xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] flex flex-col justify-between group cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/40 group-hover:scale-110 transition-transform">
+                      <FileText className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <span className="text-[10px] font-mono font-extrabold text-amber-300 bg-amber-400/20 px-2.5 py-1 rounded-full border border-amber-400/40 animate-pulse">
+                      OFFICIAL PDF
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold font-orbitron text-amber-300 mb-2 group-hover:text-amber-100 transition-colors flex items-center gap-1.5">
+                    <span>Full Guidelines PDF</span>
+                  </h3>
+                  <p className="text-xs text-amber-200/80 leading-relaxed font-rajdhani">
+                    Click here to open and download the official complete symposium rulebook and guidelines PDF document.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-amber-500/20 flex items-center justify-between text-xs font-mono font-bold text-amber-300 group-hover:text-white">
+                  <span>Open Brochure PDF</span>
+                  <span>&rarr;</span>
+                </div>
+              </a>
             </div>
 
             {/* QUICK HIGHLIGHT BANNER */}
@@ -289,14 +318,26 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                 </p>
               </div>
 
-              {onRegisterClick && (
-                <button
-                  onClick={onRegisterClick}
-                  className="px-6 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500 text-white font-orbitron font-bold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all shrink-0 cursor-pointer"
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <a
+                  href="/CISABZ-2K26_Event_Guidelines.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-orbitron font-extrabold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.8)] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  REGISTER NOW
-                </button>
-              )}
+                  <FileText className="w-4 h-4 text-slate-950" />
+                  <span>OFFICIAL PDF GUIDELINES</span>
+                </a>
+
+                {onRegisterClick && (
+                  <button
+                    onClick={onRegisterClick}
+                    className="px-6 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500 text-white font-orbitron font-bold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] transition-all cursor-pointer"
+                  >
+                    REGISTER NOW
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -342,6 +383,17 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                         <span>{rule}</span>
                       </li>
                     ))}
+                    <li className="pt-2 border-t border-slate-800/60">
+                      <a
+                        href="/CISABZ-2K26_Event_Guidelines.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs font-mono font-bold transition-all cursor-pointer group"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                        <span>View / Download Official PDF Guidelines &rarr;</span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -390,6 +442,17 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                         <span>{rule}</span>
                       </li>
                     ))}
+                    <li className="pt-2 border-t border-slate-800/60">
+                      <a
+                        href="/CISABZ-2K26_Event_Guidelines.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs font-mono font-bold transition-all cursor-pointer group"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                        <span>View / Download Official PDF Guidelines &rarr;</span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -474,6 +537,43 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
             </div>
           </motion.div>
         )}
+
+        {/* PERSISTENT END-OF-SECTION UNIQUE PDF GUIDELINE BANNER */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-12 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border-2 border-amber-400/50 shadow-[0_0_30px_rgba(245,158,11,0.25)] flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="p-3 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40 shrink-0">
+              <FileText className="w-6 h-6 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 justify-center sm:justify-start mb-1">
+                <span className="text-sm font-extrabold font-orbitron text-amber-300">
+                  OFFICIAL SYMPOSIUM GUIDELINES PDF
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-mono font-bold uppercase">
+                  PDF BROCHURE
+                </span>
+              </div>
+              <p className="text-xs text-amber-200/80 font-rajdhani">
+                Want to read or download the complete official rulebook document? Click the button to view the full PDF.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="/CISABZ-2K26_Event_Guidelines.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-orbitron font-extrabold text-xs tracking-wider uppercase shadow-lg hover:shadow-amber-400/50 transition-all shrink-0 cursor-pointer flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4 text-slate-950" />
+            <span>OPEN OFFICIAL PDF</span>
+          </a>
+        </motion.div>
       </div>
     </section>
   );
