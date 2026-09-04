@@ -255,7 +255,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRegisterClick, onExp
           </button>
 
           <a
-            href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
+            href="/CISABZ-2K26_Updated_Official_Event_Guidelines.pdf?v=20260925"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-orbitron font-extrabold text-sm tracking-widest uppercase shadow-[0_0_35px_rgba(245,158,11,0.4)] hover:shadow-[0_0_50px_rgba(245,158,11,0.7)] hover:scale-105 transition-all cursor-pointer"
