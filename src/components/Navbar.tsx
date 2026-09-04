@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onRegisterClick, onReplayIntro }
     { name: 'Schedule', href: '#schedule', id: 'schedule' },
     { name: 'Patrons', href: '#patrons', id: 'patrons' },
     { name: 'Contact', href: '#contact', id: 'contact' },
-    { name: 'Guidelines (PDF)', href: '/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925', id: 'guidelines', external: true },
+    { name: 'Guidelines (PDF)', href: '/CISABZ-2K26_Event_Guidelines.pdf?v=20260925', id: 'guidelines', external: true },
   ];
 
   return (

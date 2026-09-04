@@ -275,7 +275,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
 
               {/* 9TH ITEM: UNIQUE-COLORED PDF GUIDELINE CARD AT END OF LIST */}
               <a
-                href="/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925"
+                href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gradient-to-br from-amber-950/70 via-slate-900/90 to-amber-950/40 border-2 border-amber-400/60 hover:border-amber-300 p-5 rounded-2xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] flex flex-col justify-between group cursor-pointer"
@@ -320,7 +320,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
 
               <div className="flex flex-wrap items-center gap-3 shrink-0">
                 <a
-                  href="/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925"
+                  href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-orbitron font-extrabold text-xs tracking-wider uppercase shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.8)] transition-all cursor-pointer flex items-center gap-2"
@@ -385,7 +385,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                     ))}
                     <li className="pt-2 border-t border-slate-800/60">
                       <a
-                        href="/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925"
+                        href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs font-mono font-bold transition-all cursor-pointer group"
@@ -444,7 +444,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                     ))}
                     <li className="pt-2 border-t border-slate-800/60">
                       <a
-                        href="/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925"
+                        href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs font-mono font-bold transition-all cursor-pointer group"
@@ -565,7 +565,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
           </div>
 
           <a
-            href="/CISABZ-2K26_Event_Guidelines_v2.pdf?v=20260925"
+            href="/CISABZ-2K26_Event_Guidelines.pdf?v=20260925"
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-orbitron font-extrabold text-xs tracking-wider uppercase shadow-lg hover:shadow-amber-400/50 transition-all shrink-0 cursor-pointer flex items-center gap-2"
