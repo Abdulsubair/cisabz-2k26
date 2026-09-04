@@ -67,7 +67,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
     }
 
     if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('amount') || q.includes('money') || q.includes('upi') || q.includes('qr')) {
-      return `💰 **Registration Fees & Payment Info:**\n• Base Fee: ₹${SYMPOSIUM_CONFIG.registrationFee} (includes 1 Tech + 1 Non-Tech event, complimentary lunch & certificate)\n• Extra Event Fee: ₹${SYMPOSIUM_CONFIG.additionalEventFee} per additional event.\n• UPI ID: ${SYMPOSIUM_CONFIG.upiId} (${SYMPOSIUM_CONFIG.upiName} - ${SYMPOSIUM_CONFIG.upiPhone})\n• Registration Deadline: ${SYMPOSIUM_CONFIG.registrationEndDate}`;
+      return `💰 **Registration Fees & Payment Info:**\n• Base Fee: ₹${SYMPOSIUM_CONFIG.registrationFee} (includes 1 Tech + 1 Non-Tech event, complimentary lunch & certificate)\n• Extra Event Fee: ₹${SYMPOSIUM_CONFIG.additionalEventFee} for maximum 1 additional event (Max 3 events total for ₹250)\n• UPI ID: ${SYMPOSIUM_CONFIG.upiId} (${SYMPOSIUM_CONFIG.upiName} - ${SYMPOSIUM_CONFIG.upiPhone})\n• Registration Deadline: ${SYMPOSIUM_CONFIG.registrationEndDate}`;
     }
 
     if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('timing') || q.includes('schedule') || q.includes('deadline')) {
@@ -111,7 +111,7 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
     }
 
     if (q.includes('rule') || q.includes('guideline') || q.includes('id') || q.includes('dress') || q.includes('food') || q.includes('lunch') || q.includes('certif')) {
-      return `📋 **General Rules & Instructions:**\n• Participation is open for single or team entries (up to 2 members per team for most events).\n• Max 2 events per participant (1 Technical + 1 Non-Technical).\n• Additional event fee: ₹50 per extra event (ONLY ON THE SPOT).\n• College ID card & Bonafide certificate are mandatory.\n• Formal dress code required.\n• Decision of Judges will be final.\n• Complimentary lunch, refreshments & certificates provided to all participants!`;
+      return `📋 **General Rules & Instructions:**\n• Base registration includes 1 Technical + 1 Non-Technical event (2 events total for ₹200).\n• Maximum 1 additional event allowed for ₹50 extra fee (Total 3 events max for ₹250).\n• College ID card & Bonafide certificate are mandatory.\n• Formal dress code required.\n• Decision of Judges will be final.\n• Complimentary lunch, refreshments & certificates provided to all participants!`;
     }
 
     if (q.includes('register') || q.includes('form') || q.includes('apply') || q.includes('sign up')) {
@@ -616,8 +616,8 @@ export const CseAiAssistantModal: React.FC<CseAiAssistantModalProps> = ({ onOpen
                       <span>GENERAL SYMPOSIUM RULES</span>
                     </div>
                     <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-300">
-                      <li>Participation cap: Maximum 2 events (1 Tech + 1 Non-Tech).</li>
-                      <li>Additional event fee: ₹50 per extra event.</li>
+                      <li>Base registration: 1 Tech + 1 Non-Tech event included (₹200).</li>
+                      <li>Additional event fee: ₹50 for maximum 1 extra event (Max 3 events total).</li>
                       <li>College ID card & Bonafide certificate mandatory.</li>
                       <li>Formal dress code required on campus grounds.</li>
                       <li>Complimentary lunch & certificate provided.</li>

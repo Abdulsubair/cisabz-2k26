@@ -30,7 +30,7 @@ export const SYMPOSIUM_CONFIG = {
   upiName: 'Mubashir M',
   upiPhone: '95143 59887',
   additionalEventFee: 50,
-  maxAllowedEventsPerStudent: 2,
+  maxAllowedEventsPerStudent: 3,
 };
 
 export const ASSET_IMAGES = {
@@ -296,15 +296,15 @@ export const GENERAL_RULES: GeneralRule[] = [
   },
   {
     id: 2,
-    title: 'Max 2 Events Registration',
-    description: 'Each participant is requested to register for a maximum of 2 events — 1 Technical + 1 Non-Technical.',
+    title: 'Base Registration (2 Events)',
+    description: 'Standard registration (₹200) covers 1 Technical + 1 Non-Technical event (2 events total).',
     iconName: 'Layers',
     highlight: true,
   },
   {
     id: 3,
-    title: 'Additional Event Fee',
-    description: 'An additional event (beyond the permitted 2) can be added for ₹50 per event (ONLY ON THE SPOT).',
+    title: 'Maximum 1 Extra Event (₹50)',
+    description: 'Participants can opt for maximum 1 additional event for an extra ₹50 fee (Total maximum 3 events for ₹250).',
     iconName: 'CreditCard',
     highlight: true,
   },

@@ -42,9 +42,9 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
     },
     {
       icon: <Zap className="w-5 h-5 text-amber-400" />,
-      title: 'Spot Extra Events',
-      description: 'An additional event (beyond the permitted 2) can be added for ₹50 per event on the spot.',
-      highlight: '₹50 On The Spot Entry',
+      title: 'Spot Extra Event Option',
+      description: 'A participant can opt for maximum 1 additional event for an extra ₹50 fee (Total 3 events max for ₹250).',
+      highlight: 'Max 1 Extra Event (₹50)',
     },
     {
       icon: <Layers className="w-5 h-5 text-indigo-400" />,
@@ -314,7 +314,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                   Event Date: {SYMPOSIUM_CONFIG.eventDate} | Registration Closes: {SYMPOSIUM_CONFIG.registrationEndDate}
                 </h4>
                 <p className="text-xs text-slate-400 max-w-2xl font-rajdhani">
-                  Standard registration covers 1 Technical + 1 Non-Technical event for ₹{SYMPOSIUM_CONFIG.registrationFee}. Spot registration for additional events available on symposium day for ₹50 per extra event.
+                  Standard registration covers 1 Technical + 1 Non-Technical event for ₹{SYMPOSIUM_CONFIG.registrationFee}. Participants can opt for maximum 1 additional event for an extra ₹50 fee (Max 3 events total per student).
                 </p>
               </div>
 
