@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { SYMPOSIUM_CONFIG } from '../data/symposiumData';
-import { Calendar, Clock, ChevronRight, Trophy, Cpu, FileText } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Trophy, FileText } from 'lucide-react';
 import cisabzLogo from '../assets/cisabz-logo.png';
 
 interface HeroSectionProps {
@@ -135,16 +135,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRegisterClick, onExp
             alt="CISABZ'26 Gold Shield Emblem Logo"
             className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_0_30px_rgba(212,175,55,0.85)] group-hover:drop-shadow-[0_0_45px_rgba(255,215,0,0.95)] transition-all duration-300"
           />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-900/90 border border-cyan-500/40 text-cyan-300 text-xs sm:text-sm font-mono font-bold tracking-widest uppercase mb-4 backdrop-blur-md shadow-[0_0_20px_rgba(0,229,255,0.25)]"
-        >
-          <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
-          <span>{SYMPOSIUM_CONFIG.department}</span>
         </motion.div>
 
         <motion.div

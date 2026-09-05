@@ -15,7 +15,6 @@ import { EventGuidelineModal } from './components/EventGuidelineModal';
 import { CinematicEventVideoModal } from './components/CinematicEventVideoModal';
 import { AdminPortal } from './components/AdminPortal';
 import { ParticipantRegistrationPage } from './components/registration/ParticipantRegistrationPage';
-import { CseAiAssistantModal } from './components/CseAiAssistantModal';
 import { BackgroundBuildingFlythrough } from './components/BackgroundBuildingFlythrough';
 import type { EventItem } from './types';
 
@@ -206,10 +205,6 @@ export function App() {
         onRegister={(eventId) => handleOpenRegistration(eventId)}
       />
 
-      {/* INTERACTIVE CISABZ AI ASSISTANT CHATBOT (ONLY AFTER INTRO IS COMPLETED) */}
-      {introCompleted && !replayIntro && (
-        <CseAiAssistantModal onOpenRegistration={(eventId) => handleOpenRegistration(eventId)} />
-      )}
     </div>
   );
 }

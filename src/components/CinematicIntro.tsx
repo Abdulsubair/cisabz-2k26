@@ -40,9 +40,9 @@ export const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, forc
     },
     {
       url: ASSET_IMAGES.cseDepartment,
-      tag: 'AUTHENTIC CSE BLOCK FACADE',
-      title: 'DEPARTMENT OF COMPUTER SCIENCE',
-      sub: `Your Gateway to ${SYMPOSIUM_CONFIG.name}`,
+      tag: 'MAIN BLOCK',
+      title: 'KINGS COLLEGE OF ENGINEERING',
+      sub: `Department of Computer Science & Engineering • ${SYMPOSIUM_CONFIG.name}`,
       icon: Sparkles,
     },
   ];
