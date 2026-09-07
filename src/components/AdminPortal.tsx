@@ -20,6 +20,9 @@ import {
   ExternalLink,
   FileText,
   Award,
+  Banknote,
+  Plus,
+  Check,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -29,8 +32,11 @@ import {
   updateEventStatus,
   verifyRegistration,
   rejectRegistration,
+  subscribeFinanceRecords,
+  markFinanceRecordPaid,
+  addFinanceRecord,
 } from '../lib/firebase';
-import type { RegistrationData } from '../lib/firebase';
+import type { RegistrationData, FinanceRecord } from '../lib/firebase';
 import cisabzLogo from '../assets/cisabz-logo.png';
 
 interface AdminPortalProps {
@@ -75,6 +81,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  // Finance State
+  const [financeRecords, setFinanceRecords] = useState<FinanceRecord[]>([]);
+  const [financeSelectedSection, setFinanceSelectedSection] = useState<string>('ALL');
+  const [financeSearchQuery, setFinanceSearchQuery] = useState<string>('');
+  const [financeFilterStatus, setFinanceFilterStatus] = useState<string>('ALL');
+
+  // Finance Payment Modal State
+  const [selectedFinanceStudent, setSelectedFinanceStudent] = useState<FinanceRecord | null>(null);
+  const [paymentCustomAmount, setPaymentCustomAmount] = useState<number>(0);
+  const [paymentNotesInput, setPaymentNotesInput] = useState<string>('');
+  const [isSavingFinance, setIsSavingFinance] = useState<boolean>(false);
+
+  // Add Student Modal State
+  const [showAddStudentModal, setShowAddStudentModal] = useState<boolean>(false);
+  const [newStudentName, setNewStudentName] = useState<string>('');
+  const [newStudentRoll, setNewStudentRoll] = useState<string>('');
+  const [newStudentSection, setNewStudentSection] = useState<'2nd CSE A' | '2nd CSE B' | '3rd CSE A' | '3rd CSE B' | 'Final CSE'>('2nd CSE A');
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setActionToast({ message, type });
     setTimeout(() => setActionToast(null), 5000);
@@ -92,9 +116,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       setEventStatuses(statuses);
     });
 
+    const unsubFinance = subscribeFinanceRecords((records) => {
+      setFinanceRecords(records);
+    });
+
     return () => {
       unsubRegs();
       unsubEvents();
+      unsubFinance();
     };
   }, [isAuthenticated]);
 
@@ -217,6 +246,235 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   };
 
   const filteredData = getFilteredRegistrations();
+
+  // --------------------------------------------------
+  // FINANCE CALCULATIONS & HANDLERS
+  // --------------------------------------------------
+  const filteredFinanceRecords = financeRecords.filter((r) => {
+    if (financeSelectedSection !== 'ALL' && r.section !== financeSelectedSection) return false;
+    if (financeFilterStatus !== 'ALL' && r.status !== financeFilterStatus) return false;
+    if (financeSearchQuery.trim() !== '') {
+      const q = financeSearchQuery.toLowerCase();
+      const nameMatch = r.studentName.toLowerCase().includes(q);
+      const rollMatch = r.rollNumber.toLowerCase().includes(q);
+      const secMatch = r.section.toLowerCase().includes(q);
+      if (!nameMatch && !rollMatch && !secMatch) return false;
+    }
+    return true;
+  });
+
+  const totalFinanceCollected = financeRecords
+    .filter((r) => r.status === 'PAID')
+    .reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0);
+
+  const totalFinanceTarget = financeRecords.reduce((sum, r) => sum + r.feeAmount, 0);
+  const totalPaidFinanceCount = financeRecords.filter((r) => r.status === 'PAID').length;
+  const totalUnpaidFinanceCount = financeRecords.filter((r) => r.status === 'UNPAID').length;
+  const overallCollectionPct = financeRecords.length > 0 ? Math.round((totalPaidFinanceCount / financeRecords.length) * 100) : 0;
+
+  const getSectionStats = (sectionName: string) => {
+    const list = financeRecords.filter((r) => r.section === sectionName);
+    const paidList = list.filter((r) => r.status === 'PAID');
+    const collected = paidList.reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0);
+    const target = list.reduce((sum, r) => sum + r.feeAmount, 0);
+    return {
+      total: list.length,
+      paid: paidList.length,
+      unpaid: list.length - paidList.length,
+      collected,
+      target,
+      pct: list.length > 0 ? Math.round((paidList.length / list.length) * 100) : 0,
+    };
+  };
+
+  const handleConfirmFinancePayment = async () => {
+    if (!selectedFinanceStudent) return;
+    setIsSavingFinance(true);
+    try {
+      const amountToPay = paymentCustomAmount > 0 ? paymentCustomAmount : selectedFinanceStudent.feeAmount;
+      const res = await markFinanceRecordPaid(
+        selectedFinanceStudent.id,
+        amountToPay,
+        username || 'Admin',
+        paymentNotesInput
+      );
+      if (res.success) {
+        showToast(`Payment of ₹${amountToPay} recorded & locked for ${selectedFinanceStudent.studentName}!`, 'success');
+        setSelectedFinanceStudent(null);
+        setPaymentNotesInput('');
+        setPaymentCustomAmount(0);
+      } else {
+        showToast(res.message || 'Failed to update payment status', 'error');
+      }
+    } catch (err) {
+      showToast('Error saving payment record', 'error');
+    } finally {
+      setIsSavingFinance(false);
+    }
+  };
+
+  const handleAddStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStudentName.trim() || !newStudentRoll.trim()) {
+      showToast('Please enter student name and roll number', 'error');
+      return;
+    }
+    setIsSavingFinance(true);
+    try {
+      let year: 'II Year' | 'III Year' | 'IV Year' = 'II Year';
+      let feeAmount = 250;
+      if (newStudentSection.startsWith('3rd')) {
+        year = 'III Year';
+        feeAmount = 400;
+      } else if (newStudentSection.startsWith('Final')) {
+        year = 'IV Year';
+        feeAmount = 500;
+      }
+
+      await addFinanceRecord({
+        studentName: newStudentName.trim().toUpperCase(),
+        rollNumber: newStudentRoll.trim().toUpperCase(),
+        year,
+        section: newStudentSection,
+        department: 'CSE',
+        feeAmount,
+        paidAmount: 0,
+        status: 'UNPAID',
+        isLocked: false,
+      });
+      showToast(`Added ${newStudentName} to ${newStudentSection}!`, 'success');
+      setShowAddStudentModal(false);
+      setNewStudentName('');
+      setNewStudentRoll('');
+    } catch (err) {
+      showToast('Failed to add student', 'error');
+    } finally {
+      setIsSavingFinance(false);
+    }
+  };
+
+  const exportFinanceToExcel = () => {
+    const exportRows = filteredFinanceRecords.map((r, idx) => ({
+      'S.No': idx + 1,
+      'Student Name': r.studentName,
+      'Roll Number / Reg ID': r.rollNumber,
+      'Class & Section': r.section,
+      Year: r.year,
+      Department: r.department,
+      'Fee Rate (₹)': r.feeAmount,
+      'Paid Amount (₹)': r.paidAmount,
+      Status: r.status,
+      'Paid Date': r.paidAt ? new Date(r.paidAt).toLocaleString() : 'N/A',
+      'Collected By': r.collectedBy || 'N/A',
+      'Lock Status': r.isLocked ? 'LOCKED 🔒' : 'UNLOCKED',
+      Notes: r.notes || '',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Finance Records');
+
+    const fileName = `CISABZ_Finance_${financeSelectedSection.replace(/\s+/g, '_')}_${Date.now()}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  const exportFinanceToPDF = () => {
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      showToast('Pop-up blocked. Please allow pop-ups to export PDF.', 'error');
+      return;
+    }
+
+    const secTitle = financeSelectedSection === 'ALL' ? 'ALL CLASSES OVERVIEW' : financeSelectedSection;
+    const filteredPaid = filteredFinanceRecords.filter((r) => r.status === 'PAID');
+    const totalColl = filteredPaid.reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0);
+    const totalExp = filteredFinanceRecords.reduce((sum, r) => sum + r.feeAmount, 0);
+
+    const tableRowsHtml = filteredFinanceRecords
+      .map(
+        (r, idx) => `
+        <tr style="${r.status === 'PAID' ? 'background-color: #f0fdf4;' : ''}">
+          <td style="text-align: center;">${idx + 1}</td>
+          <td><strong>${r.rollNumber}</strong></td>
+          <td><strong>${r.studentName}</strong></td>
+          <td>${r.section}</td>
+          <td style="text-align: right;">₹${r.feeAmount}</td>
+          <td style="text-align: right; font-weight: bold; color: ${r.status === 'PAID' ? '#16a34a' : '#64748b'};">
+            ₹${r.paidAmount}
+          </td>
+          <td style="text-align: center;">
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; ${
+              r.status === 'PAID'
+                ? 'background-color: #dcfce7; color: #15803d; border: 1px solid #86efac;'
+                : 'background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;'
+            }">
+              ${r.status === 'PAID' ? 'PAID 🔒' : 'UNPAID'}
+            </span>
+          </td>
+          <td><small>${r.paidAt ? new Date(r.paidAt).toLocaleDateString() : '-'}</small></td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Finance Report - ${secTitle}</title>
+          <style>
+            @page { size: A4 portrait; margin: 10mm; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
+            .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 15px; }
+            .title { font-size: 18px; font-weight: bold; text-transform: uppercase; color: #0f172a; }
+            .subtitle { font-size: 12px; color: #475569; margin-top: 4px; }
+            .stats { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+            .stat-box { text-align: center; }
+            .stat-val { font-size: 16px; font-weight: bold; color: #0f172a; }
+            .stat-lbl { font-size: 9px; text-transform: uppercase; color: #64748b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+            th { background: #0f172a; color: #ffffff; font-size: 10px; text-transform: uppercase; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">CISABZ-2K26 — SYMPOSIUM FINANCE REPORT</div>
+            <div class="subtitle">Class Section: <strong>${secTitle}</strong> • Printed on ${new Date().toLocaleString()}</div>
+          </div>
+          <div class="stats">
+            <div class="stat-box"><div class="stat-val">${filteredFinanceRecords.length}</div><div class="stat-lbl">Total Students</div></div>
+            <div class="stat-box"><div class="stat-val" style="color: #16a34a;">${filteredPaid.length}</div><div class="stat-lbl">Paid Students</div></div>
+            <div class="stat-box"><div class="stat-val" style="color: #16a34a;">₹${totalColl.toLocaleString()}</div><div class="stat-lbl">Total Collected</div></div>
+            <div class="stat-box"><div class="stat-val" style="color: #2563eb;">₹${totalExp.toLocaleString()}</div><div class="stat-lbl">Total Expected Target</div></div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 15%;">Roll No</th>
+                <th style="width: 30%;">Student Name</th>
+                <th style="width: 15%;">Section</th>
+                <th style="width: 10%;">Fee Rate</th>
+                <th style="width: 10%;">Paid Amount</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 15%;">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    printWin.document.write(htmlContent);
+    printWin.document.close();
+    setTimeout(() => {
+      printWin.print();
+    }, 500);
+  };
 
   // Excel Export Handler (.xlsx)
   const exportToExcel = (exportFilteredOnly = false) => {
@@ -809,6 +1067,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               </div>
               <span className="text-[10px] font-mono text-purple-200 bg-purple-950/80 px-2 py-0.5 rounded-full border border-purple-500/40 font-black">
                 {ambassadorRegistrations.length}
+              </span>
+            </button>
+
+            {/* FINANCE SECTION BUTTON */}
+            <button
+              onClick={() => {
+                setActiveView('finance');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 mt-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-between cursor-pointer border ${
+                activeView === 'finance'
+                  ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                  : 'bg-emerald-950/20 text-emerald-300 hover:bg-emerald-900/40 hover:text-emerald-200 border-emerald-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-2 truncate">
+                <Banknote className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate font-bold tracking-wider">FINANCE</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-200 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 font-black">
+                ₹{financeRecords.filter((r) => r.status === 'PAID').reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0).toLocaleString()}
               </span>
             </button>
           </div>
@@ -1698,6 +1977,315 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             </div>
           </div>
         )}
+
+        {/* VIEW 6: FINANCE SECTION */}
+        {activeView === 'finance' && (
+          <div className="space-y-6 max-w-7xl mx-auto">
+            {/* Header Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 border border-emerald-500/40 p-6 rounded-3xl backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+              <div>
+                <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-widest font-bold mb-1">
+                  <Banknote className="w-4 h-4 text-emerald-400" />
+                  <span>Symposium Finance & Fee Management</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black font-orbitron text-white">
+                  Class Symposium Fee Collections
+                </h1>
+                <p className="text-xs font-mono text-slate-400 mt-1">
+                  Live tracking of II CSE A (₹250), II CSE B (₹250), III Year (₹400), and IV Year (₹500) • Permanent Payment Locking Enforced
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-4 h-4 text-cyan-400" />
+                  <span>Add Student</span>
+                </button>
+
+                <button
+                  onClick={exportFinanceToExcel}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export Excel</span>
+                </button>
+
+                <button
+                  onClick={exportFinanceToPDF}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Export PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {/* CLASS SECTION FILTER TABS */}
+            <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl overflow-x-auto scrollbar-none">
+              {[
+                { id: 'ALL', label: 'All Classes Overview', fee: null, count: financeRecords.length },
+                { id: '2nd CSE A', label: 'II CSE A', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE A').length },
+                { id: '2nd CSE B', label: 'II CSE B', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE B').length },
+                { id: '3rd CSE A', label: 'III CSE A', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE A').length },
+                { id: '3rd CSE B', label: 'III CSE B', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE B').length },
+                { id: 'Final CSE', label: 'Final Year CSE', fee: 500, count: financeRecords.filter((r) => r.section === 'Final CSE').length },
+              ].map((tab) => {
+                const isActive = financeSelectedSection === tab.id;
+                const stats = tab.id !== 'ALL' ? getSectionStats(tab.id) : null;
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setFinanceSelectedSection(tab.id)}
+                    className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border ${
+                      isActive
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                        : 'bg-slate-950/60 text-slate-400 hover:bg-slate-800 hover:text-white border-transparent'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    {tab.fee && (
+                      <span className="text-[10px] text-amber-400 font-normal">
+                        (₹{tab.fee})
+                      </span>
+                    )}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      isActive ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {stats ? `${stats.paid}/${stats.total}` : tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* OVERALL FINANCE STATS CARDS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-slate-900/90 border border-emerald-500/40 p-4 sm:p-5 rounded-2xl shadow-lg relative overflow-hidden">
+                <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
+                  Total Collected
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-emerald-400">
+                  ₹{totalFinanceCollected.toLocaleString()}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  {totalPaidFinanceCount} Students Paid ({overallCollectionPct}%)
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-cyan-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
+                  Total Target Estimation
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-cyan-300">
+                  ₹{totalFinanceTarget.toLocaleString()}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  {financeRecords.length} Total Strength Enrolled
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-amber-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
+                  Pending Unpaid
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-amber-400">
+                  {totalUnpaidFinanceCount}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  ₹{(totalFinanceTarget - totalFinanceCollected).toLocaleString()} Remaining
+                </span>
+              </div>
+
+              <div className="bg-slate-900/90 border border-purple-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-purple-400 font-bold block mb-1">
+                  Paid Percentage
+                </span>
+                <span className="text-2xl sm:text-4xl font-black font-orbitron text-purple-300">
+                  {overallCollectionPct}%
+                </span>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                  <div
+                    className="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${overallCollectionPct}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SEARCH AND STATUS FILTER BAR */}
+            <div className="bg-slate-900/80 border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={financeSearchQuery}
+                  onChange={(e) => setFinanceSearchQuery(e.target.value)}
+                  placeholder="Search student name, roll no, sec..."
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                />
+                {financeSearchQuery && (
+                  <button
+                    onClick={() => setFinanceSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs font-mono text-slate-400 font-bold uppercase">Status:</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {['ALL', 'PAID', 'UNPAID'].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setFinanceFilterStatus(st)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                        financeFilterStatus === st
+                          ? st === 'PAID'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : st === 'UNPAID'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                          : 'bg-slate-950 text-slate-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      {st === 'PAID' ? 'PAID 🔒' : st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* STUDENT FINANCE TABLE */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+              {filteredFinanceRecords.length === 0 ? (
+                <div className="p-12 text-center space-y-3">
+                  <Banknote className="w-12 h-12 text-slate-600 mx-auto" />
+                  <p className="text-sm font-bold text-white font-mono">No student finance records match current filter</p>
+                  <p className="text-xs text-slate-400 font-mono">Try selecting a different class filter or clearing search query.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                        <th className="py-4 px-4 text-center w-12">#</th>
+                        <th className="py-4 px-4">Roll No / ID</th>
+                        <th className="py-4 px-4">Student Name</th>
+                        <th className="py-4 px-4">Class & Sec</th>
+                        <th className="py-4 px-4 text-right">Fee Rate</th>
+                        <th className="py-4 px-4 text-right">Paid Amount</th>
+                        <th className="py-4 px-4 text-center">Status</th>
+                        <th className="py-4 px-4">Collection Info</th>
+                        <th className="py-4 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredFinanceRecords.map((r, idx) => {
+                        const isPaid = r.status === 'PAID';
+                        return (
+                          <tr
+                            key={r.id}
+                            className={`transition-colors ${
+                              isPaid ? 'bg-emerald-950/20 hover:bg-emerald-950/40' : 'hover:bg-slate-800/40'
+                            }`}
+                          >
+                            <td className="py-4 px-4 text-center text-slate-500 font-bold">{idx + 1}</td>
+
+                            <td className="py-4 px-4">
+                              <span className="font-bold text-cyan-300 font-mono">{r.rollNumber}</span>
+                            </td>
+
+                            <td className="py-4 px-4">
+                              <span className="font-bold text-white text-sm font-rajdhani">{r.studentName}</span>
+                            </td>
+
+                            <td className="py-4 px-4">
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-bold border border-slate-700">
+                                {r.section}
+                              </span>
+                            </td>
+
+                            <td className="py-4 px-4 text-right font-bold text-slate-300">
+                              ₹{r.feeAmount}
+                            </td>
+
+                            <td className="py-4 px-4 text-right">
+                              <span className={`font-black text-sm ${isPaid ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                ₹{r.paidAmount || 0}
+                              </span>
+                            </td>
+
+                            <td className="py-4 px-4 text-center">
+                              {isPaid ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                  <Lock className="w-3 h-3 text-emerald-400" />
+                                  <span>PAID</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase tracking-wider">
+                                  <span>UNPAID</span>
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-4 px-4">
+                              {isPaid ? (
+                                <div>
+                                  <span className="text-[10px] text-slate-300 block font-bold">
+                                    By: {r.collectedBy || 'Admin'}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 block">
+                                    {r.paidAt ? new Date(r.paidAt).toLocaleDateString() : ''}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">-</span>
+                              )}
+                            </td>
+
+                            <td className="py-4 px-4 text-right">
+                              {isPaid ? (
+                                <button
+                                  disabled
+                                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-[11px] font-mono font-bold flex items-center gap-1.5 ml-auto opacity-70 cursor-not-allowed"
+                                  title="Payment permanently locked & saved"
+                                >
+                                  <Lock className="w-3 h-3" />
+                                  <span>Locked</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSelectedFinanceStudent(r);
+                                    setPaymentCustomAmount(r.feeAmount);
+                                  }}
+                                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white text-[11px] font-mono font-bold uppercase transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] flex items-center gap-1.5 ml-auto cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Mark Paid</span>
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* VERIFICATION DETAIL MODAL */}
@@ -1870,6 +2458,189 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               </div>
             )}
           </div>
+        </div>
+      )}
+      {/* FINANCE PAYMENT CONFIRMATION MODAL */}
+      {selectedFinanceStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-slate-900 border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(16,185,129,0.25)] space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider">
+                <Lock className="w-4 h-4" />
+                <span>Confirm Permanent Payment</span>
+              </div>
+              <button
+                onClick={() => setSelectedFinanceStudent(null)}
+                className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/30 space-y-2">
+              <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold tracking-wider block">
+                Student Details
+              </span>
+              <h3 className="text-xl font-black font-orbitron text-white">
+                {selectedFinanceStudent.studentName}
+              </h3>
+              <div className="flex items-center justify-between text-xs font-mono text-slate-300 pt-1">
+                <span>Roll No: <strong className="text-cyan-300">{selectedFinanceStudent.rollNumber}</strong></span>
+                <span>Section: <strong className="text-amber-400">{selectedFinanceStudent.section}</strong></span>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs font-mono">
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>Official Class Fee Rate:</span>
+                  <span className="font-bold text-white">₹{selectedFinanceStudent.feeAmount}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>Collector:</span>
+                  <span className="font-bold text-cyan-300">{username || 'Admin'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  Payment Amount Received (₹)
+                </label>
+                <input
+                  type="number"
+                  value={paymentCustomAmount}
+                  onChange={(e) => setPaymentCustomAmount(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-emerald-500/40 text-emerald-300 text-sm font-black font-mono focus:outline-none focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  Notes / Remarks (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={paymentNotesInput}
+                  onChange={(e) => setPaymentNotesInput(e.target.value)}
+                  placeholder="e.g. Cash paid in person"
+                  className="w-full px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[11px] leading-relaxed flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>PERMANENT LOCKING WARNING:</strong> Once confirmed, this payment will be permanently saved as <strong>PAID 🔒</strong> and cannot be edited or deleted by anyone.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                onClick={() => setSelectedFinanceStudent(null)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-mono font-bold hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmFinancePayment}
+                disabled={isSavingFinance}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isSavingFinance ? 'Saving...' : 'Confirm & Permanently Lock'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD STUDENT MODAL */}
+      {showAddStudentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto">
+          <form
+            onSubmit={handleAddStudentSubmit}
+            className="relative w-full max-w-md bg-slate-900 border border-cyan-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,229,255,0.25)] space-y-5"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">
+                <Plus className="w-4 h-4" />
+                <span>Add Student to Finance Record</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddStudentModal(false)}
+                className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs font-mono">
+              <div className="space-y-1.5">
+                <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  Full Student Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  placeholder="e.g. AATHISH B"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono uppercase focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  Roll Number / Reg ID
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newStudentRoll}
+                  onChange={(e) => setNewStudentRoll(e.target.value)}
+                  placeholder="e.g. 25CSA01"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 text-xs font-mono uppercase focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  Class & Section
+                </label>
+                <select
+                  value={newStudentSection}
+                  onChange={(e) => setNewStudentSection(e.target.value as any)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="2nd CSE A">II CSE A (₹250 Fee)</option>
+                  <option value="2nd CSE B">II CSE B (₹250 Fee)</option>
+                  <option value="3rd CSE A">III CSE A (₹400 Fee)</option>
+                  <option value="3rd CSE B">III CSE B (₹400 Fee)</option>
+                  <option value="Final CSE">Final Year CSE (₹500 Fee)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowAddStudentModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-mono font-bold hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingFinance}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-500 hover:brightness-110 text-white font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(0,229,255,0.4)] flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isSavingFinance ? 'Adding...' : 'Add Student'}</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

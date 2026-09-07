@@ -52,6 +52,23 @@ export interface EventRegistrationStatus {
   registrationOpen: boolean;
 }
 
+export interface FinanceRecord {
+  id: string;
+  studentName: string;
+  rollNumber: string;
+  year: 'II Year' | 'III Year' | 'IV Year';
+  section: '2nd CSE A' | '2nd CSE B' | '3rd CSE A' | '3rd CSE B' | 'Final CSE';
+  department: string;
+  feeAmount: number;
+  paidAmount: number;
+  status: 'PAID' | 'UNPAID';
+  paidAt?: string;
+  collectedBy?: string;
+  isLocked: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
 // Initial Events List
 export const INITIAL_EVENTS: Record<string, { name: string; category: 'technical' | 'non-technical'; open: boolean }> = {
   TECHVERSE: { name: 'TECHVERSE', category: 'technical', open: true },
@@ -646,4 +663,329 @@ export async function sendRejectionEmail(params: {
     console.error('[EMAIL SERVICE ERROR]', err);
     return { success: false };
   }
+}
+
+// ----------------------------------------------------
+// FINANCE RECORDS MANAGEMENT (Firestore & LocalStorage)
+// ----------------------------------------------------
+const LOCAL_FINANCE_KEY = 'cisabz_firebase_finance_records';
+
+const INITIAL_II_CSE_A: Array<{ roll: string; name: string }> = [
+  { roll: '25CSA01', name: 'AATHISH B' },
+  { roll: '25CSA02', name: 'ABDUL RAHMAN M' },
+  { roll: '25CSA03', name: 'ABINAYA S' },
+  { roll: '25CSA04', name: 'ADHIKA S S' },
+  { roll: '25CSA05', name: 'AHMED A' },
+  { roll: '25CSA06', name: 'AISWARYA K G' },
+  { roll: '25CSA07', name: 'AISWARYA S' },
+  { roll: '25CSA08', name: 'AJAI BALA K' },
+  { roll: '25CSA09', name: 'AMRUTHA A' },
+  { roll: '25CSA10', name: 'ANUSH G' },
+  { roll: '25CSA11', name: 'ARUTHRA GOVINDARAJ S' },
+  { roll: '25CSA12', name: 'ASHINI B' },
+  { roll: '25CSA13', name: 'ASRIN SHIFANA M' },
+  { roll: '25CSA14', name: 'ASVAN N' },
+  { roll: '25CSA15', name: 'ASWIN M' },
+  { roll: '25CSA16', name: 'AYYAPPAN M' },
+  { roll: '25CSA17', name: 'BALAJI SHANMUGANATHAN S B' },
+  { roll: '25CSA18', name: 'BALAKRISHNAN M' },
+  { roll: '25CSA19', name: 'BARATH KUMAR L' },
+  { roll: '25CSA20', name: 'BHARANI SUBRAJA S' },
+  { roll: '25CSA21', name: 'BHAVYA S' },
+  { roll: '25CSA22', name: 'BOPDHANUSYA S' },
+  { roll: '25CSA23', name: 'DEVA DHARSHINI T' },
+  { roll: '25CSA24', name: 'DHARANI K' },
+  { roll: '25CSA25', name: 'DHARSHAN P' },
+  { roll: '25CSA26', name: 'DHARSHINI J' },
+  { roll: '25CSA27', name: 'DHARUN M' },
+  { roll: '25CSA28', name: 'DIVYADHARSHINI S' },
+  { roll: '25CSA29', name: 'ELAVARASAN T' },
+  { roll: '25CSA30', name: 'ESWARAN S' },
+  { roll: '25CSA31', name: 'FAHMITHA SULTHANA A' },
+  { roll: '25CSA32', name: 'FARIHA M' },
+  { roll: '25CSA33', name: 'FATHIMARUFAITHA M' },
+  { roll: '25CSA34', name: 'GEETHA S' },
+  { roll: '25CSA35', name: 'GOPINATH M' },
+  { roll: '25CSA36', name: 'GUNASEELA N' },
+  { roll: '25CSA37', name: 'HAMEEDHA M' },
+  { roll: '25CSA38', name: 'HARANI S' },
+  { roll: '25CSA39', name: 'HARIHARAN M' },
+  { roll: '25CSA40', name: 'HARIHARAN R' },
+  { roll: '25CSA41', name: 'HARINARAYANAN T' },
+  { roll: '25CSA42', name: 'HARSHINI R' },
+  { roll: '25CSA43', name: 'HEMALATHA S' },
+  { roll: '25CSA44', name: 'IRFAN R' },
+  { roll: '25CSA45', name: 'IRSANA RISMIN A' },
+  { roll: '25CSA46', name: 'JANANI SRI R' },
+  { roll: '25CSA47', name: 'JANNATHUL SUNOFIYA S' },
+  { roll: '25CSA48', name: 'JAYA DIVYA J' },
+  { roll: '25CSA49', name: 'JAYA HARISH S' },
+  { roll: '25CSA50', name: 'JEFRI D' },
+  { roll: '25CSA51', name: 'JEGAN R' },
+  { roll: '25CSA52', name: 'KABILAN V' },
+  { roll: '25CSA53', name: 'KALAIVANI A' },
+  { roll: '25CSA54', name: 'KANAKA DURKA T' },
+  { roll: '25CSA55', name: 'KANIHA R' },
+  { roll: '25CSA56', name: 'KANISH S' },
+  { roll: '25CSA57', name: 'KANISHA J' },
+  { roll: '25CSA58', name: 'KANISHKA M' },
+  { roll: '25CSA59', name: 'KANSHIYA S' },
+  { roll: '25CSA60', name: 'KAVISRI S' },
+  { roll: '25CSA61', name: 'KAYALVIZHI N' },
+  { roll: '25CSA62', name: 'KOUSHIK T' },
+  { roll: '25CSA63', name: 'DHARSHAN R' },
+  { roll: '25CSA64', name: 'KAVIN M' },
+  { roll: '25CSA65', name: 'SARAVANAN S' },
+];
+
+const INITIAL_II_CSE_B: Array<{ roll: string; name: string }> = [
+  { roll: '25CSB01', name: 'MAHA DHARSHINI M' },
+  { roll: '25CSB02', name: 'MANIKANDAN P' },
+  { roll: '25CSB03', name: 'MEGARAJAN R' },
+  { roll: '25CSB04', name: 'MUKESH S' },
+  { roll: '25CSB05', name: 'MULLAIKANNAN A' },
+  { roll: '25CSB06', name: 'NAGULAN M' },
+  { roll: '25CSB07', name: 'NANDHINI S' },
+  { roll: '25CSB08', name: 'NAVEENA B' },
+  { roll: '25CSB09', name: 'NISHANTHINI K' },
+  { roll: '25CSB10', name: 'NITHERSHANA NESAN M' },
+  { roll: '25CSB11', name: 'NITHISHWARAN R' },
+  { roll: '25CSB12', name: 'NITHIYASRI J' },
+  { roll: '25CSB13', name: 'PARAMESWARI S' },
+  { roll: '25CSB14', name: 'PARKAVI R' },
+  { roll: '25CSB15', name: 'PAVITHRA K' },
+  { roll: '25CSB16', name: 'PRAVEEN S' },
+  { roll: '25CSB17', name: 'PRITHINGARAN M' },
+  { roll: '25CSB18', name: 'PRIYADHARSHINI B' },
+  { roll: '25CSB19', name: 'PRIYADHARSHINI M' },
+  { roll: '25CSB20', name: 'PRIYADHARSHINI R' },
+  { roll: '25CSB21', name: 'PRIYADHARSHINI R' },
+  { roll: '25CSB22', name: 'PUSHPALATHA T' },
+  { roll: '25CSB23', name: 'RAGUL M' },
+  { roll: '25CSB24', name: 'RAHEEMA BEEVI M' },
+  { roll: '25CSB25', name: 'RAJIEPRIYAH D' },
+  { roll: '25CSB26', name: 'RAKESH S' },
+  { roll: '25CSB27', name: 'RATHIMEENA D' },
+  { roll: '25CSB28', name: 'RAYANN M' },
+  { roll: '25CSB29', name: 'RUTHRESWARAN G S' },
+  { roll: '25CSB30', name: 'SANGARAN J K' },
+  { roll: '25CSB31', name: 'SANJAI VASANTH S' },
+  { roll: '25CSB32', name: 'SANJITH S' },
+  { roll: '25CSB33', name: 'SANKAVI A' },
+  { roll: '25CSB34', name: 'SANTHOSH P' },
+  { roll: '25CSB35', name: 'SANTHOSH S' },
+  { roll: '25CSB36', name: 'SARANYA M' },
+  { roll: '25CSB37', name: 'SARUMATHI S' },
+  { roll: '25CSB38', name: 'SETHUPATHI G' },
+  { roll: '25CSB39', name: 'SHARMISTHA R' },
+  { roll: '25CSB40', name: 'SHREE VARSITHA S' },
+  { roll: '25CSB41', name: 'SIDHARTHAN S' },
+  { roll: '25CSB42', name: 'SIVAELANSERAN R' },
+  { roll: '25CSB43', name: 'SRI HARI RAO S' },
+  { roll: '25CSB44', name: 'SRI KARTHIK P' },
+  { roll: '25CSB45', name: 'SRIBARATHI K' },
+  { roll: '25CSB46', name: 'SUVETHA V R' },
+  { roll: '25CSB47', name: 'SYED MOHAMED ISHAK R' },
+  { roll: '25CSB48', name: 'SYED NASURUDEEN M' },
+  { roll: '25CSB49', name: 'TAMILARASAN S' },
+  { roll: '25CSB50', name: 'THARANIYA S' },
+  { roll: '25CSB51', name: 'THEYKESSH K' },
+  { roll: '25CSB52', name: 'THIRUKUMARAN P' },
+  { roll: '25CSB53', name: 'THIRUMALAI SELVAN B' },
+  { roll: '25CSB54', name: 'VAITHEESWARAN S' },
+  { roll: '25CSB55', name: 'VALLARASU C' },
+  { roll: '25CSB56', name: 'VASHEEMA M' },
+  { roll: '25CSB57', name: 'VENKATESH P' },
+  { roll: '25CSB58', name: 'VIJAYA SREE K' },
+  { roll: '25CSB59', name: 'VIJAYADARSINI G' },
+  { roll: '25CSB60', name: 'VINOTHKUMAR B' },
+  { roll: '25CSB61', name: 'VISHALI M' },
+  { roll: '25CSB62', name: 'YOGASRI S' },
+  { roll: '25CSB63', name: 'YOGESWARI M' },
+  { roll: '25CSB64', name: 'ASHIK AMEER A' },
+  { roll: '25CSB65', name: 'SREESANTH P' },
+  { roll: '25CSB66', name: 'VASANTHAKRISHNAN M' },
+  { roll: '25CSB67', name: 'VISHNU SANJAI M' },
+];
+
+export function buildInitialFinanceRecords(): FinanceRecord[] {
+  const records: FinanceRecord[] = [];
+  const now = new Date().toISOString();
+
+  // 1. II CSE A (65 Students, Fee: ₹250)
+  INITIAL_II_CSE_A.forEach((s) => {
+    records.push({
+      id: `FIN-2A-${s.roll}`,
+      studentName: s.name,
+      rollNumber: s.roll,
+      year: 'II Year',
+      section: '2nd CSE A',
+      department: 'CSE',
+      feeAmount: 250,
+      paidAmount: 0,
+      status: 'UNPAID',
+      isLocked: false,
+      createdAt: now,
+    });
+  });
+
+  // 2. II CSE B (67 Students, Fee: ₹250)
+  INITIAL_II_CSE_B.forEach((s) => {
+    records.push({
+      id: `FIN-2B-${s.roll}`,
+      studentName: s.name,
+      rollNumber: s.roll,
+      year: 'II Year',
+      section: '2nd CSE B',
+      department: 'CSE',
+      feeAmount: 250,
+      paidAmount: 0,
+      status: 'UNPAID',
+      isLocked: false,
+      createdAt: now,
+    });
+  });
+
+  return records;
+}
+
+function getLocalFinanceRecords(): FinanceRecord[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_FINANCE_KEY);
+    if (raw) {
+      const parsed: FinanceRecord[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading local finance records:', e);
+  }
+  const initial = buildInitialFinanceRecords();
+  saveLocalFinanceRecords(initial);
+  return initial;
+}
+
+function saveLocalFinanceRecords(records: FinanceRecord[]) {
+  try {
+    localStorage.setItem(LOCAL_FINANCE_KEY, JSON.stringify(records));
+  } catch (e) {
+    console.error('Error saving local finance records:', e);
+  }
+}
+
+/**
+ * Realtime Subscription for Finance Records
+ */
+export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => void) {
+  const colRef = collection(db, 'finance_records');
+
+  const unsubscribe = onSnapshot(
+    colRef,
+    (snapshot) => {
+      if (snapshot.empty) {
+        const initial = getLocalFinanceRecords();
+        callback(initial);
+        initial.forEach((r) => {
+          setDoc(doc(db, 'finance_records', r.id), r).catch((err) =>
+            console.warn('Auto-seed finance doc warning:', err)
+          );
+        });
+      } else {
+        const records: FinanceRecord[] = [];
+        snapshot.forEach((docSnap) => {
+          records.push(docSnap.data() as FinanceRecord);
+        });
+        records.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+        saveLocalFinanceRecords(records);
+        callback(records);
+      }
+    },
+    (error) => {
+      console.warn('Firestore finance snapshot warning, using localStorage fallback:', error);
+      callback(getLocalFinanceRecords());
+    }
+  );
+
+  return unsubscribe;
+}
+
+/**
+ * Mark a Finance Record as PAID (PERMANENT LOCKING ENFORCED)
+ */
+export async function markFinanceRecordPaid(
+  recordId: string,
+  paidAmount: number,
+  adminUser: string,
+  notes?: string
+): Promise<{ success: boolean; message?: string }> {
+  const paidTime = new Date().toISOString();
+
+  const localList = getLocalFinanceRecords();
+  const idx = localList.findIndex((r) => r.id === recordId);
+  if (idx !== -1) {
+    if (localList[idx].isLocked) {
+      return { success: false, message: 'This record is permanently locked and cannot be modified.' };
+    }
+    localList[idx] = {
+      ...localList[idx],
+      paidAmount: paidAmount > 0 ? paidAmount : localList[idx].feeAmount,
+      status: 'PAID',
+      paidAt: paidTime,
+      collectedBy: adminUser || 'Admin',
+      isLocked: true,
+      notes: notes || localList[idx].notes || '',
+    };
+    saveLocalFinanceRecords(localList);
+  }
+
+  try {
+    const docRef = doc(db, 'finance_records', recordId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().isLocked) {
+      return { success: false, message: 'This record is permanently locked and cannot be modified.' };
+    }
+
+    const payload = {
+      paidAmount: paidAmount > 0 ? paidAmount : 250,
+      status: 'PAID',
+      paidAt: paidTime,
+      collectedBy: adminUser || 'Admin',
+      isLocked: true,
+      ...(notes ? { notes } : {}),
+    };
+
+    await updateDoc(docRef, payload);
+    return { success: true };
+  } catch (err) {
+    console.warn('Firestore update warning for finance record, local update succeeded:', err);
+    return { success: true };
+  }
+}
+
+/**
+ * Add New Student to Finance Records
+ */
+export async function addFinanceRecord(
+  record: Omit<FinanceRecord, 'id' | 'createdAt'>
+): Promise<{ success: boolean; id: string }> {
+  const id = `FIN-${record.section.replace(/\s+/g, '')}-${record.rollNumber}-${Date.now()}`;
+  const now = new Date().toISOString();
+  const newRecord: FinanceRecord = {
+    ...record,
+    id,
+    createdAt: now,
+  };
+
+  const localList = getLocalFinanceRecords();
+  localList.push(newRecord);
+  saveLocalFinanceRecords(localList);
+
+  try {
+    await setDoc(doc(db, 'finance_records', id), newRecord);
+  } catch (err) {
+    console.warn('Firestore add finance record warning, saved locally:', err);
+  }
+
+  return { success: true, id };
 }
