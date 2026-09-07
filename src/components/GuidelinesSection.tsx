@@ -86,6 +86,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
       team: 'Individual or up to 3 members',
       rules: [
         'Present an innovative technical idea or research concept using PPT slides.',
+        'Maximum of 6–7 slides only allowed.',
         'Time allotted: strictly up to 5 minutes per team for presentation + Q&A.',
         'Topics must be relevant to current technology and innovation trends.',
         'Working models or live project demos are highly appreciated (not mandatory).',
@@ -107,12 +108,15 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
     {
       name: 'Prompt Fusion',
       subtitle: 'AI Prompt Challenge',
-      tag: '2–3 Level Rounds',
+      tag: 'Conducted in 2 Rounds',
       team: 'Individual or up to 2 members',
       rules: [
-        'Conducted in 2 to 3 level rounds evaluating AI prompt engineering skills.',
-        'Participants generate specific code outputs, structured data, or images using LLM prompts under time limits.',
-        'Evaluated on prompt efficiency, precision, creativity, and speed.',
+        'Conducted in 2 rounds.',
+        'Round 1: Recreate a given poster/banner using AI.',
+        'Round 2: Recreate a given image and generate a video from it (image given on spot).',
+        "Use any AI tool — accounts and credits are the team's responsibility.",
+        'One system provided per team; teams must write their own prompts during the event.',
+        'Evaluation Criteria: Prompt Quality, Output Accuracy, Creativity & Visual Quality, Video Quality, Time Management.',
       ],
     },
     {
