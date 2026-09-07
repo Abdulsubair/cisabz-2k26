@@ -87,6 +87,38 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const [financeSearchQuery, setFinanceSearchQuery] = useState<string>('');
   const [financeFilterStatus, setFinanceFilterStatus] = useState<string>('ALL');
 
+  // Finance Authentication State (Username: Finance, Password: Cisabz148700)
+  const [isFinanceAuthenticated, setIsFinanceAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('cisabz_finance_authed') === 'true';
+  });
+  const [financeUsernameInput, setFinanceUsernameInput] = useState<string>('');
+  const [financePasswordInput, setFinancePasswordInput] = useState<string>('');
+  const [financeAuthError, setFinanceAuthError] = useState<string>('');
+
+  const handleFinanceLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      financeUsernameInput.trim().toLowerCase() === 'finance' &&
+      financePasswordInput.trim() === 'Cisabz148700'
+    ) {
+      setIsFinanceAuthenticated(true);
+      sessionStorage.setItem('cisabz_finance_authed', 'true');
+      setFinanceAuthError('');
+      showToast('Finance Section Unlocked!', 'success');
+    } else {
+      setFinanceAuthError('Invalid Finance Username or Password.');
+      showToast('Invalid Finance Username or Password', 'error');
+    }
+  };
+
+  const handleFinanceLogout = () => {
+    setIsFinanceAuthenticated(false);
+    sessionStorage.removeItem('cisabz_finance_authed');
+    setFinanceUsernameInput('');
+    setFinancePasswordInput('');
+    showToast('Finance Section Locked', 'success');
+  };
+
   // Finance Payment Modal State
   const [selectedFinanceStudent, setSelectedFinanceStudent] = useState<FinanceRecord | null>(null);
   const [paymentCustomAmount, setPaymentCustomAmount] = useState<number>(0);
@@ -263,14 +295,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     return true;
   });
 
-  const totalFinanceCollected = financeRecords
+  const currentSectionRecords = financeRecords.filter((r) => {
+    if (financeSelectedSection === 'ALL') return true;
+    return r.section === financeSelectedSection;
+  });
+
+  const totalFinanceCollected = currentSectionRecords
     .filter((r) => r.status === 'PAID')
     .reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0);
 
-  const totalFinanceTarget = financeRecords.reduce((sum, r) => sum + r.feeAmount, 0);
-  const totalPaidFinanceCount = financeRecords.filter((r) => r.status === 'PAID').length;
-  const totalUnpaidFinanceCount = financeRecords.filter((r) => r.status === 'UNPAID').length;
-  const overallCollectionPct = financeRecords.length > 0 ? Math.round((totalPaidFinanceCount / financeRecords.length) * 100) : 0;
+  const totalFinanceTarget = currentSectionRecords.reduce((sum, r) => sum + r.feeAmount, 0);
+  const totalPaidFinanceCount = currentSectionRecords.filter((r) => r.status === 'PAID').length;
+  const totalUnpaidFinanceCount = currentSectionRecords.filter((r) => r.status === 'UNPAID').length;
+  const overallCollectionPct =
+    currentSectionRecords.length > 0
+      ? Math.round((totalPaidFinanceCount / currentSectionRecords.length) * 100)
+      : 0;
 
   const getSectionStats = (sectionName: string) => {
     const list = financeRecords.filter((r) => r.section === sectionName);
@@ -1981,310 +2021,406 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         {/* VIEW 6: FINANCE SECTION */}
         {activeView === 'finance' && (
           <div className="space-y-6 max-w-7xl mx-auto">
-            {/* Header Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 border border-emerald-500/40 p-6 rounded-3xl backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.15)]">
-              <div>
-                <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-widest font-bold mb-1">
-                  <Banknote className="w-4 h-4 text-emerald-400" />
-                  <span>Symposium Finance & Fee Management</span>
+            {!isFinanceAuthenticated ? (
+              /* FINANCE AUTHENTICATION GATE FORM */
+              <div className="max-w-md mx-auto my-12 bg-slate-900/90 border border-emerald-500/40 p-8 rounded-3xl backdrop-blur-xl shadow-[0_0_50px_rgba(16,185,129,0.2)] text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                  <Lock className="w-8 h-8" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black font-orbitron text-white">
-                  Class Symposium Fee Collections
-                </h1>
-                <p className="text-xs font-mono text-slate-400 mt-1">
-                  Live tracking of II CSE A (₹250), II CSE B (₹250), III Year (₹400), and IV Year (₹550) • Permanent Payment Locking Enforced
-                </p>
-              </div>
+                <div>
+                  <h2 className="text-2xl font-black font-orbitron text-white">Finance Portal Access</h2>
+                  <p className="text-xs font-mono text-slate-400 mt-1">
+                    Enter Finance credentials to access student fee collection & management.
+                  </p>
+                </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => setShowAddStudentModal(true)}
-                  className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                >
-                  <Plus className="w-4 h-4 text-cyan-400" />
-                  <span>Add Student</span>
-                </button>
+                <form onSubmit={handleFinanceLogin} className="space-y-4 text-left">
+                  {financeAuthError && (
+                    <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-mono text-center">
+                      {financeAuthError}
+                    </div>
+                  )}
 
-                <button
-                  onClick={exportFinanceToExcel}
-                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export Excel</span>
-                </button>
+                  <div>
+                    <label className="block text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Finance Username
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        value={financeUsernameInput}
+                        onChange={(e) => setFinanceUsernameInput(e.target.value)}
+                        placeholder="Finance"
+                        className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                    </div>
+                  </div>
 
-                <button
-                  onClick={exportFinanceToPDF}
-                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Export PDF</span>
-                </button>
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2">
+                      Finance Password
+                    </label>
+                    <div className="relative">
+                      <Key className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        required
+                        value={financePasswordInput}
+                        onChange={(e) => setFinancePasswordInput(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                    </div>
+                  </div>
 
-            {/* CLASS SECTION FILTER TABS */}
-            <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl overflow-x-auto scrollbar-none">
-              {[
-                { id: 'ALL', label: 'All Classes Overview', fee: null, count: financeRecords.length },
-                { id: '2nd CSE A', label: 'II CSE A', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE A').length },
-                { id: '2nd CSE B', label: 'II CSE B', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE B').length },
-                { id: '3rd CSE A', label: 'III CSE A', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE A').length },
-                { id: '3rd CSE B', label: 'III CSE B', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE B').length },
-                { id: '4th CSE A', label: 'IV CSE A', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE A').length },
-                { id: '4th CSE B', label: 'IV CSE B', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE B').length },
-              ].map((tab) => {
-                const isActive = financeSelectedSection === tab.id;
-                const stats = tab.id !== 'ALL' ? getSectionStats(tab.id) : null;
-
-                return (
                   <button
-                    key={tab.id}
-                    onClick={() => setFinanceSelectedSection(tab.id)}
-                    className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border ${
-                      isActive
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                        : 'bg-slate-950/60 text-slate-400 hover:bg-slate-800 hover:text-white border-transparent'
-                    }`}
+                    type="submit"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"
                   >
-                    <span>{tab.label}</span>
-                    {tab.fee && (
-                      <span className="text-[10px] text-amber-400 font-normal">
-                        (₹{tab.fee})
-                      </span>
-                    )}
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      isActive ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'
-                    }`}>
-                      {stats ? `${stats.paid}/${stats.total}` : tab.count}
-                    </span>
+                    Unlock Finance Section
                   </button>
-                );
-              })}
-            </div>
-
-            {/* OVERALL FINANCE STATS CARDS */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-slate-900/90 border border-emerald-500/40 p-4 sm:p-5 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
-                  Total Collected
-                </span>
-                <span className="text-2xl sm:text-4xl font-black font-orbitron text-emerald-400">
-                  ₹{totalFinanceCollected.toLocaleString()}
-                </span>
-                <span className="text-[10px] font-mono text-slate-400 block mt-1">
-                  {totalPaidFinanceCount} Students Paid ({overallCollectionPct}%)
-                </span>
+                </form>
               </div>
+            ) : (
+              /* UNLOCKED FINANCE DASHBOARD */
+              <>
+                {/* Header Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 border border-emerald-500/40 p-6 rounded-3xl backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+                  <div>
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-widest font-bold mb-1">
+                      <Banknote className="w-4 h-4 text-emerald-400" />
+                      <span>Symposium Finance & Fee Management</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-black font-orbitron text-white">
+                      Class Symposium Fee Collections
+                    </h1>
+                    <p className="text-xs font-mono text-slate-400 mt-1">
+                      Live tracking of II CSE A (₹250), II CSE B (₹250), III Year (₹400), and IV Year (₹550) • Permanent Payment Locking Enforced
+                    </p>
+                  </div>
 
-              <div className="bg-slate-900/90 border border-cyan-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
-                  Total Target Estimation
-                </span>
-                <span className="text-2xl sm:text-4xl font-black font-orbitron text-cyan-300">
-                  ₹{totalFinanceTarget.toLocaleString()}
-                </span>
-                <span className="text-[10px] font-mono text-slate-400 block mt-1">
-                  {financeRecords.length} Total Strength Enrolled
-                </span>
-              </div>
-
-              <div className="bg-slate-900/90 border border-amber-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
-                  Pending Unpaid
-                </span>
-                <span className="text-2xl sm:text-4xl font-black font-orbitron text-amber-400">
-                  {totalUnpaidFinanceCount}
-                </span>
-                <span className="text-[10px] font-mono text-slate-400 block mt-1">
-                  ₹{(totalFinanceTarget - totalFinanceCollected).toLocaleString()} Remaining
-                </span>
-              </div>
-
-              <div className="bg-slate-900/90 border border-purple-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-purple-400 font-bold block mb-1">
-                  Paid Percentage
-                </span>
-                <span className="text-2xl sm:text-4xl font-black font-orbitron text-purple-300">
-                  {overallCollectionPct}%
-                </span>
-                <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-                  <div
-                    className="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${overallCollectionPct}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* SEARCH AND STATUS FILTER BAR */}
-            <div className="bg-slate-900/80 border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="relative w-full sm:w-80">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={financeSearchQuery}
-                  onChange={(e) => setFinanceSearchQuery(e.target.value)}
-                  placeholder="Search student name, roll no, sec..."
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-                {financeSearchQuery && (
-                  <button
-                    onClick={() => setFinanceSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs font-mono text-slate-400 font-bold uppercase">Status:</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {['ALL', 'PAID', 'UNPAID'].map((st) => (
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      key={st}
-                      onClick={() => setFinanceFilterStatus(st)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
-                        financeFilterStatus === st
-                          ? st === 'PAID'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            : st === 'UNPAID'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                          : 'bg-slate-950 text-slate-400 hover:bg-slate-800'
-                      }`}
+                      onClick={() => setShowAddStudentModal(true)}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm"
                     >
-                      {st === 'PAID' ? 'PAID 🔒' : st}
+                      <Plus className="w-4 h-4 text-cyan-400" />
+                      <span>Add Student</span>
                     </button>
-                  ))}
+
+                    <button
+                      onClick={exportFinanceToExcel}
+                      className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Export Excel</span>
+                    </button>
+
+                    <button
+                      onClick={exportFinanceToPDF}
+                      className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Export PDF</span>
+                    </button>
+
+                    <button
+                      onClick={handleFinanceLogout}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-white border border-amber-500/40 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm ml-auto sm:ml-0"
+                      title="Lock Finance Section"
+                    >
+                      <Lock className="w-4 h-4 text-amber-400" />
+                      <span>Lock Finance</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* STUDENT FINANCE TABLE */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-              {filteredFinanceRecords.length === 0 ? (
-                <div className="p-12 text-center space-y-3">
-                  <Banknote className="w-12 h-12 text-slate-600 mx-auto" />
-                  <p className="text-sm font-bold text-white font-mono">No student finance records match current filter</p>
-                  <p className="text-xs text-slate-400 font-mono">Try selecting a different class filter or clearing search query.</p>
+                {/* CLASS SECTION FILTER TABS */}
+                <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-emerald-500/30 rounded-2xl overflow-x-auto scrollbar-none">
+                  {[
+                    { id: 'ALL', label: 'All Classes Overview', fee: null, count: financeRecords.length },
+                    { id: '2nd CSE A', label: 'II CSE A', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE A').length },
+                    { id: '2nd CSE B', label: 'II CSE B', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE B').length },
+                    { id: '3rd CSE A', label: 'III CSE A', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE A').length },
+                    { id: '3rd CSE B', label: 'III CSE B', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE B').length },
+                    { id: '4th CSE A', label: 'IV CSE A', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE A').length },
+                    { id: '4th CSE B', label: 'IV CSE B', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE B').length },
+                  ].map((tab) => {
+                    const isActive = financeSelectedSection === tab.id;
+                    const stats = tab.id !== 'ALL' ? getSectionStats(tab.id) : null;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setFinanceSelectedSection(tab.id)}
+                        className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border ${
+                          isActive
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                            : 'bg-slate-950/60 text-slate-400 hover:bg-slate-800 hover:text-white border-transparent'
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        {tab.fee && (
+                          <span className="text-[10px] text-amber-400 font-normal">
+                            (₹{tab.fee})
+                          </span>
+                        )}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          isActive ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                        }`}>
+                          {stats ? `${stats.paid}/${stats.total}` : tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead>
-                      <tr className="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
-                        <th className="py-4 px-4 text-center w-12">#</th>
-                        <th className="py-4 px-4">Roll No / ID</th>
-                        <th className="py-4 px-4">Student Name</th>
-                        <th className="py-4 px-4">Class & Sec</th>
-                        <th className="py-4 px-4 text-right">Fee Rate</th>
-                        <th className="py-4 px-4 text-right">Paid Amount</th>
-                        <th className="py-4 px-4 text-center">Status</th>
-                        <th className="py-4 px-4">Collection Info</th>
-                        <th className="py-4 px-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {filteredFinanceRecords.map((r, idx) => {
-                        const isPaid = r.status === 'PAID';
-                        return (
-                          <tr
-                            key={r.id}
-                            className={`transition-colors ${
-                              isPaid ? 'bg-emerald-950/20 hover:bg-emerald-950/40' : 'hover:bg-slate-800/40'
-                            }`}
-                          >
-                            <td className="py-4 px-4 text-center text-slate-500 font-bold">{idx + 1}</td>
 
-                            <td className="py-4 px-4">
-                              <span className="font-bold text-cyan-300 font-mono">{r.rollNumber}</span>
-                            </td>
+                {/* OVERALL / SECTION SCOPED FINANCE STATS CARDS */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-slate-900/90 border border-emerald-500/40 p-4 sm:p-5 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1">
+                      {financeSelectedSection === 'ALL' ? 'Total Collected' : `${financeSelectedSection} Collected`}
+                    </span>
+                    <span className="text-2xl sm:text-4xl font-black font-orbitron text-emerald-400">
+                      ₹{totalFinanceCollected.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                      {totalPaidFinanceCount} Students Paid ({overallCollectionPct}%)
+                    </span>
+                  </div>
 
-                            <td className="py-4 px-4">
-                              <span className="font-bold text-white text-sm font-rajdhani">{r.studentName}</span>
-                            </td>
+                  <div className="bg-slate-900/90 border border-cyan-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold block mb-1">
+                      {financeSelectedSection === 'ALL' ? 'Total Target Estimation' : `${financeSelectedSection} Target`}
+                    </span>
+                    <span className="text-2xl sm:text-4xl font-black font-orbitron text-cyan-300">
+                      ₹{totalFinanceTarget.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                      {currentSectionRecords.length} Students Enrolled
+                    </span>
+                  </div>
 
-                            <td className="py-4 px-4">
-                              <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-bold border border-slate-700">
-                                {r.section}
-                              </span>
-                            </td>
+                  <div className="bg-slate-900/90 border border-amber-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold block mb-1">
+                      Pending Unpaid
+                    </span>
+                    <span className="text-2xl sm:text-4xl font-black font-orbitron text-amber-400">
+                      {totalUnpaidFinanceCount}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                      ₹{(totalFinanceTarget - totalFinanceCollected).toLocaleString()} Remaining
+                    </span>
+                  </div>
 
-                            <td className="py-4 px-4 text-right font-bold text-slate-300">
-                              ₹{r.feeAmount}
-                            </td>
+                  <div className="bg-slate-900/90 border border-purple-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-purple-400 font-bold block mb-1">
+                      Paid Percentage
+                    </span>
+                    <span className="text-2xl sm:text-4xl font-black font-orbitron text-purple-300">
+                      {overallCollectionPct}%
+                    </span>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div
+                        className="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
+                        style={{ width: `${overallCollectionPct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                            <td className="py-4 px-4 text-right">
-                              <span className={`font-black text-sm ${isPaid ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                ₹{r.paidAmount || 0}
-                              </span>
-                            </td>
+                {/* SEARCH AND FILTER BAR */}
+                <div className="bg-slate-900/80 border border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={financeSearchQuery}
+                        onChange={(e) => setFinanceSearchQuery(e.target.value)}
+                        placeholder="Search student name, roll no, sec..."
+                        className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                      />
+                      {financeSearchQuery && (
+                        <button
+                          onClick={() => setFinanceSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
 
-                            <td className="py-4 px-4 text-center">
-                              {isPaid ? (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                  <Lock className="w-3 h-3 text-emerald-400" />
-                                  <span>PAID</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase tracking-wider">
-                                  <span>UNPAID</span>
-                                </span>
-                              )}
-                            </td>
+                    {/* Class Dropdown Filter */}
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                      <select
+                        value={financeSelectedSection}
+                        onChange={(e) => setFinanceSelectedSection(e.target.value)}
+                        className="py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-emerald-300 text-xs font-mono font-bold focus:outline-none focus:border-emerald-500 transition-colors"
+                      >
+                        <option value="ALL">All Classes ({financeRecords.length})</option>
+                        <option value="2nd CSE A">II CSE A (₹250)</option>
+                        <option value="2nd CSE B">II CSE B (₹250)</option>
+                        <option value="3rd CSE A">III CSE A (₹400)</option>
+                        <option value="3rd CSE B">III CSE B (₹400)</option>
+                        <option value="4th CSE A">IV CSE A (₹550)</option>
+                        <option value="4th CSE B">IV CSE B (₹550)</option>
+                      </select>
+                    </div>
+                  </div>
 
-                            <td className="py-4 px-4">
-                              {isPaid ? (
-                                <div>
-                                  <span className="text-[10px] text-slate-300 block font-bold">
-                                    By: {r.collectedBy || 'Admin'}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 block">
-                                    {r.paidAt ? new Date(r.paidAt).toLocaleDateString() : ''}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-slate-500">-</span>
-                              )}
-                            </td>
+                  <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs font-mono text-slate-400 font-bold uppercase">Status:</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {['ALL', 'PAID', 'UNPAID'].map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => setFinanceFilterStatus(st)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                            financeFilterStatus === st
+                              ? st === 'PAID'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : st === 'UNPAID'
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                              : 'bg-slate-950 text-slate-400 hover:bg-slate-800'
+                          }`}
+                        >
+                          {st === 'PAID' ? 'PAID 🔒' : st}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-                            <td className="py-4 px-4 text-right">
-                              {isPaid ? (
-                                <button
-                                  disabled
-                                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-[11px] font-mono font-bold flex items-center gap-1.5 ml-auto opacity-70 cursor-not-allowed"
-                                  title="Payment permanently locked & saved"
-                                >
-                                  <Lock className="w-3 h-3" />
-                                  <span>Locked</span>
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setSelectedFinanceStudent(r);
-                                    setPaymentCustomAmount(r.feeAmount);
-                                  }}
-                                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white text-[11px] font-mono font-bold uppercase transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] flex items-center gap-1.5 ml-auto cursor-pointer"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Mark Paid</span>
-                                </button>
-                              )}
-                            </td>
+                {/* STUDENT FINANCE TABLE */}
+                <div className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                  {filteredFinanceRecords.length === 0 ? (
+                    <div className="p-12 text-center space-y-3">
+                      <Banknote className="w-12 h-12 text-slate-600 mx-auto" />
+                      <p className="text-sm font-bold text-white font-mono">No student finance records match current filter</p>
+                      <p className="text-xs text-slate-400 font-mono">Try selecting a different class filter or clearing search query.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead>
+                          <tr className="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                            <th className="py-4 px-4 text-center w-12">#</th>
+                            <th className="py-4 px-4">Roll No / ID</th>
+                            <th className="py-4 px-4">Student Name</th>
+                            <th className="py-4 px-4">Class & Sec</th>
+                            <th className="py-4 px-4 text-right">Fee Rate</th>
+                            <th className="py-4 px-4 text-right">Paid Amount</th>
+                            <th className="py-4 px-4 text-center">Status</th>
+                            <th className="py-4 px-4">Collection Info</th>
+                            <th className="py-4 px-4 text-right">Action</th>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {filteredFinanceRecords.map((r, idx) => {
+                            const isPaid = r.status === 'PAID';
+                            return (
+                              <tr
+                                key={r.id}
+                                className={`transition-colors ${
+                                  isPaid ? 'bg-emerald-950/20 hover:bg-emerald-950/40' : 'hover:bg-slate-800/40'
+                                }`}
+                              >
+                                <td className="py-4 px-4 text-center text-slate-500 font-bold">{idx + 1}</td>
+
+                                <td className="py-4 px-4">
+                                  <span className="font-bold text-cyan-300 font-mono">{r.rollNumber}</span>
+                                </td>
+
+                                <td className="py-4 px-4">
+                                  <span className="font-bold text-white text-sm font-rajdhani">{r.studentName}</span>
+                                </td>
+
+                                <td className="py-4 px-4">
+                                  <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-bold border border-slate-700">
+                                    {r.section}
+                                  </span>
+                                </td>
+
+                                <td className="py-4 px-4 text-right font-bold text-slate-300">
+                                  ₹{r.feeAmount}
+                                </td>
+
+                                <td className="py-4 px-4 text-right">
+                                  <span className={`font-black text-sm ${isPaid ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                    ₹{r.paidAmount || 0}
+                                  </span>
+                                </td>
+
+                                <td className="py-4 px-4 text-center">
+                                  {isPaid ? (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                      <Lock className="w-3 h-3 text-emerald-400" />
+                                      <span>PAID</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase tracking-wider">
+                                      <span>UNPAID</span>
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className="py-4 px-4">
+                                  {isPaid ? (
+                                    <div>
+                                      <span className="text-[10px] text-slate-300 block font-bold">
+                                        By: {r.collectedBy || 'Admin'}
+                                      </span>
+                                      <span className="text-[10px] text-slate-500 block">
+                                        {r.paidAt ? new Date(r.paidAt).toLocaleDateString() : ''}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-500">-</span>
+                                  )}
+                                </td>
+
+                                <td className="py-4 px-4 text-right">
+                                  {isPaid ? (
+                                    <button
+                                      disabled
+                                      className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-[11px] font-mono font-bold flex items-center gap-1.5 ml-auto opacity-70 cursor-not-allowed"
+                                      title="Payment permanently locked & saved"
+                                    >
+                                      <Lock className="w-3 h-3" />
+                                      <span>Locked</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedFinanceStudent(r);
+                                        setPaymentCustomAmount(r.feeAmount);
+                                      }}
+                                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 text-white text-[11px] font-mono font-bold uppercase transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] flex items-center gap-1.5 ml-auto cursor-pointer"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>Mark Paid</span>
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         )}
       </main>
