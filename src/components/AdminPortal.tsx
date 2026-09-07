@@ -326,9 +326,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       if (newStudentSection.startsWith('3rd')) {
         year = 'III Year';
         feeAmount = 400;
-      } else if (newStudentSection.startsWith('Final')) {
+      } else if (newStudentSection.startsWith('4th') || newStudentSection.startsWith('Final')) {
         year = 'IV Year';
-        feeAmount = 500;
+        feeAmount = 550;
       }
 
       await addFinanceRecord({
@@ -1992,7 +1992,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   Class Symposium Fee Collections
                 </h1>
                 <p className="text-xs font-mono text-slate-400 mt-1">
-                  Live tracking of II CSE A (₹250), II CSE B (₹250), III Year (₹400), and IV Year (₹500) • Permanent Payment Locking Enforced
+                  Live tracking of II CSE A (₹250), II CSE B (₹250), III Year (₹400), and IV Year (₹550) • Permanent Payment Locking Enforced
                 </p>
               </div>
 
@@ -2031,8 +2031,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 { id: '2nd CSE B', label: 'II CSE B', fee: 250, count: financeRecords.filter((r) => r.section === '2nd CSE B').length },
                 { id: '3rd CSE A', label: 'III CSE A', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE A').length },
                 { id: '3rd CSE B', label: 'III CSE B', fee: 400, count: financeRecords.filter((r) => r.section === '3rd CSE B').length },
-                { id: '4th CSE A', label: 'IV CSE A', fee: 500, count: financeRecords.filter((r) => r.section === '4th CSE A').length },
-                { id: '4th CSE B', label: 'IV CSE B', fee: 500, count: financeRecords.filter((r) => r.section === '4th CSE B').length },
+                { id: '4th CSE A', label: 'IV CSE A', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE A').length },
+                { id: '4th CSE B', label: 'IV CSE B', fee: 550, count: financeRecords.filter((r) => r.section === '4th CSE B').length },
               ].map((tab) => {
                 const isActive = financeSelectedSection === tab.id;
                 const stats = tab.id !== 'ALL' ? getSectionStats(tab.id) : null;
@@ -2619,8 +2619,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   <option value="2nd CSE B">II CSE B (₹250 Fee)</option>
                   <option value="3rd CSE A">III CSE A (₹400 Fee)</option>
                   <option value="3rd CSE B">III CSE B (₹400 Fee)</option>
-                  <option value="4th CSE A">IV CSE A (₹500 Fee)</option>
-                  <option value="4th CSE B">IV CSE B (₹500 Fee)</option>
+                  <option value="4th CSE A">IV CSE A (₹550 Fee)</option>
+                  <option value="4th CSE B">IV CSE B (₹550 Fee)</option>
                 </select>
               </div>
             </div>

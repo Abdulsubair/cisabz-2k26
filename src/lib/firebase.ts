@@ -1137,7 +1137,7 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
     });
   });
 
-  // 5. IV CSE A (59 Students, Fee: ₹500)
+  // 5. IV CSE A (59 Students, Fee: ₹550)
   INITIAL_IV_CSE_A.forEach((s) => {
     records.push({
       id: `FIN-4A-${s.roll}`,
@@ -1146,7 +1146,7 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
       year: 'IV Year',
       section: '4th CSE A',
       department: 'CSE',
-      feeAmount: 500,
+      feeAmount: 550,
       paidAmount: 0,
       status: 'UNPAID',
       isLocked: false,
@@ -1154,7 +1154,7 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
     });
   });
 
-  // 6. IV CSE B (59 Students, Fee: ₹500)
+  // 6. IV CSE B (59 Students, Fee: ₹550)
   INITIAL_IV_CSE_B.forEach((s) => {
     records.push({
       id: `FIN-4B-${s.roll}`,
@@ -1163,7 +1163,7 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
       year: 'IV Year',
       section: '4th CSE B',
       department: 'CSE',
-      feeAmount: 500,
+      feeAmount: 550,
       paidAmount: 0,
       status: 'UNPAID',
       isLocked: false,
@@ -1180,13 +1180,19 @@ function getLocalFinanceRecords(): FinanceRecord[] {
     if (raw) {
       const parsed: FinanceRecord[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Auto-merge newly added class initial records
+        // Auto-merge newly added class initial records & update 4th Year fee to 550
         const initial = buildInitialFinanceRecords();
         const existingIds = new Set(parsed.map((r) => r.id));
         let addedCount = 0;
         initial.forEach((r) => {
           if (!existingIds.has(r.id)) {
             parsed.push(r);
+            addedCount++;
+          }
+        });
+        parsed.forEach((r) => {
+          if ((r.section === '4th CSE A' || r.section === '4th CSE B' || r.section === 'Final CSE') && !r.isLocked && r.feeAmount !== 550) {
+            r.feeAmount = 550;
             addedCount++;
           }
         });
