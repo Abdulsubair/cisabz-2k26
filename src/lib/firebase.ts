@@ -808,6 +808,139 @@ const INITIAL_II_CSE_B: Array<{ roll: string; name: string }> = [
   { roll: '25CSB67', name: 'VISHNU SANJAI M' },
 ];
 
+const INITIAL_III_CSE_A: Array<{ roll: string; name: string }> = [
+  { roll: '24CSA01', name: 'AARTHI SREE R N' },
+  { roll: '24CSA02', name: 'AATHITHYA B' },
+  { roll: '24CSA03', name: 'ABDUL WAHID T' },
+  { roll: '24CSA04', name: 'ABHISHEK C K' },
+  { roll: '24CSA05', name: 'ABINASH L' },
+  { roll: '24CSA06', name: 'ABINAYA P' },
+  { roll: '24CSA07', name: 'ABISHEK V' },
+  { roll: '24CSA08', name: 'AJAYARAJAN M' },
+  { roll: '24CSA09', name: 'AKASH C' },
+  { roll: '24CSA10', name: 'ANUSHA T' },
+  { roll: '24CSA11', name: 'ARAVINDHAKUMAR A' },
+  { roll: '24CSA12', name: 'ARKEMEDES K' },
+  { roll: '24CSA13', name: 'ARUNA RANI R' },
+  { roll: '24CSA14', name: 'ASMATH FARHANA M' },
+  { roll: '24CSA15', name: 'ASWINI R' },
+  { roll: '24CSA16', name: 'ATCHAYASRI B' },
+  { roll: '24CSA17', name: 'BALAKRITHIKA B' },
+  { roll: '24CSA18', name: 'BALUPRIYAN M' },
+  { roll: '24CSA19', name: 'BHAVASHREE A' },
+  { roll: '24CSA20', name: 'BOWTHAN G R' },
+  { roll: '24CSA21', name: 'DARSHINI N' },
+  { roll: '24CSA22', name: 'DEEPADHARSHNI G' },
+  { roll: '24CSA23', name: 'DEEPIKA S' },
+  { roll: '24CSA24', name: 'DEEPIKA S' },
+  { roll: '24CSA25', name: 'DEIKSHIDHA J' },
+  { roll: '24CSA26', name: 'DEVADHARSHINI R' },
+  { roll: '24CSA27', name: 'DHARANIKA B' },
+  { roll: '24CSA28', name: 'DHARANIKA K' },
+  { roll: '24CSA29', name: 'DHARSHINI R M' },
+  { roll: '24CSA30', name: 'DHATCHAYANI K' },
+  { roll: '24CSA31', name: 'DIVYAPRAKASH K' },
+  { roll: '24CSA32', name: 'DURGADHARSHINI R' },
+  { roll: '24CSA33', name: 'GIRIJA K' },
+  { roll: '24CSA34', name: 'GIRIJA M' },
+  { roll: '24CSA35', name: 'GIRIJA S' },
+  { roll: '24CSA36', name: 'GNANALEKA K' },
+  { roll: '24CSA37', name: 'GOKUL S' },
+  { roll: '24CSA38', name: 'GOKULAVANAN R' },
+  { roll: '24CSA39', name: 'GOKULVARTHAN R' },
+  { roll: '24CSA40', name: 'GOPIKA V' },
+  { roll: '24CSA41', name: 'GOWRISH A' },
+  { roll: '24CSA42', name: 'GURUKRISHNAN V' },
+  { roll: '24CSA43', name: 'HARI PRAGADESH S' },
+  { roll: '24CSA44', name: 'HARI PRASATH S' },
+  { roll: '24CSA45', name: 'JAYA PRAKASH K' },
+  { roll: '24CSA46', name: 'JEGABAR NISHA Y' },
+  { roll: '24CSA47', name: 'JOEYAL A' },
+  { roll: '24CSA48', name: 'JOSPHIN HEPSIBA G' },
+  { roll: '24CSA49', name: 'JOY SWEETY A' },
+  { roll: '24CSA50', name: 'KABILAN K' },
+  { roll: '24CSA51', name: 'KALAIVANAN S' },
+  { roll: '24CSA52', name: 'KAMALAVARTHINI S' },
+  { roll: '24CSA53', name: 'KAMATCHI M' },
+  { roll: '24CSA54', name: 'KARTHIKEYAN U' },
+  { roll: '24CSA55', name: 'KATHISH R' },
+  { roll: '24CSA56', name: 'KAVIPRIYAN S' },
+  { roll: '24CSA57', name: 'KAVIYA DHARSHINI M' },
+  { roll: '24CSA58', name: 'KIRUTHIKA S' },
+  { roll: '24CSA59', name: 'LAKSHANA S' },
+  { roll: '24CSA60', name: 'LEKHA G' },
+  { roll: '24CSA61', name: 'CHARLES T' },
+  { roll: '24CSA62', name: 'DASARATHY M' },
+  { roll: '24CSA63', name: 'HARISH R' },
+  { roll: '24CSA64', name: 'RAJALAKSHMI S' },
+  { roll: '24CSA65', name: 'UTHRA R' },
+];
+
+const INITIAL_III_CSE_B: Array<{ roll: string; name: string }> = [
+  { roll: '24CSB01', name: 'MADHAN KUMAR P' },
+  { roll: '24CSB02', name: 'MADHUKRISHNA S' },
+  { roll: '24CSB03', name: 'MITHUN R K' },
+  { roll: '24CSB04', name: 'MUGUNDHAN T' },
+  { roll: '24CSB05', name: 'NAVEEN G R' },
+  { roll: '24CSB06', name: 'NAVEEN KUMAR R' },
+  { roll: '24CSB07', name: 'NAVINKUMAR S' },
+  { roll: '24CSB08', name: 'NEHA P' },
+  { roll: '24CSB09', name: 'NISHANTHI S' },
+  { roll: '24CSB10', name: 'NITINRAM K S' },
+  { roll: '24CSB11', name: 'PAVALAN K' },
+  { roll: '24CSB12', name: 'PAVITHRA D' },
+  { roll: '24CSB13', name: 'PRABHAVATHI P' },
+  { roll: '24CSB14', name: 'PRAKSHITHA S' },
+  { roll: '24CSB15', name: 'PRASANTH J' },
+  { roll: '24CSB16', name: 'PREETHI M' },
+  { roll: '24CSB17', name: 'PREETHI V' },
+  { roll: '24CSB18', name: 'PRETHIKA S' },
+  { roll: '24CSB19', name: 'PRIYANKA S' },
+  { roll: '24CSB20', name: 'PUSHPA P' },
+  { roll: '24CSB21', name: 'RAGAVI R' },
+  { roll: '24CSB22', name: 'RAGUL N' },
+  { roll: '24CSB23', name: 'RAJASRI V' },
+  { roll: '24CSB24', name: 'RAMAKRISHNAN K' },
+  { roll: '24CSB25', name: 'RAMESH R' },
+  { roll: '24CSB26', name: 'RANJITH R' },
+  { roll: '24CSB27', name: 'RITHIKA S' },
+  { roll: '24CSB28', name: 'RUBAN K' },
+  { roll: '24CSB29', name: 'SAKKTHI A' },
+  { roll: '24CSB30', name: 'SANJAY S' },
+  { roll: '24CSB31', name: 'SANTHIYA MEENA E' },
+  { roll: '24CSB32', name: 'SANTHOSH K' },
+  { roll: '24CSB33', name: 'SARABESWARI B' },
+  { roll: '24CSB34', name: 'SASHWITHA G' },
+  { roll: '24CSB35', name: 'SHANTHINI PRIYA M' },
+  { roll: '24CSB36', name: 'SHARUN S' },
+  { roll: '24CSB37', name: 'SHIVANI SRI B' },
+  { roll: '24CSB38', name: 'SHRI LAKSHANA S K' },
+  { roll: '24CSB39', name: 'SINDHUJA S' },
+  { roll: '24CSB40', name: 'SOWNDARYA P' },
+  { roll: '24CSB41', name: 'SRI HARSHINI K' },
+  { roll: '24CSB42', name: 'SRIDHARSHAN S' },
+  { roll: '24CSB43', name: 'SUBASH CHANDRA BOSE K' },
+  { roll: '24CSB44', name: 'SUBHA DHARSHINI G' },
+  { roll: '24CSB45', name: 'SUBHASHINI N' },
+  { roll: '24CSB46', name: 'SYED FATHIMA K' },
+  { roll: '24CSB47', name: 'TAMIL NANGAI K' },
+  { roll: '24CSB48', name: 'THAMARAI SELVI D' },
+  { roll: '24CSB49', name: 'THARUN M' },
+  { roll: '24CSB50', name: 'VARSHINI G' },
+  { roll: '24CSB51', name: 'VARSHINI S' },
+  { roll: '24CSB52', name: 'VASANTH B' },
+  { roll: '24CSB53', name: 'VIGNESH S M' },
+  { roll: '24CSB54', name: 'VISHNU PRASATH S' },
+  { roll: '24CSB55', name: 'VISHVAKKANNAN S' },
+  { roll: '24CSB56', name: 'YAMUNA R' },
+  { roll: '24CSB57', name: 'YOGARATHNA E' },
+  { roll: '24CSB58', name: 'SIVASANMUGAM S' },
+  { roll: '24CSB59', name: 'CHATRAPATHI U' },
+  { roll: '24CSB60', name: 'MAZEED AHAMED A' },
+  { roll: '24CSB61', name: 'NITHISH R P' },
+  { roll: '24CSB62', name: 'SAITHARUN D' },
+];
+
 export function buildInitialFinanceRecords(): FinanceRecord[] {
   const records: FinanceRecord[] = [];
   const now = new Date().toISOString();
@@ -846,6 +979,40 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
     });
   });
 
+  // 3. III CSE A (65 Students, Fee: ₹400)
+  INITIAL_III_CSE_A.forEach((s) => {
+    records.push({
+      id: `FIN-3A-${s.roll}`,
+      studentName: s.name,
+      rollNumber: s.roll,
+      year: 'III Year',
+      section: '3rd CSE A',
+      department: 'CSE',
+      feeAmount: 400,
+      paidAmount: 0,
+      status: 'UNPAID',
+      isLocked: false,
+      createdAt: now,
+    });
+  });
+
+  // 4. III CSE B (62 Students, Fee: ₹400)
+  INITIAL_III_CSE_B.forEach((s) => {
+    records.push({
+      id: `FIN-3B-${s.roll}`,
+      studentName: s.name,
+      rollNumber: s.roll,
+      year: 'III Year',
+      section: '3rd CSE B',
+      department: 'CSE',
+      feeAmount: 400,
+      paidAmount: 0,
+      status: 'UNPAID',
+      isLocked: false,
+      createdAt: now,
+    });
+  });
+
   return records;
 }
 
@@ -855,6 +1022,19 @@ function getLocalFinanceRecords(): FinanceRecord[] {
     if (raw) {
       const parsed: FinanceRecord[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        // Auto-merge newly added class initial records
+        const initial = buildInitialFinanceRecords();
+        const existingIds = new Set(parsed.map((r) => r.id));
+        let addedCount = 0;
+        initial.forEach((r) => {
+          if (!existingIds.has(r.id)) {
+            parsed.push(r);
+            addedCount++;
+          }
+        });
+        if (addedCount > 0) {
+          saveLocalFinanceRecords(parsed);
+        }
         return parsed;
       }
     }
