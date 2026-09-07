@@ -62,6 +62,7 @@ export interface FinanceRecord {
   feeAmount: number;
   paidAmount: number;
   status: 'PAID' | 'UNPAID';
+  paymentMode?: 'CASH' | 'GPAY' | string;
   paidAt?: string;
   collectedBy?: string;
   isLocked: boolean;
@@ -1261,6 +1262,7 @@ export async function markFinanceRecordPaid(
   recordId: string,
   paidAmount: number,
   adminUser: string,
+  paymentMode: 'CASH' | 'GPAY' | string = 'GPAY',
   notes?: string
 ): Promise<{ success: boolean; message?: string }> {
   const paidTime = new Date().toISOString();
@@ -1275,6 +1277,7 @@ export async function markFinanceRecordPaid(
       ...localList[idx],
       paidAmount: paidAmount > 0 ? paidAmount : localList[idx].feeAmount,
       status: 'PAID',
+      paymentMode: paymentMode || 'GPAY',
       paidAt: paidTime,
       collectedBy: adminUser || 'Admin',
       isLocked: true,
@@ -1293,6 +1296,7 @@ export async function markFinanceRecordPaid(
     const payload = {
       paidAmount: paidAmount > 0 ? paidAmount : 250,
       status: 'PAID',
+      paymentMode: paymentMode || 'GPAY',
       paidAt: paidTime,
       collectedBy: adminUser || 'Admin',
       isLocked: true,
