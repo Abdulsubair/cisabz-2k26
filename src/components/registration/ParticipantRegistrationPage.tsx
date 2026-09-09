@@ -325,8 +325,8 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                   </h4>
                   <span className="bg-emerald-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse">JOIN NOW</span>
                 </div>
-                <p className="text-xs text-emerald-200 font-medium leading-relaxed mt-1">
-                  Kindly join the whatsapp group for update and information according to the event.
+                <p className="text-xs text-emerald-200 font-medium leading-relaxed mt-1 font-rajdhani">
+                  Kindly join the official WhatsApp group for real-time updates, schedule announcements, and event guidelines.
                 </p>
               </div>
             </div>
@@ -416,8 +416,8 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                 <h4 className="text-sm font-bold font-orbitron text-white uppercase tracking-wider">
                   Official WhatsApp Group
                 </h4>
-                <p className="text-xs text-emerald-300 font-medium leading-relaxed mt-0.5">
-                  Kindly join the whatsapp group for update and information according to the event.
+                <p className="text-xs text-emerald-300 font-medium leading-relaxed mt-0.5 font-rajdhani">
+                  Kindly join the official WhatsApp group for real-time updates, schedule announcements, and event guidelines.
                 </p>
               </div>
             </div>

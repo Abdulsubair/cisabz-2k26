@@ -12,6 +12,7 @@ import {
   query,
   where,
   serverTimestamp,
+  orderBy,
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -67,6 +68,16 @@ export interface FinanceRecord {
   collectedBy?: string;
   isLocked: boolean;
   notes?: string;
+  createdAt: string;
+}
+
+export interface FinanceNote {
+  id: string;
+  date: string;
+  note: string;
+  amount?: number;
+  recipient?: string;
+  createdBy?: string;
   createdAt: string;
 }
 
@@ -1005,42 +1016,42 @@ const INITIAL_IV_CSE_A: Array<{ roll: string; name: string }> = [
 ];
 
 const INITIAL_IV_CSE_B: Array<{ roll: string; name: string }> = [
-  { roll: '23CSB01', name: '23CSB01 STUDENT' },
-  { roll: '23CSB02', name: '23CSB02 STUDENT' },
-  { roll: '23CSB03', name: '23CSB03 STUDENT' },
-  { roll: '23CSB04', name: '23CSB04 STUDENT' },
-  { roll: '23CSB05', name: '23CSB05 STUDENT' },
-  { roll: '23CSB06', name: '23CSB06 STUDENT' },
-  { roll: '23CSB07', name: '23CSB07 STUDENT' },
-  { roll: '23CSB08', name: '23CSB08 STUDENT' },
-  { roll: '23CSB09', name: '23CSB09 STUDENT' },
-  { roll: '23CSB10', name: '23CSB10 STUDENT' },
-  { roll: '23CSB11', name: '23CSB11 STUDENT' },
-  { roll: '23CSB12', name: '23CSB12 STUDENT' },
-  { roll: '23CSB13', name: '23CSB13 STUDENT' },
-  { roll: '23CSB14', name: '23CSB14 STUDENT' },
-  { roll: '23CSB15', name: '23CSB15 STUDENT' },
-  { roll: '23CSB16', name: '23CSB16 STUDENT' },
-  { roll: '23CSB17', name: '23CSB17 STUDENT' },
-  { roll: '23CSB18', name: '23CSB18 STUDENT' },
-  { roll: '23CSB19', name: '23CSB19 STUDENT' },
-  { roll: '23CSB20', name: '23CSB20 STUDENT' },
-  { roll: '23CSB21', name: '23CSB21 STUDENT' },
-  { roll: '23CSB22', name: '23CSB22 STUDENT' },
-  { roll: '23CSB23', name: '23CSB23 STUDENT' },
-  { roll: '23CSB24', name: '23CSB24 STUDENT' },
-  { roll: '23CSB25', name: '23CSB25 STUDENT' },
-  { roll: '23CSB26', name: '23CSB26 STUDENT' },
-  { roll: '23CSB27', name: '23CSB27 STUDENT' },
-  { roll: '23CSB28', name: '23CSB28 STUDENT' },
-  { roll: '23CSB29', name: '23CSB29 STUDENT' },
-  { roll: '23CSB30', name: '23CSB30 STUDENT' },
-  { roll: '23CSB31', name: '23CSB31 STUDENT' },
-  { roll: '23CSB32', name: '23CSB32 STUDENT' },
-  { roll: '23CSB33', name: '23CSB33 STUDENT' },
-  { roll: '23CSB34', name: '23CSB34 STUDENT' },
-  { roll: '23CSB35', name: '23CSB35 STUDENT' },
-  { roll: '23CSB36', name: '23CSB36 STUDENT' },
+  { roll: '23CSB01', name: 'PARKAVI B' },
+  { roll: '23CSB02', name: 'PAVIDHARAN D' },
+  { roll: '23CSB03', name: 'PILIRAJ G' },
+  { roll: '23CSB04', name: 'PRAKASH K' },
+  { roll: '23CSB05', name: 'PRASANNA B' },
+  { roll: '23CSB06', name: 'PRITHIVI RAJ T' },
+  { roll: '23CSB07', name: 'PRIYADHARSHINI S' },
+  { roll: '23CSB08', name: 'RAHUL GANTHI M' },
+  { roll: '23CSB09', name: 'RAJA K' },
+  { roll: '23CSB10', name: 'RAJA MANIKANDAN V' },
+  { roll: '23CSB11', name: 'RAMAKAVI S' },
+  { roll: '23CSB12', name: 'RASUL MOHAMED H' },
+  { roll: '23CSB13', name: 'RATHINA PRAGADESH D' },
+  { roll: '23CSB14', name: 'RUHIYA V' },
+  { roll: '23CSB15', name: 'SAAIKIRTHIGA L' },
+  { roll: '23CSB16', name: 'SABAREESH M' },
+  { roll: '23CSB17', name: 'SAMINATHAN R' },
+  { roll: '23CSB18', name: 'SANDHIYA A' },
+  { roll: '23CSB19', name: 'SANDHIYA J' },
+  { roll: '23CSB20', name: 'SANJAY B' },
+  { roll: '23CSB21', name: 'SANTHOSH K' },
+  { roll: '23CSB22', name: 'SARVESH R' },
+  { roll: '23CSB23', name: 'SEDHURAMAN V' },
+  { roll: '23CSB24', name: 'SEVANTHI K' },
+  { roll: '23CSB25', name: 'SHANMATHI S' },
+  { roll: '23CSB26', name: 'SINDHUJA G' },
+  { roll: '23CSB27', name: 'SIVASAKTHI T' },
+  { roll: '23CSB28', name: 'SORNA LAKSHMI S' },
+  { roll: '23CSB29', name: 'SRIHARINI C' },
+  { roll: '23CSB30', name: 'SRUTHIKA S' },
+  { roll: '23CSB31', name: 'SUBAIR N' },
+  { roll: '23CSB32', name: 'SUBALAKSHMI E' },
+  { roll: '23CSB33', name: 'SUBASRI B S' },
+  { roll: '23CSB34', name: 'SUGAMITHA S' },
+  { roll: '23CSB35', name: 'SUGANTHIRAN K' },
+  { roll: '23CSB36', name: 'SUJITHA R' },
   { roll: '23CSB37', name: 'SWATHI M' },
   { roll: '23CSB38', name: 'SWATHI R' },
   { roll: '23CSB39', name: 'SWATHI S' },
@@ -1183,6 +1194,7 @@ function getLocalFinanceRecords(): FinanceRecord[] {
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Auto-merge newly added class initial records & update 4th Year fee to 550
         const initial = buildInitialFinanceRecords();
+        const initialNameMap = new Map(initial.map((r) => [r.id, r.studentName]));
         const existingIds = new Set(parsed.map((r) => r.id));
         let addedCount = 0;
         initial.forEach((r) => {
@@ -1192,6 +1204,13 @@ function getLocalFinanceRecords(): FinanceRecord[] {
           }
         });
         parsed.forEach((r) => {
+          if (initialNameMap.has(r.id)) {
+            const expectedName = initialNameMap.get(r.id)!;
+            if (r.studentName !== expectedName && (r.studentName.includes('STUDENT') || r.studentName.startsWith('23CSB'))) {
+              r.studentName = expectedName;
+              addedCount++;
+            }
+          }
           if ((r.section === '4th CSE A' || r.section === '4th CSE B' || r.section === 'Final CSE') && !r.isLocked && r.feeAmount !== 550) {
             r.feeAmount = 550;
             addedCount++;
@@ -1336,4 +1355,98 @@ export async function addFinanceRecord(
   }
 
   return { success: true, id };
+}
+
+// Local Storage Key for Finance Notes
+const LOCAL_FINANCE_NOTES_KEY = 'cisabz_finance_notes';
+
+function getLocalFinanceNotes(): FinanceNote[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_FINANCE_NOTES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalFinanceNotes(notes: FinanceNote[]) {
+  try {
+    localStorage.setItem(LOCAL_FINANCE_NOTES_KEY, JSON.stringify(notes));
+  } catch (e) {
+    console.error('Failed to save finance notes locally:', e);
+  }
+}
+
+/**
+ * Subscribe to Realtime Finance Notes Updates
+ */
+export function subscribeFinanceNotes(callback: (notes: FinanceNote[]) => void) {
+  try {
+    const colRef = collection(db, 'finance_notes');
+    const q = query(colRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const notes: FinanceNote[] = [];
+        snapshot.forEach((docSnap) => {
+          notes.push(docSnap.data() as FinanceNote);
+        });
+        saveLocalFinanceNotes(notes);
+        callback(notes);
+      },
+      (err) => {
+        console.warn('Firestore finance notes error, fallback to local:', err);
+        callback(getLocalFinanceNotes());
+      }
+    );
+
+    return unsubscribe;
+  } catch {
+    callback(getLocalFinanceNotes());
+    return () => { };
+  }
+}
+
+/**
+ * Add a new Finance Note / Cash Expense Log
+ */
+export async function addFinanceNote(
+  noteData: Omit<FinanceNote, 'id' | 'createdAt'>
+): Promise<{ success: boolean; id: string }> {
+  const id = `NOTE-${Date.now()}`;
+  const now = new Date().toISOString();
+  const newNote: FinanceNote = {
+    ...noteData,
+    id,
+    createdAt: now,
+  };
+
+  const localNotes = getLocalFinanceNotes();
+  localNotes.unshift(newNote);
+  saveLocalFinanceNotes(localNotes);
+
+  try {
+    await setDoc(doc(db, 'finance_notes', id), newNote);
+  } catch (err) {
+    console.warn('Firestore add finance note warning, saved locally:', err);
+  }
+
+  return { success: true, id };
+}
+
+/**
+ * Delete a Finance Note
+ */
+export async function deleteFinanceNote(noteId: string): Promise<{ success: boolean }> {
+  const localNotes = getLocalFinanceNotes().filter((n) => n.id !== noteId);
+  saveLocalFinanceNotes(localNotes);
+
+  try {
+    await deleteDoc(doc(db, 'finance_notes', noteId));
+  } catch (err) {
+    console.warn('Firestore delete note warning, removed locally:', err);
+  }
+
+  return { success: true };
 }
