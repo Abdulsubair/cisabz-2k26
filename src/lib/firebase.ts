@@ -1256,13 +1256,47 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
           );
         });
       } else {
-        const records: FinanceRecord[] = [];
+        const initial = buildInitialFinanceRecords();
+        const initialNameMap = new Map(initial.map((r) => [r.id, r.studentName]));
+        const firestoreMap = new Map<string, FinanceRecord>();
+
         snapshot.forEach((docSnap) => {
-          records.push(docSnap.data() as FinanceRecord);
+          const data = docSnap.data() as FinanceRecord;
+          firestoreMap.set(data.id, data);
         });
-        records.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
-        saveLocalFinanceRecords(records);
-        callback(records);
+
+        const mergedRecords: FinanceRecord[] = [];
+        const processedIds = new Set<string>();
+
+        initial.forEach((initRec) => {
+          processedIds.add(initRec.id);
+          if (firestoreMap.has(initRec.id)) {
+            const fsRec = firestoreMap.get(initRec.id)!;
+            if (initialNameMap.has(fsRec.id)) {
+              const expectedName = initialNameMap.get(fsRec.id)!;
+              if (fsRec.studentName !== expectedName && (fsRec.studentName.includes('STUDENT') || fsRec.studentName.startsWith('23CSB'))) {
+                fsRec.studentName = expectedName;
+                updateDoc(doc(db, 'finance_records', fsRec.id), { studentName: expectedName }).catch(() => {});
+              }
+            }
+            mergedRecords.push(fsRec);
+          } else {
+            mergedRecords.push(initRec);
+            setDoc(doc(db, 'finance_records', initRec.id), initRec).catch((err) =>
+              console.warn('Auto-seed missing finance doc warning:', err)
+            );
+          }
+        });
+
+        firestoreMap.forEach((rec, id) => {
+          if (!processedIds.has(id)) {
+            mergedRecords.push(rec);
+          }
+        });
+
+        mergedRecords.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+        saveLocalFinanceRecords(mergedRecords);
+        callback(mergedRecords);
       }
     },
     (error) => {
