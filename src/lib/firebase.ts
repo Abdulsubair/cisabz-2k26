@@ -173,7 +173,7 @@ export async function checkDuplicateRegistration(email: string, mobile: string):
   try {
     const firestoreCheck = (async () => {
       const regRef = collection(db, 'registrations');
-      
+
       const qEmail = query(regRef, where('emailNormalized', '==', normEmail));
       const snapshotEmail = await getDocs(qEmail);
       if (!snapshotEmail.empty) {
@@ -394,7 +394,7 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
     return unsubscribe;
   } catch {
     callback(getLocalRegistrations());
-    return () => {};
+    return () => { };
   }
 }
 
@@ -451,7 +451,7 @@ export function subscribeEventStatuses(callback: (statuses: Record<string, boole
     return unsubscribe;
   } catch {
     callback(getLocalEvents());
-    return () => {};
+    return () => { };
   }
 }
 

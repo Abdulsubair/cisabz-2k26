@@ -503,6 +503,27 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
                     </a>
                   </div>
                 ))}
+                
+                <a
+                  href={SYMPOSIUM_CONFIG.whatsappGroupLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between w-full p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/70 transition-all group mt-2"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform">
+                      <svg className="w-4 h-4 fill-current text-emerald-400" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.677.15-.2.3-.776.978-.952 1.179-.176.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.897-.8-1.502-1.787-1.678-2.088-.176-.301-.019-.464.131-.614.136-.135.301-.351.451-.526.15-.176.201-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.633-.928-2.238-.244-.589-.493-.51-.677-.518-.175-.008-.376-.01-.576-.01-.2 0-.526.075-.802.376-.276.3-.978.956-.978 2.33 0 1.373 1.002 2.7 1.14 2.89.138.19 1.972 3.011 4.778 4.22.667.288 1.189.46 1.595.589.671.213 1.282.183 1.764.11.537-.081 1.653-.675 1.888-1.328.235-.653.235-1.21.164-1.328-.07-.118-.27-.194-.57-.344z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.553 4.11 1.523 5.84L.05 23.475l5.803-1.52C7.545 22.87 9.7 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.848 0-3.644-.492-5.22-1.425l-.374-.222-3.44.902.918-3.355-.244-.388C2.695 15.892 2 13.997 2 12 2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Join WhatsApp Group</h4>
+                      <p className="text-[10px] text-slate-400">Official participant group</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">JOIN NOW &rarr;</span>
+                </a>
               </div>
             </div>
 

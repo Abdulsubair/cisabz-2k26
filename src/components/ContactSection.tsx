@@ -48,7 +48,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
         </div>
 
         {/* QUICK CONTACT ACTION BUTTONS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 max-w-7xl mx-auto mb-16">
           <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex flex-col items-start text-left group transition-all">
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
@@ -95,7 +95,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
 
           <button
             onClick={onRegisterClick}
-            className="p-6 rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-cyan-500/40 hover:border-cyan-400 flex flex-col items-center text-center group transition-all cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+            className="p-6 rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-cyan-500/40 hover:border-cyan-400 flex flex-col items-center justify-center text-center group transition-all cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.2)]"
           >
             <div className="p-3.5 rounded-2xl bg-cyan-500 text-white mb-4 group-hover:scale-110 transition-transform shadow-lg">
               <Send className="w-6 h-6" />
@@ -105,10 +105,26 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
           </button>
 
           <a
+            href={SYMPOSIUM_CONFIG.whatsappGroupLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] flex flex-col items-center justify-center text-center group transition-all relative overflow-hidden"
+          >
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-400 mb-4 group-hover:scale-110 transition-transform border border-emerald-500/20 shadow-md">
+              <svg className="w-6 h-6 fill-current text-emerald-400" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.677.15-.2.3-.776.978-.952 1.179-.176.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.897-.8-1.502-1.787-1.678-2.088-.176-.301-.019-.464.131-.614.136-.135.301-.351.451-.526.15-.176.201-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.633-.928-2.238-.244-.589-.493-.51-.677-.518-.175-.008-.376-.01-.576-.01-.2 0-.526.075-.802.376-.276.3-.978.956-.978 2.33 0 1.373 1.002 2.7 1.14 2.89.138.19 1.972 3.011 4.778 4.22.667.288 1.189.46 1.595.589.671.213 1.282.183 1.764.11.537-.081 1.653-.675 1.888-1.328.235-.653.235-1.21.164-1.328-.07-.118-.27-.194-.57-.344z"/>
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.553 4.11 1.523 5.84L.05 23.475l5.803-1.52C7.545 22.87 9.7 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.848 0-3.644-.492-5.22-1.425l-.374-.222-3.44.902.918-3.355-.244-.388C2.695 15.892 2 13.997 2 12 2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
+              </svg>
+            </div>
+            <h3 className="text-sm font-bold text-white uppercase mb-1">WHATSAPP GROUP</h3>
+            <p className="text-xs text-emerald-400 font-mono">Tap to Join Group</p>
+          </a>
+
+          <a
             href="https://www.instagram.com/cisabz26"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 flex flex-col items-center text-center group transition-all"
+            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 flex flex-col items-center justify-center text-center group transition-all"
           >
             {/* QR fixed at 80×80 — same icon-area height as other cards */}
             <div className="relative mb-4 group-hover:scale-110 transition-transform">
@@ -129,7 +145,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ onRegisterClick 
 
           <a
             href={`mailto:${SYMPOSIUM_CONFIG.emailPlaceholder}`}
-            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 flex flex-col items-center text-center group transition-all"
+            className="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 flex flex-col items-center justify-center text-center group transition-all"
           >
             <div className="p-3.5 rounded-2xl bg-purple-500/10 text-purple-400 mb-4 group-hover:scale-110 transition-transform">
               <Mail className="w-6 h-6" />

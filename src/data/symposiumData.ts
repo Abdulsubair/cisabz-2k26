@@ -19,6 +19,7 @@ export const SYMPOSIUM_CONFIG = {
   eventDateISO: '2026-09-25T09:00:00',
   registrationEndDate: '22-09-2026',
   registrationLink: 'https://forms.gle/aPGrPT4jFbLFYPhF9',
+  whatsappGroupLink: 'https://chat.whatsapp.com/BCVKMFre7kuIQ4Kj4AXD5L?mode=gi_t',
   googleMapsUrl: 'https://maps.google.com/?q=Kings+College+of+Engineering+Pudukkottai',
   googleMapsDirectionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Kings+College+of+Engineering+Punalkulam',
   googleMapsEmbedUrl: 'https://maps.google.com/maps?q=Kings%20College%20of%20Engineering%20Punalkulam%20Pudukkottai&t=&z=14&ie=UTF8&iwloc=&output=embed',
