@@ -12,7 +12,6 @@ import {
   query,
   where,
   serverTimestamp,
-  orderBy,
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -1416,21 +1415,38 @@ function saveLocalFinanceNotes(notes: FinanceNote[]) {
  */
 export function subscribeFinanceNotes(callback: (notes: FinanceNote[]) => void) {
   try {
+    // Immediately emit local notes so the UI never starts empty
+    const initialLocal = getLocalFinanceNotes();
+    callback(initialLocal);
+
     const colRef = collection(db, 'finance_notes');
-    const q = query(colRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(
-      q,
+      colRef,
       (snapshot) => {
-        const notes: FinanceNote[] = [];
+        const firestoreNotesMap = new Map<string, FinanceNote>();
         snapshot.forEach((docSnap) => {
-          notes.push(docSnap.data() as FinanceNote);
+          const data = docSnap.data() as FinanceNote;
+          firestoreNotesMap.set(data.id, data);
         });
-        saveLocalFinanceNotes(notes);
-        callback(notes);
+
+        const localNotes = getLocalFinanceNotes();
+        const mergedNotesMap = new Map<string, FinanceNote>();
+
+        // First include local notes
+        localNotes.forEach((n) => mergedNotesMap.set(n.id, n));
+        // Override or add Firestore notes
+        firestoreNotesMap.forEach((n, id) => mergedNotesMap.set(id, n));
+
+        const mergedList = Array.from(mergedNotesMap.values()).sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+
+        saveLocalFinanceNotes(mergedList);
+        callback(mergedList);
       },
       (err) => {
-        console.warn('Firestore finance notes error, fallback to local:', err);
+        console.warn('Firestore finance notes warning, using local notes:', err);
         callback(getLocalFinanceNotes());
       }
     );
@@ -1438,7 +1454,7 @@ export function subscribeFinanceNotes(callback: (notes: FinanceNote[]) => void) 
     return unsubscribe;
   } catch {
     callback(getLocalFinanceNotes());
-    return () => { };
+    return () => {};
   }
 }
 
@@ -1447,7 +1463,7 @@ export function subscribeFinanceNotes(callback: (notes: FinanceNote[]) => void) 
  */
 export async function addFinanceNote(
   noteData: Omit<FinanceNote, 'id' | 'createdAt'>
-): Promise<{ success: boolean; id: string }> {
+): Promise<{ success: boolean; id: string; note: FinanceNote }> {
   const id = `NOTE-${Date.now()}`;
   const now = new Date().toISOString();
   const newNote: FinanceNote = {
@@ -1457,8 +1473,8 @@ export async function addFinanceNote(
   };
 
   const localNotes = getLocalFinanceNotes();
-  localNotes.unshift(newNote);
-  saveLocalFinanceNotes(localNotes);
+  const updatedLocal = [newNote, ...localNotes.filter((n) => n.id !== id)];
+  saveLocalFinanceNotes(updatedLocal);
 
   try {
     await setDoc(doc(db, 'finance_notes', id), newNote);
@@ -1466,7 +1482,7 @@ export async function addFinanceNote(
     console.warn('Firestore add finance note warning, saved locally:', err);
   }
 
-  return { success: true, id };
+  return { success: true, id, note: newNote };
 }
 
 /**

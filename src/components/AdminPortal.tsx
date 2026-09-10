@@ -425,14 +425,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     setIsSavingNote(true);
     try {
       const parsedAmt = parseFloat(newNoteAmount);
-      await addFinanceNote({
+      const res = await addFinanceNote({
         note: newNoteText.trim(),
         date: newNoteDate || new Date().toISOString().split('T')[0],
         amount: !isNaN(parsedAmt) && parsedAmt > 0 ? parsedAmt : undefined,
         recipient: newNoteRecipient.trim() || undefined,
         createdBy: username || 'Finance Admin',
       });
-      showToast('Finance note saved!', 'success');
+      if (res && res.note) {
+        setFinanceNotes((prev) => [res.note, ...prev.filter((n) => n.id !== res.note.id)]);
+      }
+      setNotesSearchQuery(''); // Reset search filter so newly saved note is visible immediately
+      showToast('Finance note saved successfully!', 'success');
       setNewNoteText('');
       setNewNoteAmount('');
       setNewNoteRecipient('');
@@ -445,6 +449,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
   const handleDeleteNote = async (noteId: string) => {
     try {
+      setFinanceNotes((prev) => prev.filter((n) => n.id !== noteId));
       await deleteFinanceNote(noteId);
       showToast('Note deleted', 'success');
     } catch (err) {
