@@ -37,6 +37,7 @@ import {
   updateEventStatus,
   verifyRegistration,
   rejectRegistration,
+  deleteRegistration,
   subscribeFinanceRecords,
   markFinanceRecordPaid,
   addFinanceRecord,
@@ -988,6 +989,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     }
   };
 
+  // Participant Deletion Handler — Permanent deletion (ONLY for rejected participants)
+  const handleDeleteParticipant = async (regId: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete rejected registration record ${regId}?`)) {
+      return;
+    }
+    setIsProcessingAction(true);
+    try {
+      await deleteRegistration(regId);
+      setRegistrations((prev) => prev.filter((r) => r.id !== regId));
+      if (selectedParticipant && selectedParticipant.id === regId) {
+        setSelectedParticipant(null);
+      }
+      showToast(`✓ Rejected registration ${regId} permanently deleted.`, 'success');
+    } catch (e) {
+      console.error('Failed to delete participant:', e);
+      showToast('Failed to delete registration. Firestore update failed.', 'error');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
   // Overall Statistics (Total Registrations = Active Valid Registrations, excluding REJECTED)
   const totalStats = {
     total: registrations.filter((r) => r.status !== 'REJECTED').length,
@@ -1808,7 +1830,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
                           {/* Action */}
                           <td className="py-4 px-4 text-right">
-                            <div className="flex items-center justify-end">
+                            <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => {
                                   setSelectedParticipant(reg);
@@ -1819,6 +1841,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>View & Verify</span>
                               </button>
+
+                              {activeView === 'rejected' && (
+                                <button
+                                  onClick={() => handleDeleteParticipant(reg.id)}
+                                  disabled={isProcessingAction}
+                                  className="px-3 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-800/80 text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                  title="Permanently Delete Rejected Participant"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                  <span>Delete</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -2887,6 +2921,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             {/* Modal Action Buttons */}
             {!showRejectForm && (
               <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                {(activeView === 'rejected' || selectedParticipant.status === 'REJECTED') && (
+                  <button
+                    onClick={() => handleDeleteParticipant(selectedParticipant.id)}
+                    disabled={isProcessingAction}
+                    className="px-5 py-2.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-700 font-mono font-bold text-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 mr-auto"
+                    title="Permanently Delete Rejected Participant"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <span>Delete Participant</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => setShowRejectForm(true)}
                   disabled={isProcessingAction || selectedParticipant.status === 'REJECTED'}
