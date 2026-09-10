@@ -1276,7 +1276,7 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
               const expectedName = initialNameMap.get(fsRec.id)!;
               if (fsRec.studentName !== expectedName && (fsRec.studentName.includes('STUDENT') || fsRec.studentName.startsWith('23CSB'))) {
                 fsRec.studentName = expectedName;
-                updateDoc(doc(db, 'finance_records', fsRec.id), { studentName: expectedName }).catch(() => {});
+                updateDoc(doc(db, 'finance_records', fsRec.id), { studentName: expectedName }).catch(() => { });
               }
             }
             mergedRecords.push(fsRec);
