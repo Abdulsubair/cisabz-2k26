@@ -29,6 +29,7 @@ import {
   Wallet,
   Smartphone,
   RefreshCw,
+  CheckSquare,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -153,9 +154,41 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const [notesSearchQuery, setNotesSearchQuery] = useState<string>('');
   const [isSavingNote, setIsSavingNote] = useState<boolean>(false);
 
+  // Quick Bulk Mark Modal State
+  const [showQuickMarkModal, setShowQuickMarkModal] = useState<boolean>(false);
+  const [quickMarkSection, setQuickMarkSection] = useState<string>('2nd CSE A');
+  const [quickMarkPaymentMode, setQuickMarkPaymentMode] = useState<'GPAY' | 'CASH'>('GPAY');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState<boolean>(false);
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setActionToast({ message, type });
     setTimeout(() => setActionToast(null), 5000);
+  };
+
+  const handleBulkMarkPaid = async () => {
+    if (selectedStudentIds.length === 0) {
+      showToast('No students selected to mark as paid', 'error');
+      return;
+    }
+    setIsBulkProcessing(true);
+    let count = 0;
+    for (const studentId of selectedStudentIds) {
+      const student = financeRecords.find((r) => r.id === studentId);
+      if (student && !student.isLocked) {
+        await markFinanceRecordPaid(
+          student.id,
+          student.feeAmount,
+          username || 'Finance Admin',
+          quickMarkPaymentMode
+        );
+        count++;
+      }
+    }
+    setIsBulkProcessing(false);
+    setShowQuickMarkModal(false);
+    setSelectedStudentIds([]);
+    showToast(`Successfully marked ${count} students as PAID via ${quickMarkPaymentMode}!`, 'success');
   };
 
   // Subscribe to Realtime Firebase Updates
@@ -2295,6 +2328,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
                   <div className="flex flex-wrap items-center gap-2">
                     <button
+                      onClick={() => {
+                        setShowQuickMarkModal(true);
+                        setSelectedStudentIds([]);
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 cursor-pointer"
+                      title="Quick Bulk Mark Class Paid"
+                    >
+                      <CheckSquare className="w-4 h-4 text-emerald-200" />
+                      <span>Quick Mark Class</span>
+                    </button>
+
+                    <button
                       onClick={() => setShowFinanceNotesModal(true)}
                       className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] flex items-center gap-2 cursor-pointer"
                     >
@@ -3360,6 +3405,202 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                     ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK BULK MARK MODAL */}
+      {showQuickMarkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-emerald-500/40 p-6 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-lg font-bold font-orbitron text-white flex items-center gap-2">
+                  <CheckSquare className="w-5 h-5 text-emerald-400" />
+                  Quick Bulk Mark Class Paid
+                </h3>
+                <p className="text-xs font-mono text-slate-400 mt-1">
+                  Select a class section, payment mode, and mark multiple students as paid at once. Cloud synced in real time.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowQuickMarkModal(false)}
+                className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+              <div>
+                <label className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                  Select Section / Class
+                </label>
+                <select
+                  value={quickMarkSection}
+                  onChange={(e) => {
+                    setQuickMarkSection(e.target.value);
+                    setSelectedStudentIds([]);
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="2nd CSE A">2nd CSE A (65 Students • ₹250)</option>
+                  <option value="2nd CSE B">2nd CSE B (67 Students • ₹250)</option>
+                  <option value="3rd CSE A">3rd CSE A (65 Students • ₹400)</option>
+                  <option value="3rd CSE B">3rd CSE B (62 Students • ₹400)</option>
+                  <option value="4th CSE A">4th CSE A (59 Students • ₹550)</option>
+                  <option value="4th CSE B">4th CSE B (59 Students • ₹550)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                  Payment Method
+                </label>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setQuickMarkPaymentMode('GPAY')}
+                    className={`flex-1 py-2 px-3 rounded-xl border text-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      quickMarkPaymentMode === 'GPAY'
+                        ? 'bg-purple-900/60 border-purple-500 text-purple-200'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>GPay</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickMarkPaymentMode('CASH')}
+                    className={`flex-1 py-2 px-3 rounded-xl border text-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      quickMarkPaymentMode === 'CASH'
+                        ? 'bg-emerald-900/60 border-emerald-500 text-emerald-200'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    <span>Cash</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* STUDENT MULTI-SELECT ROSTER */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">
+                  Unpaid Students in {quickMarkSection}:
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const unpaid = financeRecords
+                        .filter((r) => r.section === quickMarkSection && !r.isLocked && r.status !== 'PAID')
+                        .map((r) => r.id);
+                      setSelectedStudentIds(unpaid);
+                    }}
+                    className="text-emerald-400 hover:underline text-[11px] font-bold cursor-pointer"
+                  >
+                    Select All Unpaid ({financeRecords.filter((r) => r.section === quickMarkSection && !r.isLocked && r.status !== 'PAID').length})
+                  </button>
+                  <span className="text-slate-600">•</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStudentIds([])}
+                    className="text-slate-400 hover:underline text-[11px] cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto bg-slate-950 border border-slate-800 rounded-2xl p-2 divide-y divide-slate-900">
+                {financeRecords
+                  .filter((r) => r.section === quickMarkSection)
+                  .map((student) => {
+                    const isSelected = selectedStudentIds.includes(student.id);
+                    const isAlreadyPaid = student.isLocked || student.status === 'PAID';
+                    return (
+                      <label
+                        key={student.id}
+                        className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors ${
+                          isAlreadyPaid
+                            ? 'opacity-50 cursor-not-allowed bg-emerald-950/20'
+                            : isSelected
+                            ? 'bg-emerald-900/30 border border-emerald-500/40'
+                            : 'hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            disabled={isAlreadyPaid}
+                            checked={isSelected || isAlreadyPaid}
+                            onChange={(e) => {
+                              if (isAlreadyPaid) return;
+                              if (e.target.checked) {
+                                setSelectedStudentIds((prev) => [...prev, student.id]);
+                              } else {
+                                setSelectedStudentIds((prev) => prev.filter((id) => id !== student.id));
+                              }
+                            }}
+                            className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500"
+                          />
+                          <div>
+                            <span className="text-xs font-mono font-bold text-white block">
+                              {student.studentName}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              {student.rollNumber} • Fee: ₹{student.feeAmount}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          {isAlreadyPaid ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              PAID ({student.paymentMode || 'GPAY'})
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 bg-slate-900 border border-slate-800">
+                              UNPAID
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+              <span className="text-xs font-mono text-slate-400">
+                Selected: <strong className="text-emerald-400">{selectedStudentIds.length}</strong> students
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickMarkModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-mono hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isBulkProcessing || selectedStudentIds.length === 0}
+                  onClick={handleBulkMarkPaid}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-110 disabled:opacity-50 text-white font-mono font-bold text-xs uppercase transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                >
+                  {isBulkProcessing ? (
+                    <span>Saving to Cloud...</span>
+                  ) : (
+                    <span>Mark {selectedStudentIds.length} Selected as Paid</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

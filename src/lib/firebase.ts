@@ -1240,11 +1240,32 @@ export function saveLocalFinanceRecords(records: FinanceRecord[]) {
   }
 }
 
+
+/**
+ * Sync Finance Store to Firestore registrations/FINANCE_STORE
+ */
+export async function syncFinanceStoreToFirestore(records: FinanceRecord[]) {
+  try {
+    const docRef = doc(db, 'registrations', 'FINANCE_STORE');
+    await setDoc(
+      docRef,
+      {
+        recordsJson: JSON.stringify(records),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Syncing FINANCE_STORE to Firestore warning:', err);
+  }
+}
+
 /**
  * Realtime Subscription for Finance Records
+ * Listens to registrations/FINANCE_STORE and merges with local storage & initial roster
  */
 export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => void) {
-  const colRef = collection(db, 'finance_records');
+  const storeRef = doc(db, 'registrations', 'FINANCE_STORE');
 
   const handleLocalUpdate = () => {
     callback(getLocalFinanceRecords());
@@ -1254,102 +1275,92 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
     window.addEventListener('cisabz_finance_updated', handleLocalUpdate);
   }
 
-  const unsubscribe = onSnapshot(
-    colRef,
+  // Immediately emit local records so the UI never starts empty
+  const initialLocal = getLocalFinanceRecords();
+  callback(initialLocal);
+
+  const unsubscribeStore = onSnapshot(
+    storeRef,
     (snapshot) => {
-      const localRecords = getLocalFinanceRecords();
-      const localMap = new Map<string, FinanceRecord>(localRecords.map((r) => [r.id, r]));
-
-      if (snapshot.empty) {
-        callback(localRecords);
-        localRecords.forEach((r) => {
-          setDoc(doc(db, 'finance_records', r.id), r, { merge: true }).catch((err) =>
-            console.warn('Auto-seed finance doc warning:', err)
-          );
-        });
-      } else {
-        const initial = buildInitialFinanceRecords();
-        const initialNameMap = new Map(initial.map((r) => [r.id, r.studentName]));
-        const firestoreMap = new Map<string, FinanceRecord>();
-
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data() as FinanceRecord;
-          firestoreMap.set(data.id, data);
-        });
-
-        const mergedRecords: FinanceRecord[] = [];
-        const processedIds = new Set<string>();
-
-        initial.forEach((initRec) => {
-          processedIds.add(initRec.id);
-          let recordToUse: FinanceRecord = initRec;
-
-          if (firestoreMap.has(initRec.id)) {
-            recordToUse = { ...initRec, ...firestoreMap.get(initRec.id)! };
-          }
-
-          // Preserve local PAID status if local record was marked PAID offline or prior to Firestore update
-          if (localMap.has(initRec.id)) {
-            const localRec = localMap.get(initRec.id)!;
-            if (localRec.status === 'PAID' || localRec.isLocked) {
-              if (recordToUse.status !== 'PAID' || !recordToUse.isLocked) {
-                recordToUse = {
-                  ...recordToUse,
-                  status: 'PAID',
-                  paidAmount: localRec.paidAmount || recordToUse.feeAmount,
-                  paymentMode: localRec.paymentMode || 'GPAY',
-                  paidAt: localRec.paidAt || new Date().toISOString(),
-                  collectedBy: localRec.collectedBy || 'Admin',
-                  isLocked: true,
-                  notes: localRec.notes || recordToUse.notes || '',
-                };
-                // Sync back to Firestore so Firestore database holds the PAID status as well
-                setDoc(doc(db, 'finance_records', recordToUse.id), recordToUse, { merge: true }).catch((err) =>
-                  console.warn('Sync local paid record to Firestore failed:', err)
-                );
-              }
-            }
-          }
-
-          if (initialNameMap.has(recordToUse.id)) {
-            const expectedName = initialNameMap.get(recordToUse.id)!;
-            if (recordToUse.studentName !== expectedName && (recordToUse.studentName.includes('STUDENT') || recordToUse.studentName.startsWith('23CSB'))) {
-              recordToUse.studentName = expectedName;
-              updateDoc(doc(db, 'finance_records', recordToUse.id), { studentName: expectedName }).catch(() => { });
-            }
-          }
-
-          mergedRecords.push(recordToUse);
-
-          if (!firestoreMap.has(initRec.id)) {
-            setDoc(doc(db, 'finance_records', initRec.id), recordToUse, { merge: true }).catch((err) =>
-              console.warn('Auto-seed missing finance doc warning:', err)
-            );
-          }
-        });
-
-        firestoreMap.forEach((rec, id) => {
-          if (!processedIds.has(id)) {
-            mergedRecords.push(rec);
-          }
-        });
-
-        mergedRecords.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
-        // Save merged records without triggering infinite event loop
+      let remoteRecords: FinanceRecord[] = [];
+      if (snapshot.exists() && snapshot.data()?.recordsJson) {
         try {
-          localStorage.setItem(LOCAL_FINANCE_KEY, JSON.stringify(mergedRecords));
-        } catch (e) { }
-        callback(mergedRecords);
+          remoteRecords = JSON.parse(snapshot.data().recordsJson);
+        } catch (e) {
+          console.warn('Error parsing remote recordsJson:', e);
+        }
       }
+
+      const localRecords = getLocalFinanceRecords();
+      const initial = buildInitialFinanceRecords();
+      const initialNameMap = new Map(initial.map((r) => [r.id, r.studentName]));
+
+      const mergedMap = new Map<string, FinanceRecord>();
+
+      // 1. Template roster
+      initial.forEach((r) => mergedMap.set(r.id, r));
+
+      // 2. Overlay remote store from Firestore
+      remoteRecords.forEach((r) => {
+        if (r && r.id) {
+          const existing = mergedMap.get(r.id) || r;
+          mergedMap.set(r.id, { ...existing, ...r });
+        }
+      });
+
+      // 3. Overlay local records (PRESERVE PAID STATUS IF MARKED OFFLINE / LOCAL)
+      localRecords.forEach((r) => {
+        if (r && r.id) {
+          const existing = mergedMap.get(r.id) || r;
+          if (r.status === 'PAID' || r.isLocked || (r.paidAmount && r.paidAmount > 0)) {
+            mergedMap.set(r.id, {
+              ...existing,
+              ...r,
+              status: 'PAID',
+              paidAmount: r.paidAmount || existing.paidAmount || existing.feeAmount,
+              paymentMode: r.paymentMode || existing.paymentMode || 'GPAY',
+              isLocked: true,
+            });
+          } else if (!mergedMap.has(r.id)) {
+            mergedMap.set(r.id, r);
+          }
+        }
+      });
+
+      const mergedList = Array.from(mergedMap.values());
+
+      // Fix name corrections or fee amount updates for 4th year
+      mergedList.forEach((r) => {
+        if (initialNameMap.has(r.id)) {
+          const expectedName = initialNameMap.get(r.id)!;
+          if (r.studentName !== expectedName && (r.studentName.includes('STUDENT') || r.studentName.startsWith('23CSB'))) {
+            r.studentName = expectedName;
+          }
+        }
+      });
+
+      mergedList.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+
+      // Save merged records locally
+      try {
+        localStorage.setItem(LOCAL_FINANCE_KEY, JSON.stringify(mergedList));
+      } catch (e) {}
+
+      // If remote store is empty or missing, sync merged list to Firestore
+      if (!snapshot.exists() || !snapshot.data()?.recordsJson) {
+        syncFinanceStoreToFirestore(mergedList);
+      }
+
+      callback(mergedList);
     },
-    (error) => {
-      console.warn('Firestore finance snapshot warning, using localStorage fallback:', error);
+    (err) => {
+      console.warn('Firestore FINANCE_STORE snapshot warning, using localStorage fallback:', err);
       callback(getLocalFinanceRecords());
     }
   );
 
   return () => {
-    unsubscribe();
+    unsubscribeStore();
     if (typeof window !== 'undefined') {
       window.removeEventListener('cisabz_finance_updated', handleLocalUpdate);
     }
@@ -1357,7 +1368,7 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
 }
 
 /**
- * Mark a Finance Record as PAID (PERMANENT LOCKING ENFORCED)
+ * Mark a Finance Record as PAID (PERMANENT LOCKING ENFORCED & CLOUD SYNC)
  */
 export async function markFinanceRecordPaid(
   recordId: string,
@@ -1389,13 +1400,12 @@ export async function markFinanceRecordPaid(
     saveLocalFinanceRecords(localList);
   }
 
+  // Sync complete store to Firestore registrations/FINANCE_STORE
+  await syncFinanceStoreToFirestore(localList);
+
+  // Attempt individual doc write to finance_records collection
   try {
     const docRef = doc(db, 'finance_records', recordId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists() && docSnap.data().isLocked) {
-      return { success: false, message: 'This record is permanently locked and cannot be modified.' };
-    }
-
     const payload = {
       id: recordId,
       paidAmount: paidAmount > 0 ? paidAmount : targetFee,
@@ -1406,13 +1416,12 @@ export async function markFinanceRecordPaid(
       isLocked: true,
       ...(notes ? { notes } : {}),
     };
-
     await setDoc(docRef, payload, { merge: true });
-    return { success: true };
   } catch (err) {
-    console.warn('Firestore update warning for finance record, local update succeeded:', err);
-    return { success: true };
+    console.warn('Firestore individual doc update warning:', err);
   }
+
+  return { success: true };
 }
 
 /**
@@ -1432,11 +1441,12 @@ export async function addFinanceRecord(
   const localList = getLocalFinanceRecords();
   localList.push(newRecord);
   saveLocalFinanceRecords(localList);
+  await syncFinanceStoreToFirestore(localList);
 
   try {
     await setDoc(doc(db, 'finance_records', id), newRecord);
   } catch (err) {
-    console.warn('Firestore add finance record warning, saved locally:', err);
+    console.warn('Firestore add finance record warning:', err);
   }
 
   return { success: true, id };
@@ -1463,51 +1473,64 @@ function saveLocalFinanceNotes(notes: FinanceNote[]) {
 }
 
 /**
+ * Sync Finance Notes Store to Firestore registrations/FINANCE_NOTES_STORE
+ */
+export async function syncFinanceNotesStoreToFirestore(notes: FinanceNote[]) {
+  try {
+    const docRef = doc(db, 'registrations', 'FINANCE_NOTES_STORE');
+    await setDoc(
+      docRef,
+      {
+        notesJson: JSON.stringify(notes),
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Syncing FINANCE_NOTES_STORE to Firestore warning:', err);
+  }
+}
+
+/**
  * Subscribe to Realtime Finance Notes Updates
  */
 export function subscribeFinanceNotes(callback: (notes: FinanceNote[]) => void) {
-  try {
-    // Immediately emit local notes so the UI never starts empty
-    const initialLocal = getLocalFinanceNotes();
-    callback(initialLocal);
+  const storeRef = doc(db, 'registrations', 'FINANCE_NOTES_STORE');
 
-    const colRef = collection(db, 'finance_notes');
-
-    const unsubscribe = onSnapshot(
-      colRef,
-      (snapshot) => {
-        const firestoreNotesMap = new Map<string, FinanceNote>();
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data() as FinanceNote;
-          firestoreNotesMap.set(data.id, data);
-        });
-
-        const localNotes = getLocalFinanceNotes();
-        const mergedNotesMap = new Map<string, FinanceNote>();
-
-        // First include local notes
-        localNotes.forEach((n) => mergedNotesMap.set(n.id, n));
-        // Override or add Firestore notes
-        firestoreNotesMap.forEach((n, id) => mergedNotesMap.set(id, n));
-
-        const mergedList = Array.from(mergedNotesMap.values()).sort(
-          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        );
-
-        saveLocalFinanceNotes(mergedList);
-        callback(mergedList);
-      },
-      (err) => {
-        console.warn('Firestore finance notes warning, using local notes:', err);
-        callback(getLocalFinanceNotes());
+  const unsubscribeStore = onSnapshot(
+    storeRef,
+    (snapshot) => {
+      let remoteNotes: FinanceNote[] = [];
+      if (snapshot.exists() && snapshot.data()?.notesJson) {
+        try {
+          remoteNotes = JSON.parse(snapshot.data().notesJson);
+        } catch (e) {}
       }
-    );
 
-    return unsubscribe;
-  } catch {
-    callback(getLocalFinanceNotes());
-    return () => {};
-  }
+      const localNotes = getLocalFinanceNotes();
+      const mergedNotesMap = new Map<string, FinanceNote>();
+
+      localNotes.forEach((n) => mergedNotesMap.set(n.id, n));
+      remoteNotes.forEach((n) => mergedNotesMap.set(n.id, n));
+
+      const mergedList = Array.from(mergedNotesMap.values()).sort(
+        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
+
+      saveLocalFinanceNotes(mergedList);
+      if (!snapshot.exists() || !snapshot.data()?.notesJson) {
+        syncFinanceNotesStoreToFirestore(mergedList);
+      }
+
+      callback(mergedList);
+    },
+    (err) => {
+      console.warn('Firestore finance notes warning, using local notes:', err);
+      callback(getLocalFinanceNotes());
+    }
+  );
+
+  return unsubscribeStore;
 }
 
 /**
@@ -1527,6 +1550,7 @@ export async function addFinanceNote(
   const localNotes = getLocalFinanceNotes();
   const updatedLocal = [newNote, ...localNotes.filter((n) => n.id !== id)];
   saveLocalFinanceNotes(updatedLocal);
+  await syncFinanceNotesStoreToFirestore(updatedLocal);
 
   try {
     await setDoc(doc(db, 'finance_notes', id), newNote);
@@ -1543,6 +1567,7 @@ export async function addFinanceNote(
 export async function deleteFinanceNote(noteId: string): Promise<{ success: boolean }> {
   const localNotes = getLocalFinanceNotes().filter((n) => n.id !== noteId);
   saveLocalFinanceNotes(localNotes);
+  await syncFinanceNotesStoreToFirestore(localNotes);
 
   try {
     await deleteDoc(doc(db, 'finance_notes', noteId));
@@ -1552,3 +1577,4 @@ export async function deleteFinanceNote(noteId: string): Promise<{ success: bool
 
   return { success: true };
 }
+
