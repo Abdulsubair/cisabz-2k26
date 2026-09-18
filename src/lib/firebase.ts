@@ -368,6 +368,13 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
       (snapshot) => {
         const list: RegistrationData[] = [];
         snapshot.forEach((docSnap) => {
+          if (
+            docSnap.id.startsWith('FINANCE_') ||
+            docSnap.id.includes('STORE') ||
+            !docSnap.data()?.fullName
+          ) {
+            return;
+          }
           const d = docSnap.data();
           list.push({
             id: d.id || docSnap.id,
