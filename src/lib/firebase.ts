@@ -1185,7 +1185,7 @@ export function buildInitialFinanceRecords(): FinanceRecord[] {
   return records;
 }
 
-function getLocalFinanceRecords(): FinanceRecord[] {
+export function getLocalFinanceRecords(): FinanceRecord[] {
   try {
     const raw = localStorage.getItem(LOCAL_FINANCE_KEY);
     if (raw) {
@@ -1229,9 +1229,12 @@ function getLocalFinanceRecords(): FinanceRecord[] {
   return initial;
 }
 
-function saveLocalFinanceRecords(records: FinanceRecord[]) {
+export function saveLocalFinanceRecords(records: FinanceRecord[]) {
   try {
     localStorage.setItem(LOCAL_FINANCE_KEY, JSON.stringify(records));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('cisabz_finance_updated'));
+    }
   } catch (e) {
     console.error('Error saving local finance records:', e);
   }
@@ -1242,6 +1245,14 @@ function saveLocalFinanceRecords(records: FinanceRecord[]) {
  */
 export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => void) {
   const colRef = collection(db, 'finance_records');
+
+  const handleLocalUpdate = () => {
+    callback(getLocalFinanceRecords());
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('cisabz_finance_updated', handleLocalUpdate);
+  }
 
   const unsubscribe = onSnapshot(
     colRef,
@@ -1324,7 +1335,10 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
         });
 
         mergedRecords.sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
-        saveLocalFinanceRecords(mergedRecords);
+        // Save merged records without triggering infinite event loop
+        try {
+          localStorage.setItem(LOCAL_FINANCE_KEY, JSON.stringify(mergedRecords));
+        } catch (e) { }
         callback(mergedRecords);
       }
     },
@@ -1334,7 +1348,12 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
     }
   );
 
-  return unsubscribe;
+  return () => {
+    unsubscribe();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('cisabz_finance_updated', handleLocalUpdate);
+    }
+  };
 }
 
 /**

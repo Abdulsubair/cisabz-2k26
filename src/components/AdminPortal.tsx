@@ -28,6 +28,7 @@ import {
   StickyNote,
   Wallet,
   Smartphone,
+  RefreshCw,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -39,6 +40,7 @@ import {
   rejectRegistration,
   deleteRegistration,
   subscribeFinanceRecords,
+  getLocalFinanceRecords,
   markFinanceRecordPaid,
   addFinanceRecord,
   subscribeFinanceNotes,
@@ -487,6 +489,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         paymentNotesInput
       );
       if (res.success) {
+        setFinanceRecords(getLocalFinanceRecords());
         showToast(
           `Payment of ₹${amountToPay} (${modeToUse === 'CASH' ? 'Cash 💵' : 'GPay 📱'}) recorded & locked for ${selectedFinanceStudent.studentName}!`,
           'success'
@@ -2302,6 +2305,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                           {financeNotes.length}
                         </span>
                       )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const recs = getLocalFinanceRecords();
+                        setFinanceRecords(recs);
+                        showToast(`Synced ${recs.length} Finance Records!`, 'success');
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                      title="Force Sync / Reload Finance Records"
+                    >
+                      <RefreshCw className="w-4 h-4 text-emerald-400" />
+                      <span>Sync Data</span>
                     </button>
 
                     <button
