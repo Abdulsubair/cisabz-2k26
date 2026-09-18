@@ -1246,11 +1246,13 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
   const unsubscribe = onSnapshot(
     colRef,
     (snapshot) => {
+      const localRecords = getLocalFinanceRecords();
+      const localMap = new Map<string, FinanceRecord>(localRecords.map((r) => [r.id, r]));
+
       if (snapshot.empty) {
-        const initial = getLocalFinanceRecords();
-        callback(initial);
-        initial.forEach((r) => {
-          setDoc(doc(db, 'finance_records', r.id), r).catch((err) =>
+        callback(localRecords);
+        localRecords.forEach((r) => {
+          setDoc(doc(db, 'finance_records', r.id), r, { merge: true }).catch((err) =>
             console.warn('Auto-seed finance doc warning:', err)
           );
         });
@@ -1269,19 +1271,47 @@ export function subscribeFinanceRecords(callback: (records: FinanceRecord[]) => 
 
         initial.forEach((initRec) => {
           processedIds.add(initRec.id);
+          let recordToUse: FinanceRecord = initRec;
+
           if (firestoreMap.has(initRec.id)) {
-            const fsRec = firestoreMap.get(initRec.id)!;
-            if (initialNameMap.has(fsRec.id)) {
-              const expectedName = initialNameMap.get(fsRec.id)!;
-              if (fsRec.studentName !== expectedName && (fsRec.studentName.includes('STUDENT') || fsRec.studentName.startsWith('23CSB'))) {
-                fsRec.studentName = expectedName;
-                updateDoc(doc(db, 'finance_records', fsRec.id), { studentName: expectedName }).catch(() => { });
+            recordToUse = { ...initRec, ...firestoreMap.get(initRec.id)! };
+          }
+
+          // Preserve local PAID status if local record was marked PAID offline or prior to Firestore update
+          if (localMap.has(initRec.id)) {
+            const localRec = localMap.get(initRec.id)!;
+            if (localRec.status === 'PAID' || localRec.isLocked) {
+              if (recordToUse.status !== 'PAID' || !recordToUse.isLocked) {
+                recordToUse = {
+                  ...recordToUse,
+                  status: 'PAID',
+                  paidAmount: localRec.paidAmount || recordToUse.feeAmount,
+                  paymentMode: localRec.paymentMode || 'GPAY',
+                  paidAt: localRec.paidAt || new Date().toISOString(),
+                  collectedBy: localRec.collectedBy || 'Admin',
+                  isLocked: true,
+                  notes: localRec.notes || recordToUse.notes || '',
+                };
+                // Sync back to Firestore so Firestore database holds the PAID status as well
+                setDoc(doc(db, 'finance_records', recordToUse.id), recordToUse, { merge: true }).catch((err) =>
+                  console.warn('Sync local paid record to Firestore failed:', err)
+                );
               }
             }
-            mergedRecords.push(fsRec);
-          } else {
-            mergedRecords.push(initRec);
-            setDoc(doc(db, 'finance_records', initRec.id), initRec).catch((err) =>
+          }
+
+          if (initialNameMap.has(recordToUse.id)) {
+            const expectedName = initialNameMap.get(recordToUse.id)!;
+            if (recordToUse.studentName !== expectedName && (recordToUse.studentName.includes('STUDENT') || recordToUse.studentName.startsWith('23CSB'))) {
+              recordToUse.studentName = expectedName;
+              updateDoc(doc(db, 'finance_records', recordToUse.id), { studentName: expectedName }).catch(() => { });
+            }
+          }
+
+          mergedRecords.push(recordToUse);
+
+          if (!firestoreMap.has(initRec.id)) {
+            setDoc(doc(db, 'finance_records', initRec.id), recordToUse, { merge: true }).catch((err) =>
               console.warn('Auto-seed missing finance doc warning:', err)
             );
           }
@@ -1321,10 +1351,12 @@ export async function markFinanceRecordPaid(
 
   const localList = getLocalFinanceRecords();
   const idx = localList.findIndex((r) => r.id === recordId);
+  let targetFee = 250;
   if (idx !== -1) {
     if (localList[idx].isLocked) {
       return { success: false, message: 'This record is permanently locked and cannot be modified.' };
     }
+    targetFee = localList[idx].feeAmount;
     localList[idx] = {
       ...localList[idx],
       paidAmount: paidAmount > 0 ? paidAmount : localList[idx].feeAmount,
@@ -1346,7 +1378,8 @@ export async function markFinanceRecordPaid(
     }
 
     const payload = {
-      paidAmount: paidAmount > 0 ? paidAmount : 250,
+      id: recordId,
+      paidAmount: paidAmount > 0 ? paidAmount : targetFee,
       status: 'PAID',
       paymentMode: paymentMode || 'GPAY',
       paidAt: paidTime,
@@ -1355,7 +1388,7 @@ export async function markFinanceRecordPaid(
       ...(notes ? { notes } : {}),
     };
 
-    await updateDoc(docRef, payload);
+    await setDoc(docRef, payload, { merge: true });
     return { success: true };
   } catch (err) {
     console.warn('Firestore update warning for finance record, local update succeeded:', err);
