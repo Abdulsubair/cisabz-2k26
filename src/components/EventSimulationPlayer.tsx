@@ -362,7 +362,7 @@ export const EventSimulationPlayer: React.FC<EventSimulationPlayerProps> = ({ ev
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
               <div className="flex items-center gap-2 text-yellow-400 font-bold">
                 <Gavel className="w-4 h-4 text-yellow-400" />
-                <span>HAMMER HIT // IPL MOCK AUCTION ARENA</span>
+                <span>HAMMER HIT (IPL AUCTION) // IPL MOCK AUCTION ARENA</span>
               </div>
               <div className="text-yellow-300 font-bold">PURSE: ₹45,50,000</div>
             </div>

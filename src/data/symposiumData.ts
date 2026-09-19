@@ -236,7 +236,7 @@ export const NON_TECHNICAL_EVENTS: EventItem[] = [
   {
     id: 'hammer-hit',
     code: '03',
-    name: 'Hammer Hit',
+    name: 'HAMMER HIT (IPL AUCTION)',
     subtitle: 'IPL Auction',
     category: 'non-technical',
     type: 'Auction & Strategy',
@@ -297,7 +297,7 @@ export const GENERAL_RULES: GeneralRule[] = [
   {
     id: 1,
     title: 'Open Participation',
-    description: 'Participation is open for single or team entries (team size: up to 2 members, except specified events like TechVerse/Tech Brainiac up to 3, and Hammer Hit up to 4).',
+    description: 'Participation is open for single or team entries (team size: up to 2 members, except specified events like TechVerse/Tech Brainiac up to 3, and HAMMER HIT (IPL AUCTION) up to 4).',
     iconName: 'Users',
   },
   {
@@ -502,7 +502,7 @@ export const SCHEDULE_DATA: ScheduleDay[] = [
       {
         sNo: 9,
         time: '2:00 PM to 3:00 PM',
-        event: 'Hammer Hit (IPL Auction)',
+        event: 'HAMMER HIT (IPL AUCTION)',
         venue: 'Seminar Hall',
         type: 'Non-Technical',
       },

@@ -88,7 +88,7 @@ export const INITIAL_EVENTS: Record<string, { name: string; category: 'technical
   'BUG BASH': { name: 'BUG BASH', category: 'technical', open: true },
   PINPOINT: { name: 'PINPOINT', category: 'non-technical', open: true },
   'BRAND SPOT': { name: 'BRAND SPOT', category: 'non-technical', open: true },
-  'HAMMER HIT': { name: 'HAMMER HIT', category: 'non-technical', open: true },
+  'HAMMER HIT (IPL AUCTION)': { name: 'HAMMER HIT (IPL AUCTION)', category: 'non-technical', open: true },
   CONNECTION: { name: 'CONNECTION', category: 'non-technical', open: true },
 };
 

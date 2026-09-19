@@ -158,7 +158,7 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
       ],
     },
     {
-      name: 'Hammer Hit',
+      name: 'HAMMER HIT (IPL AUCTION)',
       subtitle: 'IPL Mock Auction',
       tag: 'Single Round Event',
       team: 'Team participation (up to 4 members)',

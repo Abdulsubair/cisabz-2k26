@@ -59,7 +59,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
     'BUG BASH': true,
     PINPOINT: true,
     'BRAND SPOT': true,
-    'HAMMER HIT': true,
+    'HAMMER HIT (IPL AUCTION)': true,
     CONNECTION: true,
   });
 
@@ -87,7 +87,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
   const nonTechnicalEventsList = [
     { id: 'PINPOINT', name: 'PINPOINT', desc: 'Category / Word Guessing' },
     { id: 'BRAND SPOT', name: 'BRAND SPOT', desc: 'Logo Finding Challenge' },
-    { id: 'HAMMER HIT', name: 'HAMMER HIT', desc: 'Mock IPL Auction' },
+    { id: 'HAMMER HIT (IPL AUCTION)', name: 'HAMMER HIT (IPL AUCTION)', desc: 'Mock IPL Auction' },
     { id: 'CONNECTION', name: 'CONNECTION', desc: 'Link & Think Visual Logic' },
   ];
 

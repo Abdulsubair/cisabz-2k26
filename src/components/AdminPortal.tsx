@@ -297,7 +297,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       // 2. Filters
       const matchesCollege = filterCollege === 'ALL' || r.collegeName === filterCollege;
       const matchesTech = filterTechEvent === 'ALL' || r.technicalEvent === filterTechEvent;
-      const matchesNonTech = filterNonTechEvent === 'ALL' || r.nonTechnicalEvent === filterNonTechEvent;
+      const matchesNonTech = filterNonTechEvent === 'ALL' || r.nonTechnicalEvent === filterNonTechEvent || (filterNonTechEvent === 'HAMMER HIT (IPL AUCTION)' && r.nonTechnicalEvent === 'HAMMER HIT');
       const matchesStatus = filterStatus === 'ALL' || r.status === filterStatus;
       const matchesYear = filterYear === 'ALL' || r.year === filterYear;
       const matchesFood = filterFood === 'ALL' || r.foodPreference === filterFood;
@@ -1155,7 +1155,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     { id: 'BUG BASH', name: 'BUG BASH', category: 'technical' },
     { id: 'PINPOINT', name: 'PINPOINT', category: 'non-technical' },
     { id: 'BRAND SPOT', name: 'BRAND SPOT', category: 'non-technical' },
-    { id: 'HAMMER HIT', name: 'HAMMER HIT', category: 'non-technical' },
+    { id: 'HAMMER HIT (IPL AUCTION)', name: 'HAMMER HIT (IPL AUCTION)', category: 'non-technical' },
     { id: 'CONNECTION', name: 'CONNECTION', category: 'non-technical' },
   ];
 
@@ -1708,7 +1708,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                       <option value="ALL">All Non-Tech</option>
                       <option value="PINPOINT">PINPOINT</option>
                       <option value="BRAND SPOT">BRAND SPOT</option>
-                      <option value="HAMMER HIT">HAMMER HIT</option>
+                      <option value="HAMMER HIT (IPL AUCTION)">HAMMER HIT (IPL AUCTION)</option>
                       <option value="CONNECTION">CONNECTION</option>
                     </select>
                   </div>
