@@ -14,7 +14,7 @@ export const SYMPOSIUM_CONFIG = {
   department: 'DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING',
   collegeName: 'KINGS COLLEGE OF ENGINEERING',
   collegeAddress: 'Punalkulam, Gandarvakkottai Taluk, Pudukkottai District, Tamil Nadu',
-  venueName: 'Main Auditorium & CSE Labs',
+  venueName: 'CHERA HALL & CSE Labs',
   eventDate: '25-09-2026',
   eventDateISO: '2026-09-25T09:00:00',
   registrationEndDate: '22-09-2026',
@@ -452,7 +452,7 @@ export const SCHEDULE_DATA: ScheduleDay[] = [
         sNo: 2,
         time: '10:00 AM to 11:00 AM',
         event: 'Inauguration',
-        venue: 'CSE Seminar Hall',
+        venue: 'CHERA HALL',
         type: 'Ceremony',
       },
       {
