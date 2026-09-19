@@ -21,6 +21,8 @@ import {
   Sparkles,
   ShieldCheck,
   X,
+  ExternalLink,
+  FileText,
 } from 'lucide-react';
 import cisabzLogo from '../../assets/cisabz-logo.png';
 
@@ -817,6 +819,69 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
                 <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold border border-blue-500/30">
                   1 Allowed
                 </span>
+              </div>
+            )}
+
+            {/* TECHVERSE Specific Google Form & WhatsApp Links */}
+            {technicalEvent === 'TECHVERSE' && (
+              <div className="mt-4 p-5 rounded-2xl bg-gradient-to-r from-blue-950/80 via-slate-900 to-cyan-950/80 border-2 border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.25)] space-y-3 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                  <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">
+                    TECHVERSE Event Links & Registration Requirements:
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Google Form Link */}
+                  <a
+                    href="https://forms.gle/1pFMz89J3oqWV5n29"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3.5 rounded-xl bg-slate-950/80 hover:bg-cyan-950/50 border border-cyan-500/40 hover:border-cyan-400 text-white transition-all flex items-center justify-between group cursor-pointer shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 group-hover:scale-105 transition-transform">
+                        <FileText className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-mono font-bold text-cyan-200 uppercase tracking-wide">
+                          TECHVERSE Google Form
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          Click to open registration form
+                        </div>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0 ml-2" />
+                  </a>
+
+                  {/* WhatsApp Group Link */}
+                  <a
+                    href="https://chat.whatsapp.com/Bgkg1UtMALn1QybPctRLH1?s=sw&p=a&mlu=4&ilr=4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3.5 rounded-xl bg-slate-950/80 hover:bg-emerald-950/50 border border-emerald-500/40 hover:border-emerald-400 text-white transition-all flex items-center justify-between group cursor-pointer shadow-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 group-hover:scale-105 transition-transform">
+                        <svg className="w-5 h-5 fill-current text-emerald-400" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.677.15-.2.3-.776.978-.952 1.179-.176.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.897-.8-1.502-1.787-1.678-2.088-.176-.301-.019-.464.131-.614.136-.135.301-.351.451-.526.15-.176.201-.301.301-.501.1-.2.05-.376-.025-.526-.075-.15-.677-1.633-.928-2.238-.244-.589-.493-.51-.677-.518-.175-.008-.376-.01-.576-.01-.2 0-.526.075-.802.376-.276.3-.978.956-.978 2.33 0 1.373 1.002 2.7 1.14 2.89.138.19 1.972 3.011 4.778 4.22.667.288 1.189.46 1.595.589.671.213 1.282.183 1.764.11.537-.081 1.653-.675 1.888-1.328.235-.653.235-1.21.164-1.328-.07-.118-.27-.194-.57-.344z"/>
+                          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.553 4.11 1.523 5.84L.05 23.475l5.803-1.52C7.545 22.87 9.7 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.848 0-3.644-.492-5.22-1.425l-.374-.222-3.44.902.918-3.355-.244-.388C2.695 15.892 2 13.997 2 12 2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs font-mono font-bold text-emerald-200 uppercase tracking-wide">
+                          TECHVERSE WhatsApp Group
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          Click to join TECHVERSE group
+                        </div>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0 ml-2" />
+                  </a>
+                </div>
               </div>
             )}
 
