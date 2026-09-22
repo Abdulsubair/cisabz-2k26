@@ -1004,7 +1004,7 @@ export const ParticipantRegistrationPage: React.FC<ParticipantRegistrationPagePr
               <div className="w-full aspect-square bg-white rounded-xl p-3 flex items-center justify-center shadow-inner">
                 <img
                   src="/assets/payment-qr.png"
-                  alt="CISABZ-2K26 Official Payment QR Code (Mubashir M)"
+                  alt="CISABZ-2K26 Official Payment QR Code (Akash Kodi)"
                   className="w-full h-full object-contain rounded-lg"
                 />
               </div>
