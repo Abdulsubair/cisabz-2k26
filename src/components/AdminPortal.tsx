@@ -621,28 +621,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     const tableRowsHtml = filteredFinanceRecords
       .map(
         (r, idx) => `
-        <tr style="${r.status === 'PAID' ? 'background-color: #f0fdf4;' : ''}">
-          <td style="text-align: center;">${idx + 1}</td>
-          <td><strong>${r.rollNumber}</strong></td>
-          <td><strong>${r.studentName}</strong></td>
-          <td>${r.section}</td>
-          <td style="text-align: right;">₹${r.feeAmount}</td>
-          <td style="text-align: right; font-weight: bold; color: ${r.status === 'PAID' ? '#16a34a' : '#64748b'};">
+        <tr>
+          <td style="text-align: center; font-weight: 700; color: #000000;">${idx + 1}</td>
+          <td style="font-weight: 800; color: #000000;">${r.rollNumber}</td>
+          <td style="font-weight: 800; color: #000000;">${r.studentName}</td>
+          <td style="font-weight: 600; color: #000000;">${r.section}</td>
+          <td style="text-align: right; font-weight: 700; color: #000000;">₹${r.feeAmount}</td>
+          <td style="text-align: right; font-weight: 800; color: #000000;">
             ₹${r.paidAmount}
           </td>
           <td style="text-align: center;">
-            <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: bold; ${
-              r.status === 'PAID'
-                ? 'background-color: #dcfce7; color: #15803d; border: 1px solid #86efac;'
-                : 'background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;'
-            }">
-              ${r.status === 'PAID' ? 'PAID 🔒' : 'UNPAID'}
-            </span>
+            <strong style="display: inline-block; padding: 2px 8px; border: 1.5px solid #000000; font-size: 9pt; font-weight: 800; color: #000000; background: ${r.status === 'PAID' ? '#e2e8f0' : '#fff'};">
+              ${r.status === 'PAID' ? 'PAID' : 'UNPAID'}
+            </strong>
           </td>
-          <td style="text-align: center; font-weight: bold;">
+          <td style="text-align: center; font-weight: 700; color: #000000;">
             ${r.status === 'PAID' ? (r.paymentMode === 'CASH' ? 'Cash' : 'GPay') : '-'}
           </td>
-          <td><small>${r.paidAt ? new Date(r.paidAt).toLocaleDateString() : '-'}</small></td>
+          <td style="font-weight: 600; color: #000000;">${r.paidAt ? new Date(r.paidAt).toLocaleDateString() : '-'}</td>
         </tr>
       `
       )
@@ -654,18 +650,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         <head>
           <title>Finance Report - ${secTitle}</title>
           <style>
-            @page { size: A4 portrait; margin: 10mm; }
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
-            .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 15px; }
-            .title { font-size: 18px; font-weight: bold; text-transform: uppercase; color: #0f172a; }
-            .subtitle { font-size: 12px; color: #475569; margin-top: 4px; }
-            .stats { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+            @page { size: A4 portrait; margin: 8mm; }
+            * { box-sizing: border-box; }
+            body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #000000; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .header { text-align: center; border-bottom: 2.5px solid #000000; padding-bottom: 8px; margin-bottom: 12px; }
+            .title { font-size: 16pt; font-weight: 900; text-transform: uppercase; color: #000000; letter-spacing: 0.5px; }
+            .subtitle { font-size: 9.5pt; color: #000000; margin-top: 4px; font-weight: 600; }
+            .stats { display: flex; justify-content: space-between; background: #f8fafc; border: 1.5px solid #000000; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; }
             .stat-box { text-align: center; }
-            .stat-val { font-size: 16px; font-weight: bold; color: #0f172a; }
-            .stat-lbl { font-size: 9px; text-transform: uppercase; color: #64748b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
-            th { background: #0f172a; color: #ffffff; font-size: 10px; text-transform: uppercase; }
+            .stat-val { font-size: 13pt; font-weight: 900; color: #000000; }
+            .stat-lbl { font-size: 8.5pt; text-transform: uppercase; color: #000000; font-weight: 700; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9pt; }
+            th, td { border: 1px solid #000000; padding: 6px 8px; text-align: left; vertical-align: middle; }
+            th { background: #000000 !important; color: #ffffff !important; font-size: 9pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
+            @media print {
+              body, html { color: #000000 !important; background: #ffffff !important; }
+              th { background-color: #000000 !important; color: #ffffff !important; border: 1.5px solid #000000 !important; font-weight: 800 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              td { border: 1px solid #000000 !important; color: #000000 !important; }
+              .header { border-bottom: 2.5px solid #000000 !important; }
+              .stats { border: 1.5px solid #000000 !important; }
+            }
           </style>
         </head>
         <body>
@@ -675,9 +679,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           </div>
           <div class="stats">
             <div class="stat-box"><div class="stat-val">${filteredFinanceRecords.length}</div><div class="stat-lbl">Total Students</div></div>
-            <div class="stat-box"><div class="stat-val" style="color: #16a34a;">${filteredPaid.length}</div><div class="stat-lbl">Paid Students</div></div>
-            <div class="stat-box"><div class="stat-val" style="color: #16a34a;">₹${totalColl.toLocaleString()}</div><div class="stat-lbl">Total Collected</div></div>
-            <div class="stat-box"><div class="stat-val" style="color: #2563eb;">₹${totalExp.toLocaleString()}</div><div class="stat-lbl">Total Expected Target</div></div>
+            <div class="stat-box"><div class="stat-val">${filteredPaid.length}</div><div class="stat-lbl">Paid Students</div></div>
+            <div class="stat-box"><div class="stat-val">₹${totalColl.toLocaleString()}</div><div class="stat-lbl">Total Collected</div></div>
+            <div class="stat-box"><div class="stat-val">₹${totalExp.toLocaleString()}</div><div class="stat-lbl">Total Expected Target</div></div>
           </div>
           <table>
             <thead>
@@ -685,12 +689,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 <th style="width: 5%;">#</th>
                 <th style="width: 15%;">Roll No</th>
                 <th style="width: 30%;">Student Name</th>
-                <th style="width: 15%;">Section</th>
+                <th style="width: 12%;">Section</th>
                 <th style="width: 10%;">Fee Rate</th>
                 <th style="width: 10%;">Paid Amount</th>
-                <th style="width: 10%;">Status</th>
-                <th style="width: 10%;">Mode</th>
-                <th style="width: 15%;">Date</th>
+                <th style="width: 9%;">Status</th>
+                <th style="width: 9%;">Mode</th>
+                <th style="width: 10%;">Date</th>
               </tr>
             </thead>
             <tbody>
@@ -779,17 +783,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
       .map(
         (r, idx) => `
         <tr>
-          <td style="text-align: center;">${idx + 1}</td>
-          ${isAmbassadorView ? `<td><strong style="color: #7e22ce;">${r.ambassadorReferralId || 'N/A'}</strong></td>` : ''}
-          <td><strong>${r.id}</strong></td>
-          <td><strong>${r.fullName}</strong></td>
-          <td>${r.collegeName}<br><small style="color: #64748b;">${r.department}</small></td>
-          <td style="text-align: center;">${r.year}</td>
-          <td>${r.mobile}</td>
-          <td style="word-break: break-all;"><small>${r.email}</small></td>
-          <td><span style="color: #0284c7; font-weight: bold;">${r.technicalEvent}</span></td>
-          <td><span style="color: #d97706; font-weight: bold;">${r.nonTechnicalEvent}</span></td>
-          <td style="border-bottom: 1px solid #94a3b8;"></td>
+          <td style="text-align: center; font-weight: 800; color: #000000;">${idx + 1}</td>
+          ${isAmbassadorView ? `<td><strong style="color: #000000; font-weight: 900;">${r.ambassadorReferralId || 'N/A'}</strong></td>` : ''}
+          <td><strong style="color: #000000; font-weight: 900; font-size: 9pt;">${r.id}</strong></td>
+          <td><strong style="color: #000000; font-weight: 900; font-size: 9.5pt;">${r.fullName}</strong></td>
+          <td>
+            <div style="font-weight: 800; color: #000000; font-size: 8.5pt;">${r.collegeName}</div>
+            <div style="font-weight: 700; color: #000000; font-size: 8pt; margin-top: 1px;">${r.department}</div>
+          </td>
+          <td style="text-align: center; font-weight: 800; color: #000000;">${r.year}</td>
+          <td style="font-weight: 800; color: #000000; font-size: 8.5pt;">${r.mobile}</td>
+          <td style="word-break: break-all;"><div style="font-weight: 700; color: #000000; font-size: 8pt;">${r.email}</div></td>
+          <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
+          <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>
+          <td style="border-bottom: 1.5px solid #000000;"></td>
         </tr>
       `
       )
@@ -803,7 +810,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <style>
             @page {
               size: A4 landscape;
-              margin: 8mm 8mm 10mm 8mm;
+              margin: 6mm 6mm 8mm 6mm;
             }
             * {
               box-sizing: border-box;
@@ -814,7 +821,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               padding: 0;
               font-family: Arial, Helvetica, sans-serif;
               font-size: 9.5pt;
-              color: #0f172a;
+              color: #000000;
               background: #fff;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
@@ -822,31 +829,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             .header-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 8px;
-              border-bottom: 2px solid #0284c7;
-              padding-bottom: 6px;
+              margin-bottom: 6px;
+              border-bottom: 2.5px solid #000000;
+              padding-bottom: 4px;
             }
             .header-title {
               text-align: center;
             }
             .header-title h2 {
               margin: 0;
-              font-size: 15pt;
-              font-weight: bold;
-              color: #1e3a8a;
+              font-size: 16pt;
+              font-weight: 900;
+              color: #000000;
               text-transform: uppercase;
               letter-spacing: 0.5px;
             }
             .header-title h3 {
               margin: 2px 0;
-              font-size: 11pt;
-              font-weight: bold;
-              color: #0284c7;
+              font-size: 11.5pt;
+              font-weight: 800;
+              color: #000000;
             }
             .header-title p {
               margin: 0;
-              font-size: 9pt;
-              color: #475569;
+              font-size: 9.5pt;
+              font-weight: 700;
+              color: #000000;
             }
             .doc-info-bar {
               display: flex;
@@ -856,11 +864,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               padding: 6px 10px;
               border-radius: 4px;
               margin-bottom: 8px;
-              border: 1px solid #cbd5e1;
+              border: 1.5px solid #000000;
               font-size: 9pt;
+              font-weight: 800;
+              color: #000000;
             }
             .doc-info-bar strong {
-              color: #0f172a;
+              color: #000000;
+              font-weight: 900;
             }
             table.data-table {
               width: 100%;
@@ -877,19 +888,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               page-break-after: auto;
             }
             table.data-table th {
-              background-color: #0f172a !important;
+              background-color: #000000 !important;
               color: #ffffff !important;
-              padding: 5px 6px;
-              border: 1px solid #334155;
+              padding: 6px 6px;
+              border: 1.5px solid #000000;
               text-transform: uppercase;
-              font-size: 8pt;
+              font-size: 8.5pt;
+              font-weight: 800;
               letter-spacing: 0.3px;
               text-align: left;
               word-wrap: break-word;
             }
             table.data-table td {
               padding: 5px 6px;
-              border: 1px solid #cbd5e1;
+              border: 1px solid #000000;
+              color: #000000;
               vertical-align: middle;
               word-wrap: break-word;
               overflow-wrap: break-word;
@@ -898,13 +911,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               background-color: #f8fafc !important;
             }
             .footer-sig {
-              margin-top: 30px;
+              margin-top: 25px;
               padding-top: 10px;
               display: flex;
               justify-content: space-between;
               font-size: 9.5pt;
-              font-weight: bold;
-              color: #334155;
+              font-weight: 800;
+              color: #000000;
               page-break-before: auto;
               page-break-inside: avoid;
               break-inside: avoid;
@@ -913,11 +926,57 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             }
             .sig-box {
               text-align: center;
-              width: 220px;
-              border-top: 1.5px solid #475569;
+              width: 240px;
+              border-top: 2px solid #000000;
               padding-top: 6px;
+              color: #000000;
+              font-weight: 800;
               page-break-inside: avoid;
               break-inside: avoid;
+            }
+            @media print {
+              html, body {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                color: #000000 !important;
+                background: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .header-title h2, .header-title h3, .header-title p {
+                color: #000000 !important;
+              }
+              .header-table {
+                border-bottom: 2.5px solid #000000 !important;
+              }
+              .doc-info-bar {
+                background-color: #f1f5f9 !important;
+                border: 1.5px solid #000000 !important;
+                color: #000000 !important;
+              }
+              .doc-info-bar div, .doc-info-bar strong {
+                color: #000000 !important;
+              }
+              table.data-table th {
+                background-color: #000000 !important;
+                color: #ffffff !important;
+                border: 1.5px solid #000000 !important;
+                font-weight: 800 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              table.data-table td {
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+              }
+              table.data-table td * {
+                color: #000000 !important;
+              }
+              .footer-sig, .sig-box {
+                color: #000000 !important;
+                border-top-color: #000000 !important;
+              }
             }
           </style>
         </head>
