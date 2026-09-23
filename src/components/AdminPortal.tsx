@@ -51,6 +51,179 @@ import {
 import type { RegistrationData, FinanceRecord, FinanceNote } from '../lib/firebase';
 import cisabzLogo from '../assets/cisabz-logo.png';
 
+/**
+ * Normalizes college name strings into clean, standardized canonical names
+ * so variations like "kce", "Kings College", "KINGS COLLEGE OF ENGINEERING",
+ * "kings college of engg", etc. all map to the exact same canonical college group.
+ */
+export const getCanonicalCollegeName = (rawName: string): string => {
+  if (!rawName || !rawName.trim()) return 'Other / Not Specified';
+
+  const cleaned = rawName
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ');
+
+  // 1. Dhanalakshmi Srinivasan University (DSU)
+  if (
+    cleaned.includes('DHANALAKSHMI') ||
+    cleaned.includes('SRINIVASAN') ||
+    cleaned === 'DSU'
+  ) {
+    return 'DHANALAKSHMI SRINIVASAN UNIVERSITY';
+  }
+
+  // 2. St. Joseph's College of Engineering and Technology
+  if (
+    cleaned.includes('JOSEPH') ||
+    cleaned.includes('JSEPH') ||
+    cleaned.includes('JOSP') ||
+    cleaned.includes('JSEP') ||
+    cleaned === 'SJCET'
+  ) {
+    return "ST. JOSEPH'S COLLEGE OF ENGINEERING AND TECHNOLOGY";
+  }
+
+  // 3. Mount Zion College of Engineering and Technology
+  if (
+    cleaned.includes('ZION') ||
+    cleaned.includes('MOUNTZION') ||
+    cleaned.includes('MOUNT ZION')
+  ) {
+    return 'MOUNT ZION COLLEGE OF ENGINEERING AND TECHNOLOGY';
+  }
+
+  // 4. Kings College of Engineering
+  if (
+    cleaned === 'KCE' ||
+    cleaned.includes('KINGS') ||
+    cleaned.includes('KING S') ||
+    (cleaned.includes('KING') && cleaned.includes('ENGINEERING'))
+  ) {
+    return 'KINGS COLLEGE OF ENGINEERING';
+  }
+
+  // 5. Anjalai Ammal Mahalingam Engineering College
+  if (
+    cleaned === 'AAMEC' ||
+    cleaned.includes('ANJALAI') ||
+    cleaned.includes('AMMAL')
+  ) {
+    return 'ANJALAI AMMAL MAHALINGAM ENGINEERING COLLEGE';
+  }
+
+  // 6. Alagappa Chettiar Government College of Engineering & Technology
+  if (
+    cleaned.includes('ALAGAPPA') ||
+    cleaned.includes('CHETTIAR') ||
+    cleaned === 'ACGCET' ||
+    cleaned === 'ACCET'
+  ) {
+    return 'ALAGAPPA CHETTIAR GOVT. COLLEGE OF ENGINEERING AND TECHNOLOGY';
+  }
+
+  // 7. Bishop Heber College
+  if (
+    cleaned.includes('BISHOP') ||
+    cleaned.includes('HEBER') ||
+    cleaned === 'BHC'
+  ) {
+    return 'BISHOP HEBER COLLEGE';
+  }
+
+  // 8. Periyar Maniammai Institute of Science and Technology
+  if (
+    cleaned.includes('PERIYAR') ||
+    cleaned.includes('MANIAMMAI') ||
+    cleaned === 'PMIST'
+  ) {
+    return 'PERIYAR MANIAMMAI INSTITUTE OF SCIENCE AND TECHNOLOGY';
+  }
+
+  // 9. K. Ramakrishnan College of Engineering / Technology
+  if (
+    cleaned.includes('RAMAKRISHNAN') ||
+    cleaned === 'KRCET' ||
+    cleaned === 'KRCE' ||
+    cleaned === 'KRC'
+  ) {
+    if (cleaned.includes('TECH') || cleaned === 'KRCET') {
+      return 'K. RAMAKRISHNAN COLLEGE OF TECHNOLOGY';
+    }
+    return 'K. RAMAKRISHNAN COLLEGE OF ENGINEERING';
+  }
+
+  // 10. Saranathan College of Engineering
+  if (cleaned.includes('SARANATHAN') || cleaned === 'SCE') {
+    return 'SARANATHAN COLLEGE OF ENGINEERING';
+  }
+
+  // 11. JJ College of Engineering
+  if (cleaned.includes('JJ') || cleaned === 'JJCET') {
+    return 'J.J. COLLEGE OF ENGINEERING AND TECHNOLOGY';
+  }
+
+  // 12. CARE College of Engineering
+  if (cleaned.includes('CARE')) {
+    return 'C.A.R.E. COLLEGE OF ENGINEERING';
+  }
+
+  // 13. MAM College of Engineering
+  if (cleaned.includes('MAM') || cleaned === 'MAMCET') {
+    return 'M.A.M. COLLEGE OF ENGINEERING';
+  }
+
+  // 14. SASTRA University
+  if (cleaned.includes('SASTRA')) {
+    return 'SASTRA DEEMED UNIVERSITY';
+  }
+
+  // 15. AVC College
+  if (cleaned.includes('AVC') || cleaned === 'AVCCET') {
+    return 'A.V.C. COLLEGE OF ENGINEERING';
+  }
+
+  // General Normalization for other colleges:
+  const normalized = cleaned
+    .replace(/\b(TRICHY|TIRUCHIRAPPALLI|THANJAVUR|SAMAYAMPURAM|SAMAYAM PURAM|CHENNAI|MADURAI|COIMBATORE)\b/g, '')
+    .trim();
+
+  const normalizedWords = normalized
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => {
+      if (word === 'ENGG' || word === 'ENG') return 'ENGINEERING';
+      if (word === 'COLL') return 'COLLEGE';
+      if (word === 'INST') return 'INSTITUTE';
+      if (word === 'TECH') return 'TECHNOLOGY';
+      if (word === 'UNIV') return 'UNIVERSITY';
+      return word;
+    })
+    .join(' ');
+
+  return normalizedWords || cleaned;
+};
+
+const doesRegistrationMatchEvent = (r: RegistrationData, eventNameOrId: string): boolean => {
+  if (!eventNameOrId) return false;
+  const target = eventNameOrId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  if (target === 'techverse' && tech.includes('techverse')) return true;
+  if (target.includes('brainiac') && tech.includes('brainiac')) return true;
+  if (target.includes('prompt') && tech.includes('prompt')) return true;
+  if (target.includes('bug') && tech.includes('bug')) return true;
+
+  if (target.includes('pinpoint') && nonTech.includes('pinpoint')) return true;
+  if ((target.includes('brand') || target.includes('logo')) && (nonTech.includes('brand') || nonTech.includes('spot') || nonTech.includes('logo'))) return true;
+  if ((target.includes('hammer') || target.includes('ipl') || target.includes('auction')) && (nonTech.includes('hammer') || nonTech.includes('ipl') || nonTech.includes('auction'))) return true;
+  if (target.includes('connection') && nonTech.includes('connection')) return true;
+
+  return tech === target || nonTech === target || tech.includes(target) || nonTech.includes(target);
+};
+
 interface AdminPortalProps {
   onBackToWebsite: () => void;
   initialSubPath?: string;
@@ -257,10 +430,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     localStorage.removeItem('cisabz_admin_authed');
   };
 
-  // Extract unique colleges for filter dropdown
-  const uniqueColleges = Array.from(
-    new Set(registrations.map((r) => r.collegeName).filter(Boolean))
-  );
+  // Group and normalize college names so variations (kce, Kings College, KINGS COLLEGE OF ENGINEERING, etc.) are combined
+  const collegeGroups = React.useMemo(() => {
+    const map: Record<string, { canonicalName: string; count: number }> = {};
+    registrations.forEach((r) => {
+      const raw = r.collegeName || '';
+      if (!raw.trim()) return;
+      const canonical = getCanonicalCollegeName(raw);
+      if (!map[canonical]) {
+        map[canonical] = { canonicalName: canonical, count: 0 };
+      }
+      if (r.status !== 'REJECTED') {
+        map[canonical].count += 1;
+      }
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count || a.canonicalName.localeCompare(b.canonicalName));
+  }, [registrations]);
 
   // Ambassador Registrations & Referral Code grouping
   const ambassadorRegistrations = registrations.filter(
@@ -282,7 +467,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   // Filter Logic
   const getFilteredRegistrations = () => {
     return registrations.filter((r) => {
-      // 1. Search Query (Matches Name, Email, Mobile, College, UTR, ID, or Ambassador Referral Code)
+      const canonicalCollege = getCanonicalCollegeName(r.collegeName);
+
+      // 1. Search Query (Matches Name, Email, Mobile, College, Canonical College, UTR, ID, or Ambassador Referral Code)
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -290,14 +477,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         r.email.toLowerCase().includes(q) ||
         r.mobile.toLowerCase().includes(q) ||
         r.collegeName.toLowerCase().includes(q) ||
+        canonicalCollege.toLowerCase().includes(q) ||
         r.transactionId.toLowerCase().includes(q) ||
         r.id.toLowerCase().includes(q) ||
         (r.ambassadorReferralId && r.ambassadorReferralId.toLowerCase().includes(q));
 
       // 2. Filters
-      const matchesCollege = filterCollege === 'ALL' || r.collegeName === filterCollege;
-      const matchesTech = filterTechEvent === 'ALL' || r.technicalEvent === filterTechEvent;
-      const matchesNonTech = filterNonTechEvent === 'ALL' || r.nonTechnicalEvent === filterNonTechEvent || (filterNonTechEvent === 'HAMMER HIT (IPL AUCTION)' && r.nonTechnicalEvent === 'HAMMER HIT');
+      const matchesCollege =
+        filterCollege === 'ALL' ||
+        canonicalCollege === filterCollege ||
+        r.collegeName === filterCollege;
+
+      const matchesTech =
+        activeView === 'event-specific' ||
+        filterTechEvent === 'ALL' ||
+        r.technicalEvent === filterTechEvent;
+
+      const matchesNonTech =
+        activeView === 'event-specific' ||
+        filterNonTechEvent === 'ALL' ||
+        r.nonTechnicalEvent === filterNonTechEvent ||
+        (filterNonTechEvent === 'HAMMER HIT (IPL AUCTION)' &&
+          (r.nonTechnicalEvent === 'HAMMER HIT' || r.nonTechnicalEvent === 'HAMMER HIT (IPL AUCTION)'));
+
       const matchesStatus = filterStatus === 'ALL' || r.status === filterStatus;
       const matchesYear = filterYear === 'ALL' || r.year === filterYear;
       const matchesFood = filterFood === 'ALL' || r.foodPreference === filterFood;
@@ -318,10 +520,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         matchesView = hasReferral && r.status !== 'REJECTED';
       } else if (activeView === 'event-specific') {
         // Event-specific view shows ONLY active participants for that event (excluding REJECTED!)
-        const target = selectedEventId.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        matchesView = r.status !== 'REJECTED' && (tech === target || nonTech === target);
+        matchesView = r.status !== 'REJECTED' && doesRegistrationMatchEvent(r, selectedEventId);
       }
 
       return (
@@ -1118,13 +1317,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   // Event-wise Counts (case-insensitive, normalized, excluding REJECTED)
   const getEventCount = (eventNameOrId: string) => {
     if (!eventNameOrId) return 0;
-    const target = eventNameOrId.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return registrations.filter((r) => {
-      if (r.status === 'REJECTED') return false;
-      const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      return tech === target || nonTech === target;
-    }).length;
+    return registrations.filter((r) => r.status !== 'REJECTED' && doesRegistrationMatchEvent(r, eventNameOrId)).length;
   };
 
   // LOGIN SCREEN (IF NOT AUTHENTICATED)
@@ -1347,6 +1540,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   onClick={() => {
                     setSelectedEventId(evt.id);
                     setActiveView('event-specific');
+                    setFilterTechEvent('ALL');
+                    setFilterNonTechEvent('ALL');
                     setMobileSidebarOpen(false);
                   }}
                   className={`w-full text-left px-4 py-2 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
@@ -1574,6 +1769,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                         onClick={() => {
                           setSelectedEventId(evt.name);
                           setActiveView('event-specific');
+                          setFilterTechEvent('ALL');
+                          setFilterNonTechEvent('ALL');
                         }}
                         className="bg-slate-900/80 hover:bg-slate-800/90 border border-blue-500/30 p-5 rounded-2xl transition-all cursor-pointer group"
                       >
@@ -1621,6 +1818,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                         onClick={() => {
                           setSelectedEventId(evt.name);
                           setActiveView('event-specific');
+                          setFilterTechEvent('ALL');
+                          setFilterNonTechEvent('ALL');
                         }}
                         className="bg-slate-900/80 hover:bg-slate-800/90 border border-amber-500/30 p-5 rounded-2xl transition-all cursor-pointer group"
                       >
@@ -1698,8 +1897,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               </div>
             </div>
 
-            {/* SEARCH AND COMBINABLE FILTER CONTROLS — ONLY VISIBLE IN "ALL PARTICIPANTS" VIEW */}
-            {activeView === 'participants' && (
+            {/* SEARCH AND COMBINABLE FILTER CONTROLS */}
+            {(activeView === 'participants' || activeView === 'event-specific' || activeView === 'pending' || activeView === 'rejected') && (
               <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-4">
                 <div className="flex flex-col md:flex-row items-center gap-4">
                   {/* Search input */}
@@ -1708,7 +1907,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by Name, Email, Mobile, College, Transaction ID..."
+                      placeholder="Search by Name, Email, Mobile, College (e.g. KCE, Kings), Transaction ID..."
                       className="w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-400 text-white placeholder-slate-500 text-xs font-mono focus:outline-none"
                     />
                     <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
@@ -1720,17 +1919,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   {/* College Filter */}
                   <div>
                     <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      College
+                      College Filter
                     </label>
                     <select
                       value={filterCollege}
                       onChange={(e) => setFilterCollege(e.target.value)}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
                     >
-                      <option value="ALL">All Colleges</option>
-                      {uniqueColleges.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                      <option value="ALL">All Colleges ({registrations.filter((r) => r.status !== 'REJECTED').length})</option>
+                      {collegeGroups.map((g) => (
+                        <option key={g.canonicalName} value={g.canonicalName}>
+                          {g.canonicalName} ({g.count})
                         </option>
                       ))}
                     </select>
