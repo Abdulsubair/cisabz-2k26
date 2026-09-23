@@ -302,6 +302,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const [filterYear, setFilterYear] = useState('ALL');
   const [filterFood, setFilterFood] = useState('ALL');
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFilterCollege('ALL');
+    setFilterTechEvent('ALL');
+    setFilterNonTechEvent('ALL');
+    setFilterStatus('ALL');
+    setFilterYear('ALL');
+    setFilterFood('ALL');
+  };
+
   // Verification Detail Modal State
   const [selectedParticipant, setSelectedParticipant] = useState<RegistrationData | null>(null);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
@@ -1517,6 +1527,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         <nav className="space-y-1 flex-1 overflow-y-auto">
           <button
             onClick={() => {
+              resetFilters();
               setActiveView('dashboard');
               setMobileSidebarOpen(false);
             }}
@@ -1542,6 +1553,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('participants');
                 setMobileSidebarOpen(false);
               }}
@@ -1557,6 +1569,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('pending');
                 setMobileSidebarOpen(false);
               }}
@@ -1576,6 +1589,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
 
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('rejected');
                 setMobileSidebarOpen(false);
               }}
@@ -1606,10 +1620,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 <button
                   key={evt.id}
                   onClick={() => {
+                    resetFilters();
                     setSelectedEventId(evt.id);
                     setActiveView('event-specific');
-                    setFilterTechEvent('ALL');
-                    setFilterNonTechEvent('ALL');
                     setMobileSidebarOpen(false);
                   }}
                   className={`w-full text-left px-4 py-2 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
@@ -1627,6 +1640,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             {/* AMBASSADOR SECTION BUTTON AFTER CONNECTION */}
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('ambassador');
                 setMobileSidebarOpen(false);
               }}
@@ -1648,6 +1662,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             {/* FINANCE SECTION BUTTON */}
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('finance');
                 setMobileSidebarOpen(false);
               }}
@@ -1670,6 +1685,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <div className="pt-3">
             <button
               onClick={() => {
+                resetFilters();
                 setActiveView('settings');
                 setMobileSidebarOpen(false);
               }}
@@ -1835,10 +1851,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                       <div
                         key={evt.id}
                         onClick={() => {
+                          resetFilters();
                           setSelectedEventId(evt.name);
                           setActiveView('event-specific');
-                          setFilterTechEvent('ALL');
-                          setFilterNonTechEvent('ALL');
                         }}
                         className="bg-slate-900/80 hover:bg-slate-800/90 border border-blue-500/30 p-5 rounded-2xl transition-all cursor-pointer group"
                       >
@@ -1884,10 +1899,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                       <div
                         key={evt.id}
                         onClick={() => {
+                          resetFilters();
                           setSelectedEventId(evt.name);
                           setActiveView('event-specific');
-                          setFilterTechEvent('ALL');
-                          setFilterNonTechEvent('ALL');
                         }}
                         className="bg-slate-900/80 hover:bg-slate-800/90 border border-amber-500/30 p-5 rounded-2xl transition-all cursor-pointer group"
                       >
