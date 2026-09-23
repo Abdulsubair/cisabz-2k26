@@ -1029,7 +1029,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     } else if (activeView === 'ambassador') {
       documentTitle = 'CAMPUS AMBASSADOR REFERRAL SHEET';
     } else if (activeView === 'event-specific') {
-      documentTitle = `EVENT PARTICIPANT SHEET — ${selectedEventId}`;
+      documentTitle = selectedEventId;
       const allEvts = [...TECHNICAL_EVENTS, ...NON_TECHNICAL_EVENTS];
       const match = allEvts.find(
         (e) => e.name.toLowerCase().replace(/[^a-z0-9]/g, '') === selectedEventId.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -1065,7 +1065,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <td style="word-break: break-all;"><div style="font-weight: 700; color: #000000; font-size: 8pt;">${r.email}</div></td>
           ${
             isSingleEventPDF
-              ? `<td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${getMatchingEventBadge(r, selectedEventId)?.name || selectedEventId}</span></td>`
+              ? `<td style="text-align: center;"><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${getMatchingEventBadge(r, selectedEventId)?.name || selectedEventId}</span></td>`
               : `<td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
                  <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>`
           }
@@ -1163,17 +1163,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             table.data-table th {
               background-color: #000000 !important;
               color: #ffffff !important;
-              padding: 6px 6px;
+              padding: 6px 4px;
               border: 1.5px solid #000000;
               text-transform: uppercase;
               font-size: 8.5pt;
               font-weight: 800;
               letter-spacing: 0.3px;
               text-align: left;
-              word-wrap: break-word;
+              white-space: nowrap;
+              word-wrap: normal;
             }
             table.data-table td {
-              padding: 5px 6px;
+              padding: 5px 4px;
               border: 1px solid #000000;
               color: #000000;
               vertical-align: middle;
@@ -1236,6 +1237,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 color: #ffffff !important;
                 border: 1.5px solid #000000 !important;
                 font-weight: 800 !important;
+                white-space: nowrap !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
@@ -1275,27 +1277,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             <div><strong>CATEGORY / SHEET:</strong> ${documentTitle}</div>
             <div><strong>VENUE:</strong> ${eventVenue}</div>
             <div><strong>TOTAL PARTICIPANTS:</strong> ${listToExport.length}</div>
-            <div><strong>PRINTED AT:</strong> ${new Date().toLocaleString()}</div>
           </div>
 
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width: 4%;">S.No</th>
-                ${isAmbassadorView ? '<th style="width: 10%;">Ref Code</th>' : ''}
-                <th style="width: ${isAmbassadorView ? '8%' : '9%'};">Reg ID</th>
+                <th style="width: 3.5%; text-align: center;">S.No</th>
+                ${isAmbassadorView ? '<th style="width: 9%;">Ref Code</th>' : ''}
+                <th style="width: ${isAmbassadorView ? '8%' : '8.5%'};">Reg ID</th>
                 <th style="width: ${isAmbassadorView ? '13%' : '14%'};">Participant Name</th>
-                <th style="width: ${isAmbassadorView ? '18%' : '20%'};">College & Dept</th>
-                <th style="width: 6%;">Year</th>
-                <th style="width: 10%;">Mobile</th>
-                <th style="width: ${isAmbassadorView ? '12%' : '13%'};">Email</th>
+                <th style="width: ${isAmbassadorView ? '19%' : '21%'};">College & Dept</th>
+                <th style="width: 5.5%; text-align: center;">Year</th>
+                <th style="width: 9.5%;">Mobile</th>
+                <th style="width: ${isAmbassadorView ? '12%' : '13.5%'};">Email</th>
                 ${
                   isSingleEventPDF
-                    ? '<th style="width: 18%;">Event</th>'
-                    : `<th style="width: 9%;">Tech Event</th>
-                       <th style="width: 9%;">Non-Tech</th>`
+                    ? '<th style="width: 14%; text-align: center;">Event</th>'
+                    : `<th style="width: 9.5%;">Tech Event</th>
+                       <th style="width: 9.5%;">Non-Tech</th>`
                 }
-                <th style="width: 6%;">Signature</th>
+                <th style="width: ${isAmbassadorView ? '9.5%' : '10.5%'}; text-align: center;">Signature</th>
               </tr>
             </thead>
             <tbody>
