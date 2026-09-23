@@ -224,6 +224,49 @@ const doesRegistrationMatchEvent = (r: RegistrationData, eventNameOrId: string):
   return tech === target || nonTech === target || tech.includes(target) || nonTech.includes(target);
 };
 
+export const getMatchingEventBadge = (
+  r: RegistrationData,
+  eventNameOrId: string
+): { name: string; type: 'tech' | 'non-tech' } | null => {
+  if (!eventNameOrId || eventNameOrId === 'ALL') return null;
+
+  const target = eventNameOrId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const tech = (r.technicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nonTech = (r.nonTechnicalEvent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  if (
+    (target === 'techverse' && tech.includes('techverse')) ||
+    (target.includes('brainiac') && tech.includes('brainiac')) ||
+    (target.includes('prompt') && tech.includes('prompt')) ||
+    (target.includes('bug') && tech.includes('bug')) ||
+    tech === target ||
+    tech.includes(target)
+  ) {
+    if (r.technicalEvent) {
+      return { name: r.technicalEvent, type: 'tech' };
+    }
+  }
+
+  if (
+    (target.includes('pinpoint') && nonTech.includes('pinpoint')) ||
+    ((target.includes('brand') || target.includes('logo')) &&
+      (nonTech.includes('brand') || nonTech.includes('spot') || nonTech.includes('logo'))) ||
+    ((target.includes('hammer') || target.includes('ipl') || target.includes('auction')) &&
+      (nonTech.includes('hammer') || nonTech.includes('ipl') || nonTech.includes('auction'))) ||
+    (target.includes('connection') && nonTech.includes('connection')) ||
+    nonTech === target ||
+    nonTech.includes(target)
+  ) {
+    if (r.nonTechnicalEvent) {
+      return { name: r.nonTechnicalEvent, type: 'non-tech' };
+    }
+  }
+
+  if (r.technicalEvent) return { name: r.technicalEvent, type: 'tech' };
+  if (r.nonTechnicalEvent) return { name: r.nonTechnicalEvent, type: 'non-tech' };
+  return null;
+};
+
 interface AdminPortalProps {
   onBackToWebsite: () => void;
   initialSubPath?: string;
@@ -446,6 +489,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     });
     return Object.values(map).sort((a, b) => b.count - a.count || a.canonicalName.localeCompare(b.canonicalName));
   }, [registrations]);
+
+  const collegeGroupsForSelectedEvent = React.useMemo(() => {
+    const map: Record<string, { canonicalName: string; count: number }> = {};
+    registrations.forEach((r) => {
+      if (r.status === 'REJECTED') return;
+      if (!doesRegistrationMatchEvent(r, selectedEventId)) return;
+      const raw = r.collegeName || '';
+      if (!raw.trim()) return;
+      const canonical = getCanonicalCollegeName(raw);
+      if (!map[canonical]) {
+        map[canonical] = { canonicalName: canonical, count: 0 };
+      }
+      map[canonical].count += 1;
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count || a.canonicalName.localeCompare(b.canonicalName));
+  }, [registrations, selectedEventId]);
 
   // Ambassador Registrations & Referral Code grouping
   const ambassadorRegistrations = registrations.filter(
@@ -977,6 +1036,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
     }
 
     const isAmbassadorView = activeView === 'ambassador';
+    const isSingleEventPDF = activeView === 'event-specific';
 
     const tableRowsHtml = listToExport
       .map(
@@ -993,8 +1053,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
           <td style="text-align: center; font-weight: 800; color: #000000;">${r.year}</td>
           <td style="font-weight: 800; color: #000000; font-size: 8.5pt;">${r.mobile}</td>
           <td style="word-break: break-all;"><div style="font-weight: 700; color: #000000; font-size: 8pt;">${r.email}</div></td>
-          <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
-          <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>
+          ${
+            isSingleEventPDF
+              ? `<td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${getMatchingEventBadge(r, selectedEventId)?.name || selectedEventId}</span></td>`
+              : `<td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
+                 <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>`
+          }
           <td style="border-bottom: 1.5px solid #000000;"></td>
         </tr>
       `
@@ -1215,8 +1279,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 <th style="width: 6%;">Year</th>
                 <th style="width: 10%;">Mobile</th>
                 <th style="width: ${isAmbassadorView ? '12%' : '13%'};">Email</th>
-                <th style="width: 9%;">Tech Event</th>
-                <th style="width: 9%;">Non-Tech</th>
+                ${
+                  isSingleEventPDF
+                    ? '<th style="width: 18%;">Event</th>'
+                    : `<th style="width: 9%;">Tech Event</th>
+                       <th style="width: 9%;">Non-Tech</th>`
+                }
                 <th style="width: 6%;">Signature</th>
               </tr>
             </thead>
@@ -1915,113 +1983,146 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </div>
 
                 {/* Combinable Filter Selects */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-800/80">
-                  {/* College Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      College Filter
-                    </label>
-                    <select
-                      value={filterCollege}
-                      onChange={(e) => setFilterCollege(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Colleges ({registrations.filter((r) => r.status !== 'REJECTED').length})</option>
-                      {collegeGroups.map((g) => (
-                        <option key={g.canonicalName} value={g.canonicalName}>
-                          {g.canonicalName} ({g.count})
+                {activeView === 'event-specific' ? (
+                  <div className="pt-2 border-t border-slate-800/80 max-w-sm">
+                    {/* College Filter ONLY for Event Specific View */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        College Filter
+                      </label>
+                      <select
+                        value={filterCollege}
+                        onChange={(e) => setFilterCollege(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">
+                          All Colleges (
+                          {
+                            registrations.filter(
+                              (r) =>
+                                r.status !== 'REJECTED' &&
+                                doesRegistrationMatchEvent(r, selectedEventId)
+                            ).length
+                          }
+                          )
                         </option>
-                      ))}
-                    </select>
+                        {collegeGroupsForSelectedEvent.map((g) => (
+                          <option key={g.canonicalName} value={g.canonicalName}>
+                            {g.canonicalName} ({g.count})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-800/80">
+                    {/* College Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        College Filter
+                      </label>
+                      <select
+                        value={filterCollege}
+                        onChange={(e) => setFilterCollege(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Colleges ({registrations.filter((r) => r.status !== 'REJECTED').length})</option>
+                        {collegeGroups.map((g) => (
+                          <option key={g.canonicalName} value={g.canonicalName}>
+                            {g.canonicalName} ({g.count})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* Tech Event Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      Tech Event
-                    </label>
-                    <select
-                      value={filterTechEvent}
-                      onChange={(e) => setFilterTechEvent(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Tech</option>
-                      <option value="TECHVERSE">TECHVERSE</option>
-                      <option value="TECH BRAINIAC">TECH BRAINIAC</option>
-                      <option value="PROMPT FUSION">PROMPT FUSION</option>
-                      <option value="BUG BASH">BUG BASH</option>
-                    </select>
-                  </div>
+                    {/* Tech Event Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Tech Event
+                      </label>
+                      <select
+                        value={filterTechEvent}
+                        onChange={(e) => setFilterTechEvent(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Tech</option>
+                        <option value="TECHVERSE">TECHVERSE</option>
+                        <option value="TECH BRAINIAC">TECH BRAINIAC</option>
+                        <option value="PROMPT FUSION">PROMPT FUSION</option>
+                        <option value="BUG BASH">BUG BASH</option>
+                      </select>
+                    </div>
 
-                  {/* Non-Tech Event Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      Non-Tech Event
-                    </label>
-                    <select
-                      value={filterNonTechEvent}
-                      onChange={(e) => setFilterNonTechEvent(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Non-Tech</option>
-                      <option value="PINPOINT">PINPOINT</option>
-                      <option value="BRAND SPOT">BRAND SPOT</option>
-                      <option value="HAMMER HIT (IPL AUCTION)">HAMMER HIT (IPL AUCTION)</option>
-                      <option value="CONNECTION">CONNECTION</option>
-                    </select>
-                  </div>
+                    {/* Non-Tech Event Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Non-Tech Event
+                      </label>
+                      <select
+                        value={filterNonTechEvent}
+                        onChange={(e) => setFilterNonTechEvent(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Non-Tech</option>
+                        <option value="PINPOINT">PINPOINT</option>
+                        <option value="BRAND SPOT">BRAND SPOT</option>
+                        <option value="HAMMER HIT (IPL AUCTION)">HAMMER HIT (IPL AUCTION)</option>
+                        <option value="CONNECTION">CONNECTION</option>
+                      </select>
+                    </div>
 
-                  {/* Status Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Status</option>
-                      <option value="PENDING">PENDING</option>
-                      <option value="VERIFIED">VERIFIED</option>
-                      <option value="REJECTED">REJECTED</option>
-                    </select>
-                  </div>
+                    {/* Status Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Status</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="VERIFIED">VERIFIED</option>
+                        <option value="REJECTED">REJECTED</option>
+                      </select>
+                    </div>
 
-                  {/* Year Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      Year
-                    </label>
-                    <select
-                      value={filterYear}
-                      onChange={(e) => setFilterYear(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Years</option>
-                      <option value="I Year">I Year</option>
-                      <option value="II Year">II Year</option>
-                      <option value="III Year">III Year</option>
-                      <option value="IV Year">IV Year</option>
-                    </select>
-                  </div>
+                    {/* Year Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Year
+                      </label>
+                      <select
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Years</option>
+                        <option value="I Year">I Year</option>
+                        <option value="II Year">II Year</option>
+                        <option value="III Year">III Year</option>
+                        <option value="IV Year">IV Year</option>
+                      </select>
+                    </div>
 
-                  {/* Food Filter */}
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
-                      Food
-                    </label>
-                    <select
-                      value={filterFood}
-                      onChange={(e) => setFilterFood(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
-                    >
-                      <option value="ALL">All Food</option>
-                      <option value="Veg">Veg</option>
-                      <option value="Non-Veg">Non-Veg</option>
-                    </select>
+                    {/* Food Filter */}
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Food
+                      </label>
+                      <select
+                        value={filterFood}
+                        onChange={(e) => setFilterFood(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">All Food</option>
+                        <option value="Veg">Veg</option>
+                        <option value="Non-Veg">Non-Veg</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -2035,67 +2136,114 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[11px]">
-                      <tr>
-                        <th className="py-4 px-4">Participant</th>
-                        <th className="py-4 px-4">College & Dept</th>
-                        <th className="py-4 px-4">Contact</th>
-                        <th className="py-4 px-4">Tech Event</th>
-                        <th className="py-4 px-4">Non-Tech Event</th>
-                        <th className="py-4 px-4">Transaction ID</th>
-                        <th className="py-4 px-4">Status</th>
-                        <th className="py-4 px-4 text-right">Action</th>
-                      </tr>
-                    </thead>
+                  {(() => {
+                    const isSingleEventFilterActive =
+                      activeView === 'event-specific' ||
+                      filterTechEvent !== 'ALL' ||
+                      filterNonTechEvent !== 'ALL';
 
-                    <tbody className="divide-y divide-slate-800/60">
-                      {filteredData.map((reg) => (
-                        <tr key={reg.id} className="hover:bg-slate-800/40 transition-colors">
-                          {/* Name & ID */}
-                          <td className="py-4 px-4">
-                            <div className="font-bold text-white text-sm font-rajdhani">
-                              {reg.fullName}
-                            </div>
-                            <span className="text-[10px] text-amber-400 font-mono font-bold block">
-                              {reg.id}
-                            </span>
-                            <span className="text-[10px] text-slate-500 block">
-                              {reg.year} • {reg.foodPreference}
-                            </span>
-                          </td>
+                    const activeSingleEventName =
+                      activeView === 'event-specific'
+                        ? selectedEventId
+                        : filterTechEvent !== 'ALL'
+                        ? filterTechEvent
+                        : filterNonTechEvent !== 'ALL'
+                        ? filterNonTechEvent
+                        : '';
 
-                          {/* College & Dept */}
-                          <td className="py-4 px-4 max-w-[180px]">
-                            <div className="truncate font-medium text-slate-200" title={reg.collegeName}>
-                              {reg.collegeName}
-                            </div>
-                            <div className="text-[11px] text-slate-400 truncate" title={reg.department}>
-                              {reg.department}
-                            </div>
-                          </td>
+                    return (
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[11px]">
+                          <tr>
+                            <th className="py-4 px-4">Participant</th>
+                            <th className="py-4 px-4">College & Dept</th>
+                            <th className="py-4 px-4">Contact</th>
+                            {isSingleEventFilterActive ? (
+                              <th className="py-4 px-4">Event</th>
+                            ) : (
+                              <>
+                                <th className="py-4 px-4">Tech Event</th>
+                                <th className="py-4 px-4">Non-Tech Event</th>
+                              </>
+                            )}
+                            <th className="py-4 px-4">Transaction ID</th>
+                            <th className="py-4 px-4">Status</th>
+                            <th className="py-4 px-4 text-right">Action</th>
+                          </tr>
+                        </thead>
 
-                          {/* Contact */}
-                          <td className="py-4 px-4">
-                            <div className="text-cyan-300 font-bold">{reg.mobile}</div>
-                            <div className="text-[11px] text-slate-400 truncate max-w-[140px]">
-                              {reg.email}
-                            </div>
-                          </td>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {filteredData.map((reg) => (
+                            <tr key={reg.id} className="hover:bg-slate-800/40 transition-colors">
+                              {/* Name & ID */}
+                              <td className="py-4 px-4">
+                                <div className="font-bold text-white text-sm font-rajdhani">
+                                  {reg.fullName}
+                                </div>
+                                <span className="text-[10px] text-amber-400 font-mono font-bold block">
+                                  {reg.id}
+                                </span>
+                                <span className="text-[10px] text-slate-500 block">
+                                  {reg.year} • {reg.foodPreference}
+                                </span>
+                              </td>
 
-                          {/* Tech Event */}
-                          <td className="py-4 px-4">
-                            <span className="px-2.5 py-1 rounded bg-blue-500/20 text-cyan-300 font-bold border border-blue-500/30">
-                              {reg.technicalEvent}
-                            </span>
-                          </td>
+                              {/* College & Dept */}
+                              <td className="py-4 px-4 max-w-[180px]">
+                                <div className="truncate font-medium text-slate-200" title={reg.collegeName}>
+                                  {reg.collegeName}
+                                </div>
+                                <div className="text-[11px] text-slate-400 truncate" title={reg.department}>
+                                  {reg.department}
+                                </div>
+                              </td>
 
-                          {/* Non-Tech Event */}
-                          <td className="py-4 px-4">
-                            <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                              {reg.nonTechnicalEvent}
-                            </span>
-                          </td>
+                              {/* Contact */}
+                              <td className="py-4 px-4">
+                                <div className="text-cyan-300 font-bold">{reg.mobile}</div>
+                                <div className="text-[11px] text-slate-400 truncate max-w-[140px]">
+                                  {reg.email}
+                                </div>
+                              </td>
+
+                              {/* Event Badge(s) */}
+                              {isSingleEventFilterActive ? (
+                                <td className="py-4 px-4">
+                                  {(() => {
+                                    const badge = getMatchingEventBadge(reg, activeSingleEventName);
+                                    if (!badge) {
+                                      return <span className="text-slate-500 font-bold">-</span>;
+                                    }
+                                    return (
+                                      <span
+                                        className={`px-2.5 py-1 rounded font-bold border ${
+                                          badge.type === 'tech'
+                                            ? 'bg-blue-500/20 text-cyan-300 border-blue-500/30'
+                                            : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                        }`}
+                                      >
+                                        {badge.name}
+                                      </span>
+                                    );
+                                  })()}
+                                </td>
+                              ) : (
+                                <>
+                                  {/* Tech Event */}
+                                  <td className="py-4 px-4">
+                                    <span className="px-2.5 py-1 rounded bg-blue-500/20 text-cyan-300 font-bold border border-blue-500/30">
+                                      {reg.technicalEvent}
+                                    </span>
+                                  </td>
+
+                                  {/* Non-Tech Event */}
+                                  <td className="py-4 px-4">
+                                    <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                                      {reg.nonTechnicalEvent}
+                                    </span>
+                                  </td>
+                                </>
+                              )}
 
                           {/* Transaction ID */}
                           <td className="py-4 px-4">
@@ -2153,7 +2301,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                       ))}
                     </tbody>
                   </table>
-                </div>
+                );
+              })()}
+            </div>
               )}
             </div>
           </div>
