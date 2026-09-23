@@ -172,10 +172,11 @@ export const GuidelinesSection: React.FC<GuidelinesSectionProps> = ({ onRegister
     {
       name: 'Connection',
       subtitle: 'Link & Think Visual Puzzle',
-      tag: '2–3 Level Rounds',
-      team: 'Individual or up to 2 members',
+      tag: 'Conducted in 2 Rounds',
+      team: 'Team (2 to 3 members, no individual entries)',
       rules: [
-        'Conducted in 2 to 3 rounds featuring visual puzzles.',
+        'Conducted in 2 level rounds featuring visual puzzles.',
+        'Team participation only (2 to 3 members per team, no individual entries).',
         'Participants view a set of images and must identify the hidden word or concept linking them.',
         'Difficulty and number of images per clue set increase across rounds.',
         'Evaluated on accuracy and speed of identifying the common connection.',
