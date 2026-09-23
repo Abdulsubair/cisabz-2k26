@@ -1053,21 +1053,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
         (r, idx) => `
         <tr>
           <td style="text-align: center; font-weight: 800; color: #000000;">${idx + 1}</td>
-          ${isAmbassadorView ? `<td><strong style="color: #000000; font-weight: 900;">${r.ambassadorReferralId || 'N/A'}</strong></td>` : ''}
-          <td><strong style="color: #000000; font-weight: 900; font-size: 9pt;">${r.id}</strong></td>
-          <td><strong style="color: #000000; font-weight: 900; font-size: 9.5pt;">${r.fullName}</strong></td>
-          <td>
+          ${isAmbassadorView ? `<td style="text-align: center;"><strong style="color: #000000; font-weight: 900;">${r.ambassadorReferralId || 'N/A'}</strong></td>` : ''}
+          <td style="text-align: center;"><strong style="color: #000000; font-weight: 900; font-size: 9pt;">${r.id}</strong></td>
+          <td style="text-align: center;"><strong style="color: #000000; font-weight: 900; font-size: 9.5pt;">${r.fullName}</strong></td>
+          <td style="text-align: center;">
             <div style="font-weight: 800; color: #000000; font-size: 8.5pt;">${r.collegeName}</div>
             <div style="font-weight: 700; color: #000000; font-size: 8pt; margin-top: 1px;">${r.department}</div>
           </td>
           <td style="text-align: center; font-weight: 800; color: #000000;">${r.year}</td>
-          <td style="font-weight: 800; color: #000000; font-size: 8.5pt;">${r.mobile}</td>
+          <td style="text-align: center; font-weight: 800; color: #000000; font-size: 8.5pt;">${r.mobile}</td>
           <td style="word-break: break-all;"><div style="font-weight: 700; color: #000000; font-size: 8pt;">${r.email}</div></td>
           ${
             isSingleEventPDF
               ? `<td style="text-align: center;"><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${getMatchingEventBadge(r, selectedEventId)?.name || selectedEventId}</span></td>`
-              : `<td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
-                 <td><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>`
+              : `<td style="text-align: center;"><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.technicalEvent || '-'}</span></td>
+                 <td style="text-align: center;"><span style="color: #000000; font-weight: 800; font-size: 8.5pt;">${r.nonTechnicalEvent || '-'}</span></td>`
           }
           <td style="border-bottom: 1.5px solid #000000;"></td>
         </tr>
@@ -1283,18 +1283,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             <thead>
               <tr>
                 <th style="width: 3.5%; text-align: center;">S.No</th>
-                ${isAmbassadorView ? '<th style="width: 9%;">Ref Code</th>' : ''}
-                <th style="width: ${isAmbassadorView ? '8%' : '8.5%'};">Reg ID</th>
-                <th style="width: ${isAmbassadorView ? '13%' : '14%'};">Participant Name</th>
-                <th style="width: ${isAmbassadorView ? '19%' : '21%'};">College & Dept</th>
+                ${isAmbassadorView ? '<th style="width: 9%; text-align: center;">Ref Code</th>' : ''}
+                <th style="width: ${isAmbassadorView ? '8%' : '8.5%'}; text-align: center;">Reg ID</th>
+                <th style="width: ${isAmbassadorView ? '13%' : '14%'}; text-align: center;">Participant Name</th>
+                <th style="width: ${isAmbassadorView ? '19%' : '21%'}; text-align: center;">College & Dept</th>
                 <th style="width: 5.5%; text-align: center;">Year</th>
-                <th style="width: 9.5%;">Mobile</th>
-                <th style="width: ${isAmbassadorView ? '12%' : '13.5%'};">Email</th>
+                <th style="width: 9.5%; text-align: center;">Mobile</th>
+                <th style="width: ${isAmbassadorView ? '12%' : '13.5%'}; text-align: left;">Email</th>
                 ${
                   isSingleEventPDF
                     ? '<th style="width: 14%; text-align: center;">Event</th>'
-                    : `<th style="width: 9.5%;">Tech Event</th>
-                       <th style="width: 9.5%;">Non-Tech</th>`
+                    : `<th style="width: 9.5%; text-align: center;">Tech Event</th>
+                       <th style="width: 9.5%; text-align: center;">Non-Tech</th>`
                 }
                 <th style="width: ${isAmbassadorView ? '9.5%' : '10.5%'}; text-align: center;">Signature</th>
               </tr>
