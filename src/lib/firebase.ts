@@ -43,6 +43,9 @@ export interface RegistrationData {
   rejectedAt?: string;
   verifiedBy?: string;
   rejectionReason?: string;
+  isOnSpot?: boolean;
+  amountPaid?: number;
+  onSpotPaymentMode?: 'CASH' | 'GPAY' | string;
 }
 
 export interface EventRegistrationStatus {
@@ -113,14 +116,27 @@ export const auth = getAuth(app);
 const LOCAL_REGISTRATIONS_KEY = 'cisabz_firebase_registrations';
 const LOCAL_EVENTS_KEY = 'cisabz_firebase_events';
 
+// Sample On-Spot Registrations extracted from user handwritten registration sheet
+export const HANDWRITTEN_ONSPOT_SAMPLES: RegistrationData[] = [];
+
 // Local storage helper methods
 function getLocalRegistrations(): RegistrationData[] {
+  let list: RegistrationData[] = [];
   try {
     const raw = localStorage.getItem(LOCAL_REGISTRATIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) list = JSON.parse(raw);
   } catch {
-    return [];
+    list = [];
   }
+
+  // Ensure sample handwritten on-spot entries exist if not present
+  HANDWRITTEN_ONSPOT_SAMPLES.forEach((sample) => {
+    if (!list.some((r) => r.id === sample.id || r.mobile === sample.mobile)) {
+      list.unshift(sample);
+    }
+  });
+
+  return list;
 }
 
 function saveLocalRegistrations(data: RegistrationData[]) {
@@ -376,6 +392,7 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
             return;
           }
           const d = docSnap.data();
+          const isDocOnSpot = Boolean(d.isOnSpot || docSnap.id.startsWith('ONSPOT-'));
           list.push({
             id: d.id || docSnap.id,
             fullName: d.fullName || '',
@@ -398,8 +415,22 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
             rejectedAt: d.rejectedAt,
             verifiedBy: d.verifiedBy,
             rejectionReason: d.rejectionReason,
+            isOnSpot: isDocOnSpot,
+            amountPaid: typeof d.amountPaid === 'number' ? d.amountPaid : (isDocOnSpot ? 200 : 0),
+            onSpotPaymentMode: d.onSpotPaymentMode || (d.transactionId?.includes('GPAY') ? 'GPAY' : 'CASH'),
           });
         });
+
+
+        try {
+          const locals = getLocalRegistrations();
+          locals.forEach((localReg) => {
+            if (localReg.isOnSpot && !list.some((r) => r.id === localReg.id)) {
+              list.unshift(localReg);
+            }
+          });
+        } catch {}
+
         callback(list);
         saveLocalRegistrations(list);
       },
@@ -413,6 +444,72 @@ export function subscribeRegistrations(callback: (data: RegistrationData[]) => v
     callback(getLocalRegistrations());
     return () => { };
   }
+}
+
+/**
+ * Save new On-Spot Registration to Firebase Firestore & local storage
+ */
+export async function addOnSpotRegistration(data: {
+  fullName: string;
+  collegeName: string;
+  department: string;
+  year: 'I Year' | 'II Year' | 'III Year' | 'IV Year';
+  email?: string;
+  mobile: string;
+  technicalEvent: string;
+  nonTechnicalEvent: string;
+  foodPreference: 'Veg' | 'Non-Veg';
+  amountPaid?: number;
+  paymentMode?: 'CASH' | 'GPAY' | string;
+  paymentProofUrl?: string;
+  verifiedBy?: string;
+}): Promise<RegistrationData> {
+  const regId = `ONSPOT-${Math.floor(100000 + Math.random() * 900000)}`;
+  const nowISO = new Date().toISOString();
+
+  const record: RegistrationData = {
+    id: regId,
+    fullName: data.fullName.trim(),
+    collegeName: data.collegeName.trim(),
+    department: data.department.trim() || 'CSE',
+    year: data.year || 'III Year',
+    email: data.email?.trim() || `${regId.toLowerCase()}@onspot.symposium`,
+    mobile: data.mobile.trim(),
+    ambassadorReferralId: '',
+    foodPreference: data.foodPreference || 'Veg',
+    technicalEvent: data.technicalEvent || '',
+    nonTechnicalEvent: data.nonTechnicalEvent || '',
+    transactionId: `ONSPOT-${(data.paymentMode || 'CASH').toUpperCase()}`,
+    paymentName: 'On-Spot Desk',
+    paymentProofUrl: data.paymentProofUrl || '',
+    paymentProofPath: '',
+    status: 'VERIFIED',
+    createdAt: nowISO,
+    verifiedAt: nowISO,
+    verifiedBy: data.verifiedBy || 'On-Spot Desk',
+    isOnSpot: true,
+    amountPaid: data.amountPaid || 200,
+    onSpotPaymentMode: data.paymentMode || 'CASH',
+  };
+
+  // Save to Firestore
+  try {
+    const docRef = doc(db, 'registrations', regId);
+    await setDoc(docRef, {
+      ...record,
+      emailNormalized: normalizeCredential(record.email),
+      mobileNormalized: normalizeCredential(record.mobile),
+      createdAtServer: serverTimestamp(),
+    });
+  } catch (err) {
+    console.warn('Firestore on-spot save offline fallback:', err);
+  }
+
+  // Save to Local Storage fallback
+  const locals = getLocalRegistrations();
+  saveLocalRegistrations([record, ...locals.filter((r) => r.id !== regId)]);
+
+  return record;
 }
 
 /**

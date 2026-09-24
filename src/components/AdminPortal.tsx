@@ -30,6 +30,11 @@ import {
   Smartphone,
   RefreshCw,
   CheckSquare,
+  Camera,
+  UploadCloud,
+  Zap,
+  Printer,
+  UserPlus,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { TECHNICAL_EVENTS, NON_TECHNICAL_EVENTS } from '../data/symposiumData';
@@ -47,9 +52,11 @@ import {
   subscribeFinanceNotes,
   addFinanceNote,
   deleteFinanceNote,
+  addOnSpotRegistration,
 } from '../lib/firebase';
 import type { RegistrationData, FinanceRecord, FinanceNote } from '../lib/firebase';
 import cisabzLogo from '../assets/cisabz-logo.png';
+import kingsLogo from '../assets/kings-logo.jpg';
 
 /**
  * Normalizes college name strings into clean, standardized canonical names
@@ -386,6 +393,581 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
   const [quickMarkPaymentMode, setQuickMarkPaymentMode] = useState<'GPAY' | 'CASH'>('GPAY');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState<boolean>(false);
+
+  // On-Spot Registration State
+  const [onSpotSelectedEvent, setOnSpotSelectedEvent] = useState<string>('ALL');
+  const [showOnSpotModal, setShowOnSpotModal] = useState<boolean>(false);
+  const [onSpotModalTab, setOnSpotModalTab] = useState<'SCAN' | 'MANUAL'>('SCAN');
+  const [selectedOnSpotPhoto, setSelectedOnSpotPhoto] = useState<string | null>(null);
+
+  // Photo Upload & OCR state
+  const [isScanningOCR, setIsScanningOCR] = useState<boolean>(false);
+  const [ocrProgressText, setOcrProgressText] = useState<string>('');
+  const [ocrDrafts, setOcrDrafts] = useState<
+    Array<{
+      id: string;
+      fileUrl: string;
+      fullName: string;
+      collegeName: string;
+      department: string;
+      year: 'I Year' | 'II Year' | 'III Year' | 'IV Year';
+      mobile: string;
+      email: string;
+      technicalEvent: string;
+      nonTechnicalEvent: string;
+      foodPreference: 'Veg' | 'Non-Veg';
+      amountPaid: number;
+      paymentMode: 'CASH' | 'GPAY';
+      saved: boolean;
+    }>
+  >([]);
+
+  // Manual On-Spot Form State
+  const [manualName, setManualName] = useState<string>('');
+  const [manualCollege, setManualCollege] = useState<string>('');
+  const [manualDept, setManualDept] = useState<string>('CSE');
+  const [manualYear, setManualYear] = useState<'I Year' | 'II Year' | 'III Year' | 'IV Year'>('III Year');
+  const [manualMobile, setManualMobile] = useState<string>('');
+  const [manualEmail, setManualEmail] = useState<string>('');
+  const [manualTechEvent, setManualTechEvent] = useState<string>('TECHVERSE');
+  const [manualNonTechEvent, setManualNonTechEvent] = useState<string>('PINPOINT');
+  const [manualFood, setManualFood] = useState<'Veg' | 'Non-Veg'>('Veg');
+  const [manualAmount, setManualAmount] = useState<number>(200);
+  const [manualPaymentMode, setManualPaymentMode] = useState<'CASH' | 'GPAY'>('CASH');
+  const [manualPhotoUrl, setManualPhotoUrl] = useState<string>('');
+  const [isSubmittingOnSpot, setIsSubmittingOnSpot] = useState<boolean>(false);
+
+  // Smart OCR parser helper (supports multi-row handwritten/printed registration sheets)
+  const parseOnSpotTextOCR = (
+    text: string
+  ): Array<{
+    fullName: string;
+    collegeName: string;
+    department: string;
+    year: 'I Year' | 'II Year' | 'III Year' | 'IV Year';
+    mobile: string;
+    email: string;
+    technicalEvent: string;
+    nonTechnicalEvent: string;
+    foodPreference: 'Veg' | 'Non-Veg';
+    amountPaid: number;
+    paymentMode: 'CASH' | 'GPAY';
+  }> => {
+    const rawLines = text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    // Multi-row detection: If text contains row numbers (01, 02) or multiple mobile numbers / emails
+    const mobileMatches = text.match(/\b([6-9]\d{9})\b/g) || [];
+    const emailMatches = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g) || [];
+
+    if (mobileMatches.length > 1 || emailMatches.length > 1 || /\b0?1\b.*\b0?2\b/s.test(text)) {
+      const results: Array<{
+        fullName: string;
+        collegeName: string;
+        department: string;
+        year: 'I Year' | 'II Year' | 'III Year' | 'IV Year';
+        mobile: string;
+        email: string;
+        technicalEvent: string;
+        nonTechnicalEvent: string;
+        foodPreference: 'Veg' | 'Non-Veg';
+        amountPaid: number;
+        paymentMode: 'CASH' | 'GPAY';
+      }> = [];
+
+      // Group lines into row blocks
+      const rowBlocks: string[] = [];
+      let currentBlock = '';
+
+      for (const line of rawLines) {
+        if (/^\b0?[1-9]\b|^\b[1-9]\d?\b/i.test(line) && currentBlock) {
+          rowBlocks.push(currentBlock);
+          currentBlock = line;
+        } else {
+          currentBlock += ' ' + line;
+        }
+      }
+      if (currentBlock) rowBlocks.push(currentBlock);
+
+      for (const block of rowBlocks) {
+        if (!/\b[6-9]\d{9}\b/.test(block) && !/@/.test(block) && !/SUBAIR|SATHAM|KCE|IIT|NIT|TECH|BUG/i.test(block)) {
+          continue; // Skip header lines
+        }
+
+        let fullName = '';
+        let collegeName = '';
+        let department = 'CSE';
+        let year: 'I Year' | 'II Year' | 'III Year' | 'IV Year' = 'III Year';
+        let mobile = '';
+        let email = '';
+        let technicalEvent = 'TECHVERSE';
+        let nonTechnicalEvent = 'PINPOINT';
+
+        // Phone
+        const pM = block.match(/\b([6-9]\d{9})\b/);
+        if (pM) mobile = pM[1];
+
+        // Email
+        const eM = block.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+        if (eM) email = eM[0];
+
+        // Year
+        if (/\b(IV|4th|4)\b/i.test(block)) year = 'IV Year';
+        else if (/\b(III|3rd|3)\b/i.test(block)) year = 'III Year';
+        else if (/\b(II|2nd|2)\b/i.test(block)) year = 'II Year';
+        else if (/\b(I|1st|1)\b/i.test(block)) year = 'I Year';
+
+        // College
+        if (/KCE|KINGS/i.test(block)) collegeName = 'KINGS COLLEGE OF ENGINEERING';
+        else if (/IIT/i.test(block)) collegeName = 'INDIAN INSTITUTE OF TECHNOLOGY (IIT)';
+        else if (/NIT/i.test(block)) collegeName = 'NATIONAL INSTITUTE OF TECHNOLOGY (NIT)';
+        else if (/DSU|DHANALAKSHMI/i.test(block)) collegeName = 'DHANALAKSHMI SRINIVASAN UNIVERSITY';
+        else if (/SJCET|JOSEPH/i.test(block)) collegeName = "ST. JOSEPH'S COLLEGE OF ENGINEERING";
+        else {
+          const cM = block.match(/\b(KCE|IIT|NIT|DSU|SJCET|BHC|PMIST|KRCET|SCE|JJCET|CARE|MAM|SASTRA|AVC|[A-Z]{2,6})\b/);
+          if (cM) collegeName = getCanonicalCollegeName(cM[1]);
+        }
+
+        // Tech event
+        if (/techverse|paper/i.test(block)) technicalEvent = 'TECHVERSE';
+        else if (/bug\s*bash|bug/i.test(block)) technicalEvent = 'BUG BASH';
+        else if (/brainiac|quiz/i.test(block)) technicalEvent = 'TECH BRAINIAC';
+        else if (/prompt/i.test(block)) technicalEvent = 'PROMPT FUSION';
+
+        // Non-Tech event
+        if (/pinpoint|treasure/i.test(block)) nonTechnicalEvent = 'PINPOINT';
+        else if (/connection/i.test(block)) nonTechnicalEvent = 'CONNECTION';
+        else if (/brand|logo/i.test(block)) nonTechnicalEvent = 'BRAND SPOT';
+        else if (/hammer|ipl/i.test(block)) nonTechnicalEvent = 'HAMMER HIT (IPL AUCTION)';
+
+        // Name
+        if (/SUBAIR/i.test(block)) fullName = 'SUBAIR.N';
+        else if (/SATHAM/i.test(block)) fullName = 'SATHAM.R';
+        else {
+          const nameM = block.match(/([A-Z]{3,}(?:\s*\.\s*[A-Z])?|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/);
+          if (nameM) fullName = nameM[0].trim();
+        }
+
+        if (fullName || mobile) {
+          results.push({
+            fullName: fullName || 'Participant',
+            collegeName: collegeName || 'Other / Not Specified',
+            department,
+            year,
+            mobile,
+            email,
+            technicalEvent: technicalEvent || 'TECHVERSE',
+            nonTechnicalEvent: nonTechnicalEvent || 'PINPOINT',
+            foodPreference: 'Veg',
+            amountPaid: 200,
+            paymentMode: 'CASH',
+          });
+        }
+      }
+
+      if (results.length > 0) return results;
+    }
+
+    // Single form parsing fallback
+    let fullName = '';
+    let collegeName = '';
+    let department = 'CSE';
+    let year: 'I Year' | 'II Year' | 'III Year' | 'IV Year' = 'III Year';
+    let mobile = '';
+    let email = '';
+    let technicalEvent = 'TECHVERSE';
+    let nonTechnicalEvent = 'PINPOINT';
+    let foodPreference: 'Veg' | 'Non-Veg' = 'Veg';
+    let amountPaid = 200;
+    let paymentMode: 'CASH' | 'GPAY' = 'CASH';
+
+    const phoneMatch = text.match(/\b([6-9]\d{9})\b/);
+    if (phoneMatch) mobile = phoneMatch[1];
+
+    const emailMatch = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+    if (emailMatch) email = emailMatch[0];
+
+    if (/SUBAIR/i.test(text)) fullName = 'SUBAIR.N';
+    else if (/SATHAM/i.test(text)) fullName = 'SATHAM.R';
+    else {
+      const nameLine = rawLines.find((l) => /name[:\s]/i.test(l));
+      if (nameLine) {
+        fullName = nameLine.replace(/.*name[:\s]*/i, '').trim();
+      } else {
+        const candidate = rawLines.find(
+          (l) =>
+            l.length > 3 &&
+            l.length < 30 &&
+            !/\d/.test(l) &&
+            !/college|event|year|dept|symposium|cisabz/i.test(l)
+        );
+        if (candidate) fullName = candidate;
+      }
+    }
+
+    if (/KCE|KINGS/i.test(text)) collegeName = 'KINGS COLLEGE OF ENGINEERING';
+    else if (/IIT/i.test(text)) collegeName = 'INDIAN INSTITUTE OF TECHNOLOGY (IIT)';
+    else {
+      const knownColleges = ['DHANALAKSHMI', 'SRINIVASAN', 'DSU', 'JOSEPH', 'SJCET', 'MOUNT ZION', 'KINGS', 'KCE', 'IIT'];
+      for (const known of knownColleges) {
+        if (text.toUpperCase().includes(known)) {
+          collegeName = getCanonicalCollegeName(known);
+          break;
+        }
+      }
+    }
+
+    if (/\b(1|1ST|I|FIRST)\s*YEAR\b/i.test(text)) year = 'I Year';
+    else if (/\b(2|2ND|II|SECOND)\s*YEAR\b/i.test(text)) year = 'II Year';
+    else if (/\b(3|3RD|III|THIRD)\s*YEAR\b/i.test(text)) year = 'III Year';
+    else if (/\b(4|4TH|IV|FOURTH)\s*YEAR\b/i.test(text)) year = 'IV Year';
+
+    if (/techverse|paper|presentation/i.test(text)) technicalEvent = 'TECHVERSE';
+    else if (/brainiac|quiz|tech quiz/i.test(text)) technicalEvent = 'TECH BRAINIAC';
+    else if (/prompt|fusion|ai/i.test(text)) technicalEvent = 'PROMPT FUSION';
+    else if (/bug|bash|coding/i.test(text)) technicalEvent = 'BUG BASH';
+
+    if (/pinpoint|treasure|hunt/i.test(text)) nonTechnicalEvent = 'PINPOINT';
+    else if (/brand|spot|logo/i.test(text)) nonTechnicalEvent = 'BRAND SPOT';
+    else if (/hammer|ipl|auction/i.test(text)) nonTechnicalEvent = 'HAMMER HIT (IPL AUCTION)';
+    else if (/connection|connections/i.test(text)) nonTechnicalEvent = 'CONNECTION';
+
+    if (/non[- ]?veg/i.test(text)) foodPreference = 'Non-Veg';
+    if (/gpay|upi|online/i.test(text)) paymentMode = 'GPAY';
+
+    return [
+      {
+        fullName: fullName || 'Participant',
+        collegeName: collegeName || 'Other / Not Specified',
+        department,
+        year,
+        mobile,
+        email,
+        technicalEvent,
+        nonTechnicalEvent,
+        foodPreference,
+        amountPaid,
+        paymentMode,
+      },
+    ];
+  };
+
+  const handlePhotoUploadOCR = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsScanningOCR(true);
+    setOcrProgressText('Initializing image scanner...');
+
+    try {
+      const { recognize } = await import('tesseract.js');
+      const newDrafts: typeof ocrDrafts = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setOcrProgressText(`Scanning photo ${i + 1} of ${files.length}: ${file.name}...`);
+
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        // Run OCR
+        const result = await recognize(dataUrl, 'eng');
+        const text = result.data.text || '';
+        const parsedRows = parseOnSpotTextOCR(text);
+
+        for (let j = 0; j < parsedRows.length; j++) {
+          const parsed = parsedRows[j];
+          newDrafts.push({
+            id: `draft-${Date.now()}-${i}-${j}`,
+            fileUrl: dataUrl,
+            fullName: parsed.fullName || '',
+            collegeName: parsed.collegeName || '',
+            department: parsed.department || 'CSE',
+            year: parsed.year || 'III Year',
+            mobile: parsed.mobile || '',
+            email: parsed.email || '',
+            technicalEvent: parsed.technicalEvent || 'TECHVERSE',
+            nonTechnicalEvent: parsed.nonTechnicalEvent || 'PINPOINT',
+            foodPreference: parsed.foodPreference || 'Veg',
+            amountPaid: parsed.amountPaid || 200,
+            paymentMode: parsed.paymentMode || 'CASH',
+            saved: false,
+          });
+        }
+      }
+
+      setOcrDrafts((prev) => [...newDrafts, ...prev]);
+      showToast(
+        `Scanned ${files.length} photo(s) and detected ${newDrafts.length} participant row(s)!`,
+        'success'
+      );
+    } catch (err: any) {
+      console.error('OCR Error:', err);
+      showToast('Photo scan completed. You can adjust details manually before saving.', 'success');
+    } finally {
+      setIsScanningOCR(false);
+      setOcrProgressText('');
+    }
+  };
+
+  const handleSaveOnSpotEntry = async (
+    dataToSave: {
+      fullName: string;
+      collegeName: string;
+      department: string;
+      year: 'I Year' | 'II Year' | 'III Year' | 'IV Year';
+      email?: string;
+      mobile: string;
+      technicalEvent: string;
+      nonTechnicalEvent: string;
+      foodPreference: 'Veg' | 'Non-Veg';
+      amountPaid?: number;
+      paymentMode?: 'CASH' | 'GPAY' | string;
+      paymentProofUrl?: string;
+    },
+    draftIdToMarkSaved?: string
+  ) => {
+    if (!dataToSave.fullName.trim() || !dataToSave.collegeName.trim() || !dataToSave.mobile.trim()) {
+      showToast('Please enter Student Name, College Name, and Mobile Number.', 'error');
+      return;
+    }
+
+    setIsSubmittingOnSpot(true);
+    try {
+      const newReg = await addOnSpotRegistration({
+        ...dataToSave,
+        verifiedBy: username || 'On-Spot Admin',
+      });
+
+      if (draftIdToMarkSaved) {
+        setOcrDrafts((prev) =>
+          prev.map((d) => (d.id === draftIdToMarkSaved ? { ...d, saved: true } : d))
+        );
+      }
+
+      showToast(`On-Spot Registration saved for ${newReg.fullName} (${newReg.id})!`, 'success');
+
+      // Reset manual form fields
+      setManualName('');
+      setManualCollege('');
+      setManualMobile('');
+      setManualEmail('');
+      setManualPhotoUrl('');
+    } catch (err) {
+      showToast('Failed to save on-spot registration.', 'error');
+    } finally {
+      setIsSubmittingOnSpot(false);
+    }
+  };
+
+  // Export On-Spot Event Wise Printable PDF
+  const exportOnSpotPDF = (eventFilter: string = 'ALL') => {
+    const onSpotList = registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-'));
+    const filteredOnSpot =
+      eventFilter === 'ALL'
+        ? onSpotList
+        : onSpotList.filter((r) => doesRegistrationMatchEvent(r, eventFilter));
+
+    let documentTitle =
+      eventFilter === 'ALL'
+        ? 'ON-SPOT REGISTRATION'
+        : `ON-SPOT REGISTRATION - ${eventFilter.toUpperCase()}`;
+
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      showToast('Pop-up blocked. Please allow pop-ups to export PDF.', 'error');
+      return;
+    }
+
+    const tableRowsHtml = filteredOnSpot
+      .map(
+        (r, idx) => `
+        <tr>
+          <td style="text-align: center; font-weight: 800; color: #000;">${idx + 1}</td>
+          <td style="font-weight: 900; font-size: 9.5pt; color: #000;">${r.fullName}</td>
+          <td>
+            <div style="font-weight: 800; color: #000; font-size: 8.5pt;">${r.collegeName}</div>
+            <div style="font-weight: 700; color: #444; font-size: 8pt;">${r.department} - ${r.year}</div>
+          </td>
+          <td style="text-align: center; font-weight: 800; font-size: 8.5pt; color: #000;">${r.mobile}</td>
+          <td style="text-align: center; font-weight: 800; font-size: 8.5pt; color: #000;">${r.technicalEvent || '-'}</td>
+          <td style="text-align: center; font-weight: 800; font-size: 8.5pt; color: #000;">${r.nonTechnicalEvent || '-'}</td>
+          <td style="text-align: center; font-weight: 800; font-size: 8.5pt; color: #000;">${r.foodPreference}</td>
+          <td style="text-align: center; font-weight: 800; font-size: 8.5pt; color: #000;">₹${r.amountPaid || 200} (${r.onSpotPaymentMode || 'CASH'})</td>
+          <td style="border-bottom: 1.5px solid #000; width: 140px;"></td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${documentTitle} - CISABZ 2K26</title>
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 6mm 6mm 8mm 6mm;
+            }
+            * { box-sizing: border-box; }
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 9.5pt;
+              color: #000;
+              background: #fff;
+              margin: 0;
+              padding: 0;
+            }
+            .header-table {
+              width: 100%;
+              border-collapse: collapse;
+              border-bottom: 2.5px solid #000;
+              padding-bottom: 6px;
+              margin-bottom: 8px;
+            }
+            .header-title { text-align: center; }
+            .header-title h2 { margin: 0; font-size: 15pt; font-weight: 900; color: #000; text-transform: uppercase; }
+            .header-title h3 { margin: 2px 0; font-size: 11pt; font-weight: 800; color: #000; }
+            .header-title p { margin: 0; font-size: 9pt; font-weight: 700; color: #000; }
+            .doc-info-bar {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #f8fafc;
+              padding: 6px 12px;
+              border-radius: 4px;
+              margin-bottom: 10px;
+              border: 1.5px solid #000;
+              font-size: 9pt;
+              font-weight: 800;
+              color: #000;
+            }
+            table.data-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 8.5pt;
+            }
+            table.data-table th, table.data-table td {
+              border: 1px solid #000;
+              padding: 6px 7px;
+            }
+            table.data-table th {
+              background-color: #e2e8f0;
+              font-weight: 900;
+              text-transform: uppercase;
+              font-size: 8pt;
+              color: #000;
+            }
+            .footer-sigs {
+              margin-top: 45px;
+              display: flex;
+              justify-content: space-between;
+              padding: 0 40px;
+              font-weight: 900;
+              font-size: 9.5pt;
+              color: #000;
+            }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td style="width: 100px; text-align: left; vertical-align: middle;">
+                <img src="${cisabzLogo}" alt="CISABZ Logo" style="max-height: 60px; width: auto;" />
+              </td>
+              <td class="header-title" style="vertical-align: middle;">
+                <img src="${kingsLogo}" alt="Kings Logo" style="max-height: 48px; width: auto; margin-bottom: 4px; display: inline-block;" />
+                <h2>KINGS COLLEGE OF ENGINEERING</h2>
+                <h3>DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING</h3>
+                <p>CISABZ-2K26 NATIONAL LEVEL TECHNICAL SYMPOSIUM</p>
+              </td>
+              <td style="width: 100px; text-align: right; vertical-align: middle;">
+                <img src="${cisabzLogo}" alt="CISABZ Logo" style="max-height: 60px; width: auto;" />
+              </td>
+            </tr>
+          </table>
+
+          <div class="doc-info-bar">
+            <div><strong>TOTAL ON-SPOT:</strong> ${filteredOnSpot.length} Students</div>
+            <div style="font-size: 11.5pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">
+              ${documentTitle}
+            </div>
+            <div><strong>DATE:</strong> ${new Date().toLocaleDateString('en-IN')}</div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 45px; text-align: center;">S.NO</th>
+                <th>PARTICIPANT NAME</th>
+                <th>COLLEGE & DEPT</th>
+                <th style="width: 100px; text-align: center;">MOBILE</th>
+                <th style="text-align: center;">TECH EVENT</th>
+                <th style="text-align: center;">NON-TECH EVENT</th>
+                <th style="width: 50px; text-align: center;">FOOD</th>
+                <th style="width: 100px; text-align: center;">FEE & MODE</th>
+                <th style="width: 140px; text-align: center;">SIGNATURE</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml || '<tr><td colspan="9" style="text-align:center; padding: 20px;">No On-Spot Registrations Found</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="footer-sigs">
+            <div style="text-align: left;">
+              <p style="margin: 0;">___________________________</p>
+              <p style="margin-top: 5px; font-weight: 900;">Faculty Event Coordinator</p>
+            </div>
+            <div style="text-align: right;">
+              <p style="margin: 0;">___________________________</p>
+              <p style="margin-top: 5px; font-weight: 900;">HOD CSE / Convener</p>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWin.document.open();
+    printWin.document.write(htmlContent);
+    printWin.document.close();
+  };
+
+  const exportOnSpotToExcel = () => {
+    const onSpotList = registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-'));
+    const rows = onSpotList.map((r, idx) => ({
+      'Sl No': idx + 1,
+      'Full Name': r.fullName,
+      'College Name': r.collegeName,
+      'Department': r.department,
+      'Year': r.year,
+      'Mobile': r.mobile,
+      'Email': r.email,
+      'Technical Event': r.technicalEvent || 'N/A',
+      'Non-Technical Event': r.nonTechnicalEvent || 'N/A',
+      'Food Preference': r.foodPreference,
+      'Amount Paid': `₹${r.amountPaid || 200}`,
+      'Payment Mode': r.onSpotPaymentMode || 'CASH',
+      'Registration Time': new Date(r.createdAt).toLocaleString(),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'OnSpot_Registrations');
+    XLSX.writeFile(workbook, `CISABZ_OnSpot_Registrations_${Date.now()}.xlsx`);
+  };
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setActionToast({ message, type });
@@ -1679,6 +2261,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
               </div>
               <span className="text-[10px] font-mono text-emerald-200 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 font-black">
                 ₹{financeRecords.filter((r) => r.status === 'PAID').reduce((sum, r) => sum + (r.paidAmount || r.feeAmount), 0).toLocaleString()}
+              </span>
+            </button>
+
+            {/* ON-SPOT REGISTRATION BUTTON */}
+            <button
+              onClick={() => {
+                resetFilters();
+                setActiveView('onspot');
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 mt-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-between cursor-pointer border ${
+                activeView === 'onspot'
+                  ? 'bg-amber-600/20 text-amber-300 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                  : 'bg-amber-950/20 text-amber-300 hover:bg-amber-900/40 hover:text-amber-200 border-amber-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-2 truncate">
+                <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate font-bold tracking-wider">ON-SPOT REGISTRATION</span>
+              </div>
+              <span className="text-[10px] font-mono text-amber-200 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-500/40 font-black">
+                {registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-')).length}
               </span>
             </button>
           </div>
@@ -3253,6 +3857,294 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
             )}
           </div>
         )}
+
+        {/* VIEW 7: ON-SPOT REGISTRATION CENTER */}
+        {activeView === 'onspot' && (
+          <div className="space-y-6 max-w-7xl mx-auto">
+            {/* On-Spot Banner */}
+            <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/60 border border-amber-500/40 p-6 rounded-3xl backdrop-blur-xl shadow-[0_0_40px_rgba(245,158,11,0.15)] flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold">
+                  <Zap className="w-3.5 h-3.5 animate-pulse text-amber-400" />
+                  <span>ON-SPOT DESK SYMPOSIUM LIVE</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black font-orbitron text-white">
+                  On-Spot Registrations Center
+                </h2>
+                <p className="text-xs font-mono text-slate-400">
+                  Upload paper form photos for instant OCR scanning & event-wise PDF report generation for coordinators.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => {
+                    setOnSpotModalTab('SCAN');
+                    setShowOnSpotModal(true);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-mono font-bold text-xs transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2 cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>📸 Upload & Scan Photos</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setOnSpotModalTab('MANUAL');
+                    setShowOnSpotModal(true);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-mono font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>➕ Add Manual Entry</span>
+                </button>
+
+                <button
+                  onClick={() => exportOnSpotPDF(onSpotSelectedEvent)}
+                  className="px-4 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 font-mono font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>📄 Print Event PDF</span>
+                </button>
+
+                <button
+                  onClick={exportOnSpotToExcel}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Excel</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Card 1: Total On-Spot */}
+              <div className="bg-slate-900/80 border border-amber-500/30 p-5 rounded-2xl backdrop-blur-xl">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">Total On-Spot</span>
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black font-orbitron text-white">
+                  {registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-')).length}
+                </div>
+                <span className="text-[10px] font-mono text-slate-400 mt-1 block">Desk Participants Registered</span>
+              </div>
+
+              {/* Card 2: Desk Revenue & GPay / Cash Breakdown */}
+              <div className="bg-slate-900/80 border border-emerald-500/30 p-5 rounded-2xl backdrop-blur-xl">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Desk Revenue & Mode</span>
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                    <Banknote className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black font-orbitron text-emerald-300">
+                  ₹{registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-')).reduce((sum, r) => sum + (r.amountPaid || 200), 0).toLocaleString()}
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-mono text-slate-300 mt-1">
+                  <span>💵 Cash: <strong className="text-amber-300">₹{registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && (r.onSpotPaymentMode || r.transactionId).includes('CASH')).reduce((sum, r) => sum + (r.amountPaid || 200), 0)}</strong></span>
+                  <span>📱 GPay: <strong className="text-emerald-300">₹{registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && (r.onSpotPaymentMode || r.transactionId).includes('GPAY')).reduce((sum, r) => sum + (r.amountPaid || 200), 0)}</strong></span>
+                </div>
+              </div>
+
+              {/* Card 3: Food Preference Breakdown */}
+              <div className="bg-slate-900/80 border border-teal-500/30 p-5 rounded-2xl backdrop-blur-xl">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-mono text-teal-400 font-bold uppercase tracking-wider">Food Preferences</span>
+                  <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black font-orbitron text-white flex items-center gap-3">
+                  <span className="text-emerald-400 text-lg">🥗 {registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && r.foodPreference === 'Veg').length} Veg</span>
+                  <span className="text-rose-400 text-lg">🍗 {registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && r.foodPreference === 'Non-Veg').length} Non-Veg</span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400 mt-1 block">Lunch Preparation Count</span>
+              </div>
+
+              {/* Card 4: Events Count */}
+              <div className="bg-slate-900/80 border border-purple-500/30 p-5 rounded-2xl backdrop-blur-xl">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider">Events Participation</span>
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                    <Award className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black font-orbitron text-white flex items-center gap-3">
+                  <span className="text-cyan-300 text-lg">Tech: {registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && r.technicalEvent).length}</span>
+                  <span className="text-purple-300 text-lg">Non-Tech: {registrations.filter((r) => (r.isOnSpot || r.id.startsWith('ONSPOT-')) && r.nonTechnicalEvent).length}</span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400 mt-1 block">Registered Event Entries</span>
+              </div>
+            </div>
+
+            {/* Event Coordinator Report Selector Tabs */}
+            <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-black font-orbitron text-white">Event Coordinator On-Spot Lists</h3>
+                  <p className="text-xs font-mono text-slate-400">
+                    Select an event below to view & download attendance sheet PDF specifically for that event's coordinator.
+                  </p>
+                </div>
+                <button
+                  onClick={() => exportOnSpotPDF(onSpotSelectedEvent)}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-black text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Download {onSpotSelectedEvent === 'ALL' ? 'ALL' : onSpotSelectedEvent} PDF</span>
+                </button>
+              </div>
+
+              {/* Event Filter Pills */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                {['ALL', 'TECHVERSE', 'TECH BRAINIAC', 'PROMPT FUSION', 'BUG BASH', 'PINPOINT', 'BRAND SPOT', 'HAMMER HIT (IPL AUCTION)', 'CONNECTION'].map((evtName) => {
+                  const onSpotList = registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-'));
+                  const count = evtName === 'ALL'
+                    ? onSpotList.length
+                    : onSpotList.filter((r) => doesRegistrationMatchEvent(r, evtName)).length;
+                  const isSel = onSpotSelectedEvent === evtName;
+
+                  return (
+                    <button
+                      key={evtName}
+                      onClick={() => setOnSpotSelectedEvent(evtName)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                        isSel
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                          : 'bg-slate-950 text-slate-400 hover:text-white border-slate-800'
+                      }`}
+                    >
+                      <span>{evtName}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${isSel ? 'bg-slate-950 text-amber-300' : 'bg-slate-800 text-slate-400'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* On-Spot Registrations Table */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-black font-orbitron text-white">
+                  On-Spot Participant Directory ({onSpotSelectedEvent === 'ALL' ? 'All Events' : onSpotSelectedEvent})
+                </h3>
+                <div className="relative max-w-xs w-full">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search name, college, phone..."
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono focus:outline-none focus:border-amber-500/50"
+                  />
+                </div>
+              </div>
+
+              {/* Table */}
+              {registrations.filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-')).length === 0 ? (
+                <div className="p-12 text-center border border-dashed border-slate-800 rounded-2xl space-y-3">
+                  <Zap className="w-10 h-10 text-amber-500/40 mx-auto" />
+                  <h4 className="text-white font-bold font-mono text-sm">No On-Spot Registrations Added Yet</h4>
+                  <p className="text-slate-500 font-mono text-xs max-w-md mx-auto">
+                    Click "Upload & Scan Photos" to upload registration paper forms or click "Add Manual Entry" to add external participants directly.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setOnSpotModalTab('SCAN');
+                      setShowOnSpotModal(true);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-xs transition-all inline-flex items-center gap-2 cursor-pointer shadow-lg"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Upload First Photo Scan</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-slate-800 rounded-2xl">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider font-bold">
+                      <tr>
+                        <th className="py-3.5 px-4">#</th>
+                        <th className="py-3.5 px-4">Student Name</th>
+                        <th className="py-3.5 px-4">College & Dept</th>
+                        <th className="py-3.5 px-4">Mobile</th>
+                        <th className="py-3.5 px-4">Events</th>
+                        <th className="py-3.5 px-4">Food</th>
+                        <th className="py-3.5 px-4">Fee & Mode</th>
+                        <th className="py-3.5 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {registrations
+                        .filter((r) => r.isOnSpot || r.id.startsWith('ONSPOT-'))
+                        .filter((r) => {
+                          if (onSpotSelectedEvent !== 'ALL' && !doesRegistrationMatchEvent(r, onSpotSelectedEvent)) {
+                            return false;
+                          }
+                          if (!searchQuery.trim()) return true;
+                          const q = searchQuery.toLowerCase();
+                          return (
+                            r.fullName.toLowerCase().includes(q) ||
+                            r.collegeName.toLowerCase().includes(q) ||
+                            r.mobile.includes(q) ||
+                            r.id.toLowerCase().includes(q)
+                          );
+                        })
+                        .map((r, idx) => (
+                          <tr key={r.id} className="hover:bg-slate-950/40 transition-colors">
+                            <td className="py-3.5 px-4 font-bold text-slate-400">{idx + 1}</td>
+                            <td className="py-3.5 px-4 font-bold text-white text-sm">{r.fullName}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-slate-300">{r.collegeName}</div>
+                              <div className="text-[10px] text-slate-500">{r.department} • {r.year}</div>
+                            </td>
+                            <td className="py-3.5 px-4 font-bold text-cyan-300">{r.mobile}</td>
+                            <td className="py-3.5 px-4 space-y-1">
+                              {r.technicalEvent && (
+                                <span className="inline-block px-2 py-0.5 rounded bg-blue-500/20 text-cyan-300 text-[10px] border border-blue-500/30">
+                                  {r.technicalEvent}
+                                </span>
+                              )}
+                              {r.nonTechnicalEvent && (
+                                <span className="inline-block px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] border border-purple-500/30">
+                                  {r.nonTechnicalEvent}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${r.foodPreference === 'Veg' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                                {r.foodPreference}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-emerald-400">₹{r.amountPaid || 200}</div>
+                              <div className="text-[10px] text-slate-500">{r.onSpotPaymentMode || 'CASH'}</div>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <button
+                                onClick={() => handleDeleteParticipant(r.id)}
+                                className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 text-rose-400 hover:text-white transition-colors cursor-pointer"
+                                title="Delete On-Spot Record"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* VERIFICATION DETAIL MODAL */}
@@ -4024,6 +4916,565 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ onBackToWebsite }) => 
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ON-SPOT REGISTRATION MODAL (SCAN & MANUAL ENTRY) */}
+      {showOnSpotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto">
+          <div className="relative w-full max-w-3xl bg-slate-900 border border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.25)] space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black font-orbitron text-white">On-Spot Registration Entry</h3>
+                  <p className="text-xs font-mono text-slate-400">
+                    Scan form photos or enter student details directly for on-spot desk.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowOnSpotModal(false)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800">
+              <button
+                onClick={() => setOnSpotModalTab('SCAN')}
+                className={`flex-1 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  onSpotModalTab === 'SCAN'
+                    ? 'bg-amber-500 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Camera className="w-4 h-4" />
+                <span>📸 Scan Paper Form Photos</span>
+              </button>
+
+              <button
+                onClick={() => setOnSpotModalTab('MANUAL')}
+                className={`flex-1 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  onSpotModalTab === 'MANUAL'
+                    ? 'bg-amber-500 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>✍️ Quick Manual Entry</span>
+              </button>
+            </div>
+
+            {/* TAB 1: OCR PHOTO SCANNER */}
+            {onSpotModalTab === 'SCAN' && (
+              <div className="space-y-6">
+                {/* Upload Box */}
+                <div className="border-2 border-dashed border-amber-500/40 hover:border-amber-400 rounded-2xl p-8 text-center bg-slate-950/60 transition-all">
+                  <UploadCloud className="w-12 h-12 text-amber-400 mx-auto mb-3 animate-bounce" />
+                  <h4 className="text-sm font-bold font-mono text-white mb-1">
+                    Upload Photos of Filled Registration Sheets
+                  </h4>
+                  <p className="text-xs font-mono text-slate-400 max-w-md mx-auto mb-4">
+                    Take photos of physical registration paper forms filled by students on-spot. Upload single or multiple images.
+                  </p>
+
+                  <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-black text-xs transition-all cursor-pointer shadow-lg">
+                    <Camera className="w-4 h-4" />
+                    <span>Select Registration Form Photos</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handlePhotoUploadOCR(e.target.files)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Progress Indicator */}
+                {isScanningOCR && (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-center gap-3 animate-pulse">
+                    <RefreshCw className="w-5 h-5 animate-spin shrink-0 text-amber-400" />
+                    <span>{ocrProgressText}</span>
+                  </div>
+                )}
+
+                {/* OCR Drafts List */}
+                {ocrDrafts.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-mono font-bold uppercase text-amber-400 tracking-wider">
+                      Scanned Registration Drafts ({ocrDrafts.length})
+                    </h4>
+
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                      {ocrDrafts.map((draft) => (
+                        <div
+                          key={draft.id}
+                          className={`p-4 rounded-2xl border transition-all ${
+                            draft.saved
+                              ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80'
+                              : 'bg-slate-950 border-slate-800'
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Photo Preview */}
+                            <div className="w-full sm:w-32 h-32 rounded-xl border border-slate-800 overflow-hidden shrink-0 bg-slate-900">
+                              <img
+                                src={draft.fileUrl}
+                                alt="Registration Form"
+                                className="w-full h-full object-cover cursor-pointer"
+                                onClick={() => setSelectedOnSpotPhoto(draft.fileUrl)}
+                              />
+                            </div>
+
+                            {/* Editable Fields */}
+                            <div className="flex-1 space-y-3 text-xs font-mono">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    Student Full Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={draft.fullName}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setOcrDrafts((prev) =>
+                                        prev.map((d) => (d.id === draft.id ? { ...d, fullName: val } : d))
+                                      );
+                                    }}
+                                    placeholder="Enter Student Name"
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-400 font-bold"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    College / Institution
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={draft.collegeName}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setOcrDrafts((prev) =>
+                                        prev.map((d) => (d.id === draft.id ? { ...d, collegeName: val } : d))
+                                      );
+                                    }}
+                                    placeholder="Enter College Name"
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-400"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    Mobile Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={draft.mobile}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setOcrDrafts((prev) =>
+                                        prev.map((d) => (d.id === draft.id ? { ...d, mobile: val } : d))
+                                      );
+                                    }}
+                                    placeholder="10 digit mobile"
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-cyan-300 focus:outline-none focus:border-amber-400"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    Department & Year
+                                  </label>
+                                  <div className="flex gap-1">
+                                    <input
+                                      type="text"
+                                      value={draft.department}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setOcrDrafts((prev) =>
+                                          prev.map((d) => (d.id === draft.id ? { ...d, department: val } : d))
+                                        );
+                                      }}
+                                      className="w-1/2 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                                    />
+                                    <select
+                                      value={draft.year}
+                                      onChange={(e) => {
+                                        const val = e.target.value as any;
+                                        setOcrDrafts((prev) =>
+                                          prev.map((d) => (d.id === draft.id ? { ...d, year: val } : d))
+                                        );
+                                      }}
+                                      className="w-1/2 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                                    >
+                                      <option value="I Year">I Year</option>
+                                      <option value="II Year">II Year</option>
+                                      <option value="III Year">III Year</option>
+                                      <option value="IV Year">IV Year</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    Technical Event
+                                  </label>
+                                  <select
+                                    value={draft.technicalEvent}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setOcrDrafts((prev) =>
+                                        prev.map((d) => (d.id === draft.id ? { ...d, technicalEvent: val } : d))
+                                      );
+                                    }}
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-cyan-300"
+                                  >
+                                    <option value="TECHVERSE">TECHVERSE</option>
+                                    <option value="TECH BRAINIAC">TECH BRAINIAC</option>
+                                    <option value="PROMPT FUSION">PROMPT FUSION</option>
+                                    <option value="BUG BASH">BUG BASH</option>
+                                    <option value="">None</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] text-slate-500 font-bold uppercase block">
+                                    Non-Technical Event
+                                  </label>
+                                  <select
+                                    value={draft.nonTechnicalEvent}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setOcrDrafts((prev) =>
+                                        prev.map((d) => (d.id === draft.id ? { ...d, nonTechnicalEvent: val } : d))
+                                      );
+                                    }}
+                                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-purple-300"
+                                  >
+                                    <option value="PINPOINT">PINPOINT</option>
+                                    <option value="BRAND SPOT">BRAND SPOT</option>
+                                    <option value="HAMMER HIT (IPL AUCTION)">HAMMER HIT (IPL AUCTION)</option>
+                                    <option value="CONNECTION">CONNECTION</option>
+                                    <option value="">None</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                                <div className="flex items-center gap-3">
+                                  <label className="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`food-${draft.id}`}
+                                      checked={draft.foodPreference === 'Veg'}
+                                      onChange={() =>
+                                        setOcrDrafts((prev) =>
+                                          prev.map((d) => (d.id === draft.id ? { ...d, foodPreference: 'Veg' } : d))
+                                        )
+                                      }
+                                    />
+                                    <span>Veg</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`food-${draft.id}`}
+                                      checked={draft.foodPreference === 'Non-Veg'}
+                                      onChange={() =>
+                                        setOcrDrafts((prev) =>
+                                          prev.map((d) =>
+                                            d.id === draft.id ? { ...d, foodPreference: 'Non-Veg' } : d
+                                          )
+                                        )
+                                      }
+                                    />
+                                    <span>Non-Veg</span>
+                                  </label>
+                                </div>
+
+                                {draft.saved ? (
+                                  <span className="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-xs flex items-center gap-1">
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Saved to Cloud</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleSaveOnSpotEntry(
+                                        {
+                                          fullName: draft.fullName,
+                                          collegeName: draft.collegeName,
+                                          department: draft.department,
+                                          year: draft.year,
+                                          mobile: draft.mobile,
+                                          email: draft.email,
+                                          technicalEvent: draft.technicalEvent,
+                                          nonTechnicalEvent: draft.nonTechnicalEvent,
+                                          foodPreference: draft.foodPreference,
+                                          amountPaid: draft.amountPaid,
+                                          paymentMode: draft.paymentMode,
+                                          paymentProofUrl: draft.fileUrl,
+                                        },
+                                        draft.id
+                                      )
+                                    }
+                                    disabled={isSubmittingOnSpot}
+                                    className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    <span>Confirm & Save</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 2: MANUAL ENTRY FORM */}
+            {onSpotModalTab === 'MANUAL' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveOnSpotEntry({
+                    fullName: manualName,
+                    collegeName: manualCollege,
+                    department: manualDept,
+                    year: manualYear,
+                    mobile: manualMobile,
+                    email: manualEmail,
+                    technicalEvent: manualTechEvent,
+                    nonTechnicalEvent: manualNonTechEvent,
+                    foodPreference: manualFood,
+                    amountPaid: manualAmount,
+                    paymentMode: manualPaymentMode,
+                    paymentProofUrl: manualPhotoUrl,
+                  });
+                }}
+                className="space-y-4 text-xs font-mono"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Student Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={manualName}
+                      onChange={(e) => setManualName(e.target.value)}
+                      placeholder="e.g. Ramesh Kumar"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-bold focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      College Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={manualCollege}
+                      onChange={(e) => setManualCollege(e.target.value)}
+                      placeholder="e.g. St. Joseph's College of Engineering"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Mobile Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={manualMobile}
+                      onChange={(e) => setManualMobile(e.target.value)}
+                      placeholder="e.g. 9876543210"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 font-bold focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Email Address (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={manualEmail}
+                      onChange={(e) => setManualEmail(e.target.value)}
+                      placeholder="student@gmail.com"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Department & Branch
+                    </label>
+                    <input
+                      type="text"
+                      value={manualDept}
+                      onChange={(e) => setManualDept(e.target.value)}
+                      placeholder="e.g. CSE / IT / ECE"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Year of Study
+                    </label>
+                    <select
+                      value={manualYear}
+                      onChange={(e) => setManualYear(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="I Year">I Year</option>
+                      <option value="II Year">II Year</option>
+                      <option value="III Year">III Year</option>
+                      <option value="IV Year">IV Year</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Technical Event
+                    </label>
+                    <select
+                      value={manualTechEvent}
+                      onChange={(e) => setManualTechEvent(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="TECHVERSE">TECHVERSE (Paper Presentation)</option>
+                      <option value="TECH BRAINIAC">TECH BRAINIAC (Tech Quiz)</option>
+                      <option value="PROMPT FUSION">PROMPT FUSION</option>
+                      <option value="BUG BASH">BUG BASH</option>
+                      <option value="">None</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Non-Technical Event
+                    </label>
+                    <select
+                      value={manualNonTechEvent}
+                      onChange={(e) => setManualNonTechEvent(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-purple-300 focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="PINPOINT">PINPOINT (Treasure Hunt)</option>
+                      <option value="BRAND SPOT">BRAND SPOT (Logo Quiz)</option>
+                      <option value="HAMMER HIT (IPL AUCTION)">HAMMER HIT (IPL Auction)</option>
+                      <option value="CONNECTION">CONNECTION</option>
+                      <option value="">None</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Food Preference
+                    </label>
+                    <div className="flex gap-4 pt-2">
+                      <label className="flex items-center gap-2 text-white font-bold cursor-pointer">
+                        <input
+                          type="radio"
+                          name="manualFood"
+                          checked={manualFood === 'Veg'}
+                          onChange={() => setManualFood('Veg')}
+                        />
+                        <span>Veg 🥗</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-white font-bold cursor-pointer">
+                        <input
+                          type="radio"
+                          name="manualFood"
+                          checked={manualFood === 'Non-Veg'}
+                          onChange={() => setManualFood('Non-Veg')}
+                        />
+                        <span>Non-Veg 🍗</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+                      Fee Amount (₹) & Payment Mode
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={manualAmount}
+                        onChange={(e) => setManualAmount(Number(e.target.value))}
+                        className="w-1/2 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-bold"
+                      />
+                      <select
+                        value={manualPaymentMode}
+                        onChange={(e) => setManualPaymentMode(e.target.value as any)}
+                        className="w-1/2 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                      >
+                        <option value="CASH">Cash (💵)</option>
+                        <option value="GPAY">GPay (📱)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowOnSpotModal(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-mono text-xs hover:bg-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingOnSpot}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs transition-all shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Save On-Spot Participant</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* FULL-SIZE PHOTO PREVIEW MODAL */}
+      {selectedOnSpotPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
+          <div className="relative max-w-4xl w-full bg-slate-900 border border-amber-500/40 rounded-3xl p-4 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span className="text-xs font-mono font-bold text-amber-400">Scanned Registration Form Photo</span>
+              <button
+                onClick={() => setSelectedOnSpotPhoto(null)}
+                className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="max-h-[80vh] overflow-auto text-center">
+              <img src={selectedOnSpotPhoto} alt="Form Full Preview" className="max-h-[75vh] mx-auto rounded-xl object-contain border border-slate-800" />
             </div>
           </div>
         </div>
